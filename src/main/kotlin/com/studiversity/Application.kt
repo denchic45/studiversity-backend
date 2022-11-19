@@ -1,7 +1,7 @@
 package com.studiversity
 
-import io.ktor.server.application.*
 import com.studiversity.plugins.*
+import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.Database
 
 fun main(args: Array<String>): Unit =

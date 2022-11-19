@@ -1,6 +1,5 @@
 package com.studiversity.db.table
 
-import com.studiversity.db.table.Users.autoIncrement
 import com.studiversity.util.varcharMax
 import org.jetbrains.exposed.sql.Table
 

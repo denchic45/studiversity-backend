@@ -2,7 +2,10 @@ package com.studiversity.db.dao
 
 import com.studiversity.db.table.UserEntity
 import com.studiversity.db.table.Users
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 class UserDao {

@@ -2,8 +2,6 @@ package com.studiversity.plugins
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.studiversity.Configs
-import com.studiversity.db.dao.KeyDao
 import com.studiversity.db.dao.UserDao
 import com.studiversity.db.table.UserEntity
 import com.studiversity.model.LoginRequest
@@ -27,7 +25,6 @@ fun Application.configureSecurity() {
     val jwtSecret = this@configureSecurity.environment.config.property("jwt.secret").getString()
 
     val userDao = UserDao()
-    val keyDao = KeyDao()
     authentication {
         jwt("auth-jwt") {
             val jwtAudience = this@configureSecurity.environment.config.property("jwt.audience").getString()
