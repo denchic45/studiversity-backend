@@ -18,7 +18,7 @@ class UserDao {
     }
 
     suspend fun getByLogin(login: String): UserEntity? = newSuspendedTransaction {
-        Users.select { Users.email eq login }.map(::rowToEntity).singleOrNull()
+        Users.select { Users.email eq login }.map(::rowToEntity).firstOrNull()
     }
 
     suspend fun getAll(): List<UserEntity> = newSuspendedTransaction {
