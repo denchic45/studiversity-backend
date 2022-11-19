@@ -77,7 +77,7 @@ fun Application.configureSecurity() {
                         .withClaim("email", loginRequest.email)
                         .withClaim("password", loginRequest.password)
                         .withExpiresAt(Date(date))
-                        .sign(Algorithm.HMAC256(keyDao.getJwtSecret()))
+                        .sign(Algorithm.HMAC256(jwtSecret))
                     call.respond(
                         hashMapOf(
                             "date" to DateTimeFormatter.ISO_DATE_TIME.format(
