@@ -1,26 +1,23 @@
 package com.studiversity.db.table
 
 import com.studiversity.util.varcharMax
-import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.dao.id.UUIDTable
 
-@Serializable
 data class UserEntity(
-    val id: Int = -1,
+    val id: String = "",
     val firstName: String,
     val surname: String,
     val patronymic: String,
     val email: String,
-    val password: String
+    val password: String,
+    val refreshToken: String
 )
 
-object Users : Table("user") {
-    val id = integer("id").autoIncrement()
+object Users : UUIDTable("user") {
     val firstName = varcharMax("first_name")
     val surname = varcharMax("surname")
     val patronymic = varcharMax("patronymic")
     val email = varcharMax("email")
     val password = varcharMax("password")
-
-    override val primaryKey = PrimaryKey(id)
+    val refreshToken = varcharMax("refresh_token")
 }

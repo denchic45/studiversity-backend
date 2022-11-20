@@ -3,6 +3,7 @@ val kotlinVersion: String by project
 val logbackVersion: String by project
 val exposedVersion: String by project
 val h2Version: String by project
+val koinVersion: String by project
 
 plugins {
     application
@@ -83,4 +84,8 @@ dependencies {
     implementation("org.postgresql:postgresql:42.5.0")
 
     implementation("org.springframework.security:spring-security-core:5.7.5")
+
+    // Koin
+    implementation ("io.insert-koin:koin-ktor:$koinVersion")
+    implementation ("io.insert-koin:koin-logger-slf4j:$koinVersion")
 }
