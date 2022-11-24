@@ -2,6 +2,7 @@ package com.studiversity.feature.auth
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import com.studiversity.model.respondWithError
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -29,7 +30,7 @@ fun Application.configureAuth() {
                 if (credential.payload.audience.contains(jwtAudience)) JWTPrincipal(credential.payload) else null
             }
             challenge { defaultScheme, realm ->
-                call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
+                call.respondWithError(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
             }
         }
     }

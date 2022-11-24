@@ -1,5 +1,6 @@
 package com.studiversity
 
+import com.studiversity.di.configureDI
 import com.studiversity.feature.auth.configureAuth
 import com.studiversity.plugin.*
 import io.ktor.server.application.*

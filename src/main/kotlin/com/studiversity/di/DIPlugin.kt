@@ -1,4 +1,4 @@
-package com.studiversity.plugin
+package com.studiversity.di
 
 import com.studiversity.di.appModule
 import com.studiversity.di.daoModule
@@ -10,6 +10,6 @@ fun Application.configureDI() {
     // Install Ktor features
     install(Koin) {
         slf4jLogger()
-        modules(appModule(), daoModule)
+        modules(appModule(), authModule,daoModule)
     }
 }

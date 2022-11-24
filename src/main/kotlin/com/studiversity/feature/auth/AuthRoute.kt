@@ -4,11 +4,13 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.studiversity.db.dao.UserDao
 import com.studiversity.db.table.UserEntity
-import com.studiversity.model.ErrorResponse
 import com.studiversity.model.LoginRequest
 import com.studiversity.model.RefreshTokenResponse
 import com.studiversity.model.RegistrationRequest
+import com.studiversity.model.respondWithError
 import com.studiversity.util.isEmail
+import io.github.jan.supabase.gotrue.GoTrue
+import io.github.jan.supabase.gotrue.providers.builtin.Email
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -25,19 +27,20 @@ fun Route.loginRoute() {
     val audience by inject<String>(named("audience"))
     val domain by inject<String>(named("domain"))
     val jwtSecret by inject<String>(named("jwtSecret"))
+    val goTrue by inject<GoTrue>()
 
     post("/login") {
+        goTrue.loginWith(Email) {
+
+        }
         val loginRequest = call.receive<LoginRequest>()
         userDao.getByLogin(loginRequest.email)?.let { userEntity ->
-            if (BCrypt.checkpw(loginRequest.password, userEntity.password)) {
-                val token = createToken(userEntity.id, audience, jwtSecret, domain)
-                call.respond(
-                    hashMapOf("token" to token)
-                )
-            } else {
-                call.respond(HttpStatusCode.Forbidden, "Not correct password")
+            if (!BCrypt.checkpw(loginRequest.password, userEntity.password)) {
+                return@post call.respondWithError(HttpStatusCode.Forbidden, "INVALID_PASSWORD")
             }
-        } ?: call.respond(HttpStatusCode.BadRequest, "Not correct email")
+            val token = createToken(userEntity.id, audience, jwtSecret, domain)
+            call.respond(hashMapOf("token" to token))
+        } ?: call.respondWithError(HttpStatusCode.BadRequest, "EMAIL_NOT_FOUND")
 
     }
 }
@@ -61,23 +64,23 @@ fun Route.registerRoute() {
         if (registrationRequest != null) {
 
             if (!registrationRequest.email.isEmail())
-                return@post call.respond(HttpStatusCode.Unauthorized, "Wrong email")
+                return@post call.respondWithError(HttpStatusCode.Unauthorized, "WRONG_EMAIL")
             if (userDao.isEmailExist(registrationRequest.email))
-                return@post call.respond(HttpStatusCode.Unauthorized, "This email address is already taken")
+                return@post call.respondWithError(HttpStatusCode.Unauthorized, "EMAIL_EXIST")
 
             registrationRequest.password.apply {
                 if (this.length < 6)
-                    return@post call.respond(
+                    return@post call.respondWithError(
                         HttpStatusCode.Unauthorized,
-                        "Password must contain at least 6 characters"
+                        "PASSWORD_MUST_CONTAIN_AT_LEAST_6_CHARACTERS"
                     )
                 if (!this.contains("(?=.*[a-z])(?=.*[A-Z])".toRegex()))
-                    return@post call.respond(
+                    return@post call.respondWithError(
                         HttpStatusCode.Unauthorized,
-                        "Password must contain upper and lower case characters"
+                        "PASSWORD_MUST_CONTAIN_UPPER_AND_LOWER_CASE_CHARACTERS"
                     )
                 if (!this.contains("[0-9]".toRegex()))
-                    return@post call.respond(HttpStatusCode.Unauthorized, "Password must contain numbers")
+                    return@post call.respondWithError(HttpStatusCode.Unauthorized, "PASSWORD_MUST_CONTAIN_DIGITS")
             }
 
             val hashed: String = BCrypt.hashpw(registrationRequest.password, BCrypt.gensalt())
@@ -95,7 +98,7 @@ fun Route.registerRoute() {
             )
             call.respond("User ${registrationRequest.firstName} successfully registered!")
         } else {
-            call.respond("Not correct fields!")
+            call.respondWithError(HttpStatusCode.BadRequest, "NOT_CORRECT_FIELDS")
         }
     }
 }
@@ -124,10 +127,8 @@ fun Route.tokenRoute() {
                     userId
                 )
             )
-        } else return@post call.respond(
-            HttpStatusCode.BadRequest,
-            ErrorResponse(HttpStatusCode.BadRequest.value, "WRONG_REFRESH_TOKEN")
-        )
+        } else
+            return@post call.respondWithError(HttpStatusCode.BadRequest, "WRONG_REFRESH_TOKEN")
 
     }
 }
