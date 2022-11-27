@@ -10,12 +10,11 @@ class UserDao {
 
     suspend fun insert(userEntity: UserEntity) = newSuspendedTransaction {
         Users.insert {
+            it[id] = UUID.fromString(userEntity.id)
             it[firstName] = userEntity.firstName
             it[surname] = userEntity.surname
             it[patronymic] = userEntity.patronymic
             it[email] = userEntity.email
-            it[password] = userEntity.password
-            it[refreshToken] = userEntity.refreshToken
         }
     }
 
@@ -32,20 +31,10 @@ class UserDao {
         firstName = it[Users.firstName],
         surname = it[Users.surname],
         patronymic = it[Users.patronymic],
-        email = it[Users.email],
-        password = it[Users.password],
-        refreshToken = it[Users.refreshToken]
+        email = it[Users.email]
     )
 
     suspend fun isEmailExist(email: String): Boolean = newSuspendedTransaction {
         !Users.select { Users.email eq email }.empty()
-    }
-
-    suspend fun getRefreshToken(userId: UUID) = newSuspendedTransaction {
-        Users.select { Users.id eq userId }.map { it[Users.refreshToken].toString() }.single()
-    }
-
-    suspend fun updateRefreshToken(userId: UUID, newRefreshToken: String) = newSuspendedTransaction {
-        Users.update({ Users.id eq userId }) { it[refreshToken] = newRefreshToken }
     }
 }

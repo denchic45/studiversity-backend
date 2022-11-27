@@ -4,20 +4,16 @@ import com.studiversity.util.varcharMax
 import org.jetbrains.exposed.dao.id.UUIDTable
 
 data class UserEntity(
-    val id: String = "",
     val firstName: String,
     val surname: String,
-    val patronymic: String,
+    val patronymic: String?,
     val email: String,
-    val password: String,
-    val refreshToken: String
+    val id: String
 )
 
-object Users : UUIDTable("user") {
+object Users : UUIDTable("user", "user_id") {
     val firstName = varcharMax("first_name")
     val surname = varcharMax("surname")
-    val patronymic = varcharMax("patronymic")
+    val patronymic = varcharMax("patronymic").nullable()
     val email = varcharMax("email")
-    val password = varcharMax("password")
-    val refreshToken = varcharMax("refresh_token")
 }

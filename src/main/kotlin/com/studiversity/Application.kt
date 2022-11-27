@@ -3,7 +3,10 @@ package com.studiversity
 import com.studiversity.di.configureDI
 import com.studiversity.feature.auth.configureAuth
 import com.studiversity.plugin.*
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.contentnegotiation.*
+import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
 
 fun main(args: Array<String>): Unit =
