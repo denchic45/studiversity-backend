@@ -63,8 +63,10 @@ fun Application.configureAuth() {
     }
 
     routing {
-        signupRoute()
-        tokenRoute()
+        route("/auth") {
+            signupRoute()
+            tokenRoute()
+        }
     }
 }
 
