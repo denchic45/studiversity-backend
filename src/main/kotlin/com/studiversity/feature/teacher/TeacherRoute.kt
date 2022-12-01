@@ -6,7 +6,9 @@ import io.ktor.server.routing.*
 fun Route.timetableRoute() {
     route("/timetable") {
         get {
-            val weekYear = call.request.queryParameters["week_year"]
+            val id = call.request.queryParameters["id"]
+            val monday = call.request.queryParameters["monday"]
+
             //TODO get events by range date and teacher
         }
     }

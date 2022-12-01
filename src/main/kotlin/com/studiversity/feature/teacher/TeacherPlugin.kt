@@ -5,8 +5,6 @@ import io.ktor.server.routing.*
 
 fun Application.configureTeacher() {
     routing {
-        route("/teachers") {
-
-        }
+        timetableRoute()
     }
 }
