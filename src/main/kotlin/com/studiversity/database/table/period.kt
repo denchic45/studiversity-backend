@@ -1,4 +1,4 @@
-package com.studiversity.db.table
+package com.studiversity.database.table
 
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.javatime.date

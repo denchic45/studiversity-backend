@@ -1,4 +1,4 @@
-package com.studiversity.model
+package com.studiversity.feature.auth.model
 
 import kotlinx.serialization.Serializable
 

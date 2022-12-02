@@ -2,8 +2,8 @@ package com.studiversity.feature.auth
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import com.studiversity.feature.auth.model.LoginRequest
 import com.studiversity.model.ErrorInfo
-import com.studiversity.model.LoginRequest
 import com.studiversity.model.respondWithError
 import com.studiversity.util.isEmail
 import io.ktor.http.*

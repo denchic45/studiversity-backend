@@ -1,6 +1,6 @@
 package com.studiversity.util
 
-import com.studiversity.db.table.Users.registerColumn
+import com.studiversity.database.table.Users.registerColumn
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.VarCharColumnType
 

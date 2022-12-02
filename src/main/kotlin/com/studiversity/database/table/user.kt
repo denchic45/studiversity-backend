@@ -1,4 +1,4 @@
-package com.studiversity.db.table
+package com.studiversity.database.table
 
 import com.studiversity.util.varcharMax
 import org.jetbrains.exposed.dao.id.UUIDTable

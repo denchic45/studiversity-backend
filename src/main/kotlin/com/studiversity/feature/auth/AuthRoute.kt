@@ -1,9 +1,9 @@
 package com.studiversity.feature.auth
 
-import com.studiversity.db.dao.UserDao
-import com.studiversity.db.table.UserEntity
-import com.studiversity.model.CreateUserRequest
-import com.studiversity.model.TokenResponse
+import com.studiversity.database.dao.UserDao
+import com.studiversity.database.table.UserEntity
+import com.studiversity.feature.auth.model.CreateUserRequest
+import com.studiversity.feature.auth.model.TokenResponse
 import com.studiversity.supabase.model.SignupResponse
 import com.studiversity.supabase.model.respondWithSupabaseError
 import io.ktor.client.*

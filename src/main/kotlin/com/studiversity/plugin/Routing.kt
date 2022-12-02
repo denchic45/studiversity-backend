@@ -1,6 +1,6 @@
 package com.studiversity.plugin
 
-import com.studiversity.db.dao.UserDao
+import com.studiversity.database.dao.UserDao
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*

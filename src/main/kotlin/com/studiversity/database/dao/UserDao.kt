@@ -1,8 +1,11 @@
-package com.studiversity.db.dao
+package com.studiversity.database.dao
 
-import com.studiversity.db.table.UserEntity
-import com.studiversity.db.table.Users
-import org.jetbrains.exposed.sql.*
+import com.studiversity.database.table.UserEntity
+import com.studiversity.database.table.Users
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.util.*
 

@@ -1,6 +1,6 @@
 package com.studiversity.di
 
-import com.studiversity.db.dao.UserDao
+import com.studiversity.database.dao.UserDao
 import org.koin.dsl.module
 
 val daoModule = module {
