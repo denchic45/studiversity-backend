@@ -1,0 +1,8 @@
+package com.studiversity.database.table
+
+import org.jetbrains.exposed.dao.id.IntIdTable
+
+object RolesScopes : IntIdTable("role_scope", "role_scope_id") {
+    val roleId = long("role_id")
+    val scopeId = long("scope_id")
+}

@@ -37,6 +37,10 @@ tasks.withType<KotlinCompile> {
     }
 }
 
+//tasks.withType<Test> {
+//    useJUnitPlatform()
+//}
+
 tasks {
     val shadowJarTask = named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
         // explicitly configure the filename of the resulting UberJar
@@ -78,7 +82,6 @@ dependencies {
     implementation("io.ktor:ktor-server-auth-jwt-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
-    testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-request-validation:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
@@ -95,11 +98,20 @@ dependencies {
 
     implementation("org.mindrot:jbcrypt:0.4")
 
-    implementation("org.postgresql:postgresql:42.5.0")
-
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+    implementation("org.postgresql:postgresql:42.5.1")
 
     // Koin
     implementation("io.insert-koin:koin-ktor:$koinVersion")
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
+
+    testImplementation(kotlin("test"))
+    testImplementation("io.insert-koin", "koin-test-junit5", koinVersion) {
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-test-junit")
+    }
+    testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
 }

@@ -1,9 +1,9 @@
 package com.studiversity.feature.auth
 
-import com.studiversity.database.dao.UserDao
-import com.studiversity.database.table.UserEntity
 import com.studiversity.feature.auth.model.CreateUserRequest
 import com.studiversity.feature.auth.model.TokenResponse
+import com.studiversity.feature.role.UserRepository
+import com.studiversity.feature.user.User
 import com.studiversity.supabase.model.SignupResponse
 import com.studiversity.supabase.model.respondWithSupabaseError
 import io.ktor.client.*
@@ -15,9 +15,10 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+import java.util.*
 
 fun Route.signupRoute() {
-    val userDao by inject<UserDao>()
+    val userRepository: UserRepository by inject()
     val supabaseClient by inject<HttpClient>()
 
     post("/signup") {
@@ -31,11 +32,8 @@ fun Route.signupRoute() {
             if (status.isSuccess()) {
                 val body = body<SignupResponse>()
 
-                userDao.insert(with(createUserRequest) {
-                    UserEntity(
-                        firstName, surname, patronymic, email,
-                        body.user.id
-                    )
+                userRepository.add(with(createUserRequest) {
+                    User(UUID.fromString(body.user.id), firstName, surname, patronymic, email)
                 })
 
                 this@post.call.respond(

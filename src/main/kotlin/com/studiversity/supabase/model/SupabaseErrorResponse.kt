@@ -50,7 +50,7 @@ fun SupabaseError2Response.mapResponse(): SingleErrorResponse = SingleErrorRespo
 )
 
 private val msgToErrorInfo = mapOf(
-    "User already registered" to ErrorInfo(AuthErrors.USER_ALREADY_REGISTERED)
+    "User.kt already registered" to ErrorInfo(AuthErrors.USER_ALREADY_REGISTERED)
 )
 
 private val errorToErrorInfo = mapOf(
