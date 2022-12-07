@@ -4,5 +4,5 @@ import io.ktor.server.application.*
 
 @Suppress("unused")
 fun Application.teachersModule() {
-    configureRouting()
+
 }

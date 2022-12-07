@@ -22,6 +22,14 @@ class RoleRepository {
         }
     }
 
+    private fun isExistRoleOfUserByScope(userId: UUID, roleId: Long, scopeId: UUID): Boolean {
+        return UsersRolesScopes.exists {
+            UsersRolesScopes.userId eq userId and
+                    (UsersRolesScopes.roleId eq roleId) and
+                    (UsersRolesScopes.scopeId eq scopeId)
+        }
+    }
+
     fun hasCapability(userId: UUID, capabilityResource: String, scopeId: UUID): Boolean = transaction {
         val path = ScopeEntity.findById(scopeId)!!.path
         for (nextScopeId in path) {
@@ -55,14 +63,6 @@ class RoleRepository {
                 ).map { rolesCapabilitiesRow -> rolesCapabilitiesRow[RolesCapabilities.permission] }
                 .firstOrNull() ?: Permission.Undefined
         }.combinedPermission()
-
-    private fun isExistRoleOfUserByScope(userId: UUID, roleId: Long, scopeId: UUID): Boolean {
-        return UsersRolesScopes.exists {
-            UsersRolesScopes.userId eq userId and
-                    (UsersRolesScopes.roleId eq roleId) and
-                    (UsersRolesScopes.scopeId eq scopeId)
-        }
-    }
 
     private fun checkRoleCapability(roleId: Long, capabilityResource: String, permission: Permission): Boolean {
         return RolesCapabilities.exists {

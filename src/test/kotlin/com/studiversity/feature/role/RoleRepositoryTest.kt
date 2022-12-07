@@ -6,6 +6,7 @@ import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.util.*
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -14,8 +15,8 @@ class RoleRepositoryTest : KoinTest {
 
     private val roleRepository: RoleRepository by inject()
 
-    init {
-
+    @BeforeTest
+    fun start() {
         Database.connect(
             url = "jdbc:postgresql://db.twmjqqkhwizjfmbebbxj.supabase.co:5432/postgres",
             driver = "org.postgresql.Driver",

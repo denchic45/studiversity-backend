@@ -2,8 +2,8 @@ package com.studiversity.feature.auth
 
 import com.studiversity.feature.auth.model.CreateUserRequest
 import com.studiversity.feature.auth.model.TokenResponse
-import com.studiversity.feature.role.UserRepository
 import com.studiversity.feature.user.User
+import com.studiversity.feature.user.UserRepository
 import com.studiversity.supabase.model.SignupResponse
 import com.studiversity.supabase.model.respondWithSupabaseError
 import io.ktor.client.*

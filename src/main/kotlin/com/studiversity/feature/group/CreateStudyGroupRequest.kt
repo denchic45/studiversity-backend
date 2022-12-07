@@ -3,11 +3,12 @@ package com.studiversity.feature.group
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CreateGroupRequest(
+data class CreateStudyGroupRequest(
     val name: String,
     val academicYear: AcademicYear,
-    val curatorId: String
+    val specialtyId: String? = null,
+    val curatorId: String? = null
 )
 
 @Serializable
-data class AcademicYear(val start: String, val end: String)
+data class AcademicYear(val start: Int, val end: Int)

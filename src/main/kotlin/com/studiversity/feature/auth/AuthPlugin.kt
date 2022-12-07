@@ -37,33 +37,32 @@ fun Application.configureAuth() {
         }
     }
 
-    install(RequestValidation) {
-        validate<LoginRequest> { login ->
-            val password = login.password
-
-            buildList {
-                if (password.length < 6)
-                    add(AuthErrors.PASSWORD_MUST_CONTAIN_AT_LEAST_6_CHARACTERS)
-
-                if (!password.contains("(?=.*[a-z])(?=.*[A-Z])".toRegex()))
-                    add(AuthErrors.PASSWORD_MUST_CONTAIN_UPPER_AND_LOWER_CASE_CHARACTERS)
-
-                if (!password.contains("[0-9]".toRegex()))
-                    add(AuthErrors.PASSWORD_MUST_CONTAIN_DIGITS)
-
-                if (!login.email.isEmail())
-                    add(AuthErrors.WRONG_EMAIL)
-
-            }.let { errors ->
-                if (errors.isEmpty())
-                    ValidationResult.Valid
-                else ValidationResult.Invalid(errors)
-            }
-        }
-    }
-
     routing {
         route("/auth") {
+            install(RequestValidation) {
+                validate<LoginRequest> { login ->
+                    val password = login.password
+
+                    buildList {
+                        if (password.length < 6)
+                            add(AuthErrors.PASSWORD_MUST_CONTAIN_AT_LEAST_6_CHARACTERS)
+
+                        if (!password.contains("(?=.*[a-z])(?=.*[A-Z])".toRegex()))
+                            add(AuthErrors.PASSWORD_MUST_CONTAIN_UPPER_AND_LOWER_CASE_CHARACTERS)
+
+                        if (!password.contains("[0-9]".toRegex()))
+                            add(AuthErrors.PASSWORD_MUST_CONTAIN_DIGITS)
+
+                        if (!login.email.isEmail())
+                            add(AuthErrors.WRONG_EMAIL)
+
+                    }.let { errors ->
+                        if (errors.isEmpty())
+                            ValidationResult.Valid
+                        else ValidationResult.Invalid(errors)
+                    }
+                }
+            }
             signupRoute()
             tokenRoute()
         }

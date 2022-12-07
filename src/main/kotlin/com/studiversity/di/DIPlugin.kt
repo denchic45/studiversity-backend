@@ -28,9 +28,10 @@ fun Application.configureDI() {
         exception<RequestValidationException> { call, cause ->
             call.respondWithErrors(HttpStatusCode.BadRequest, cause.reasons.toErrors())
         }
+
     }
     install(Koin) {
         slf4jLogger()
-        modules(appModule(), authModule, daoModule)
+        modules(appModule(), authModule, repositoryModule)
     }
 }

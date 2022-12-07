@@ -14,7 +14,7 @@ interface AddScopeRepoExt {
                 "type of passed parentScopeId $parentScope is not parent type of passed scopeTypeId $scopeTypeId"
             )
         ScopeEntity.new(scopeId) {
-            this.type = parentType
+            type = ScopeTypeEntity.findById(scopeTypeId)!!
             path = listOf(scopeId.toString()) + parentScope.path
         }
     }

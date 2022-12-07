@@ -1,10 +1,9 @@
-package com.studiversity.feature.role
+package com.studiversity.feature.user
 
 import com.studiversity.Constants
 import com.studiversity.database.table.UserEntity
 import com.studiversity.database.table.toDomain
 import com.studiversity.feature.scope.AddScopeRepoExt
-import com.studiversity.feature.user.User
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
@@ -18,7 +17,7 @@ class UserRepository : AddScopeRepoExt {
                 patronymic = user.patronymic
                 email = user.email
             }
-            addScope(user.id, 4, Constants.organizationId)
+            addScope(user.id, 2, Constants.organizationId)
         }
     }
 
