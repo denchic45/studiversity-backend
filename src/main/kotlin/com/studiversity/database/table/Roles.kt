@@ -5,4 +5,5 @@ import org.jetbrains.exposed.dao.id.LongIdTable
 
 object Roles : LongIdTable("role", "role_id") {
     val name = varcharMax("role_name")
+    val shortName = varcharMax("short_name")
 }

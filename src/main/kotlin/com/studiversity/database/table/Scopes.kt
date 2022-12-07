@@ -10,16 +10,15 @@ import java.util.*
 
 object Scopes : UUIDTable("scope", "instance_id") {
     val path = varcharMax("path")
-    val type: Column<EntityID<Long>> = reference("type", ScopeTypes)
+    val type: Column<EntityID<Long>> = reference("type", ScopeTypes.id)
 }
 
 class ScopeEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<ScopeEntity>(Scopes) {
-        fun newScope(id: UUID, type: Long) {
-            
-        }
-    }
+    companion object : UUIDEntityClass<ScopeEntity>(Scopes)
 
-    var path by Scopes.path
+    var path: List<String> by Scopes.path.transform(
+        toColumn = { it.reversed().joinToString("/") },
+        toReal = { it.split("/").reversed() }
+    )
     var type by ScopeTypeEntity referencedOn Scopes.type
 }
