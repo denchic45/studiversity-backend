@@ -4,16 +4,21 @@ import com.studiversity.feature.group.members.groupMembersRoutes
 import com.studiversity.util.onlyDigits
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import io.ktor.server.plugins.requestvalidation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+import java.util.*
 
 
 fun Application.groupRoutes() {
     routing {
         route("/groups") {
+
+            val studyGroupRepository: StudyGroupRepository by inject()
+
             install(RequestValidation) {
                 validate<CreateStudyGroupRequest> { request ->
                     buildList {
@@ -30,20 +35,26 @@ fun Application.groupRoutes() {
                     }
                 }
             }
-            val studyGroupRepository: StudyGroupRepository by inject()
             post {
                 val body = call.receive<CreateStudyGroupRequest>()
                 studyGroupRepository.add(body)
                 call.respond(HttpStatusCode.OK, "Group created")
             }
-            get {
+            route("/{id}") {
+                get {
+                    val id = call.parameters["id"]!!
+                    studyGroupRepository.findById(UUID.fromString(id))?.let { group ->
+                        call.respond(HttpStatusCode.OK, group)
+                    } ?: throw NotFoundException()
+                }
+                patch {
 
-            }
-            patch { }
-            post("/archive") {
+                }
+                post("/archive") {
 
+                }
+                delete { }
             }
-            delete { }
 
             groupMembersRoutes()
         }
