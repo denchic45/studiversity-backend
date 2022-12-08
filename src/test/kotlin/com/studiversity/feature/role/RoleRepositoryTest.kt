@@ -2,13 +2,12 @@ package com.studiversity.feature.role
 
 import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
 import org.koin.core.context.GlobalContext.startKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.util.*
-import kotlin.test.BeforeTest
-import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -16,20 +15,23 @@ class RoleRepositoryTest : KoinTest {
 
     private val roleRepository: RoleRepository by inject()
 
-    @BeforeAll
-    fun start() {
-        Database.connect(
-            url = "jdbc:postgresql://db.twmjqqkhwizjfmbebbxj.supabase.co:5432/postgres",
-            driver = "org.postgresql.Driver",
-            user = "postgres",
-            password = "4G4x#!nKhwexYgM"
-        )
+    companion object {
+        @BeforeAll
+        @JvmStatic
+        fun start() {
+            Database.connect(
+                url = "jdbc:postgresql://db.twmjqqkhwizjfmbebbxj.supabase.co:5432/postgres",
+                driver = "org.postgresql.Driver",
+                user = "postgres",
+                password = "4G4x#!nKhwexYgM"
+            )
 
-        startKoin {
-            modules(
-                module {
-                    single { RoleRepository() }
-                })
+            startKoin {
+                modules(
+                    module {
+                        single { RoleRepository() }
+                    })
+            }
         }
     }
 
