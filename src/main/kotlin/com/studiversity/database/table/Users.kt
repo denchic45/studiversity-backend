@@ -1,5 +1,6 @@
 package com.studiversity.database.table
 
+import com.studiversity.database.exists
 import com.studiversity.feature.user.User
 import com.studiversity.util.varcharMax
 import org.jetbrains.exposed.dao.UUIDEntity
@@ -17,7 +18,11 @@ object Users : UUIDTable("user", "user_id") {
 }
 
 class UserEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<UserEntity>(Users)
+    companion object : UUIDEntityClass<UserEntity>(Users) {
+        fun isExistEmail(email: String): Boolean {
+            return table.exists { Users.email eq email }
+        }
+    }
 
     var firstName by Users.firstName
     var surname by Users.surname
