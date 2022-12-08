@@ -3,6 +3,8 @@ package com.studiversity.feature.group
 import com.studiversity.Constants
 import com.studiversity.database.table.SpecialtyDao
 import com.studiversity.database.table.StudyGroupDao
+import com.studiversity.feature.group.mapper.toStudyGroup
+import com.studiversity.feature.group.model.StudyGroup
 import com.studiversity.feature.scope.AddScopeRepoExt
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -18,5 +20,9 @@ class StudyGroupRepository : AddScopeRepoExt {
             }
         }
         addScope(dao.id.value, 3, Constants.organizationId)
+    }
+
+    fun findById(id: UUID): StudyGroup? {
+        return StudyGroupDao.findById(id)?.toStudyGroup()
     }
 }

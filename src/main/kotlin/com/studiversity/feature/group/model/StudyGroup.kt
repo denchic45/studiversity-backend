@@ -8,7 +8,7 @@ data class StudyGroup(
     val id: UUID,
     val name: String,
     val academicYear: AcademicYear,
-    val specialty: Specialty
+    val specialty: Specialty?
 ) {
     data class AcademicYear(val start: Year, val end: Year)
 }
