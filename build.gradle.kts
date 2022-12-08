@@ -37,9 +37,9 @@ tasks.withType<KotlinCompile> {
     }
 }
 
-//tasks.withType<Test> {
-//    useJUnitPlatform()
-//}
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
 
 tasks {
     val shadowJarTask = named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
@@ -104,7 +104,7 @@ dependencies {
     implementation("io.insert-koin:koin-ktor:$koinVersion")
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
 
-    testImplementation(kotlin("test"))
+//    testImplementation(kotlin("test"))
     testImplementation("io.insert-koin", "koin-test-junit5", koinVersion) {
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-test-junit")
     }
