@@ -1,6 +1,7 @@
 package com.studiversity.feature.role
 
 import org.jetbrains.exposed.sql.Database
+import org.junit.jupiter.api.BeforeAll
 import org.koin.core.context.GlobalContext.startKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
@@ -15,7 +16,7 @@ class RoleRepositoryTest : KoinTest {
 
     private val roleRepository: RoleRepository by inject()
 
-    @BeforeTest
+    @BeforeAll
     fun start() {
         Database.connect(
             url = "jdbc:postgresql://db.twmjqqkhwizjfmbebbxj.supabase.co:5432/postgres",
