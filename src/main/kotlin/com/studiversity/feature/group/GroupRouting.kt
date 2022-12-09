@@ -1,10 +1,12 @@
 package com.studiversity.feature.group
 
+import com.studiversity.feature.group.dto.CreateStudyGroupRequest
 import com.studiversity.feature.group.members.groupMembersRoutes
+import com.studiversity.feature.group.usecase.AddStudyGroupUseCase
+import com.studiversity.feature.group.usecase.FindStudyGroupByIdUseCase
 import com.studiversity.util.onlyDigits
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.plugins.*
 import io.ktor.server.plugins.requestvalidation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -16,8 +18,8 @@ import java.util.*
 fun Application.groupRoutes() {
     routing {
         route("/groups") {
-
-            val studyGroupRepository: StudyGroupRepository by inject()
+            val addStudyGroup: AddStudyGroupUseCase by inject()
+            val findStudyGroupById: FindStudyGroupByIdUseCase by inject()
 
             install(RequestValidation) {
                 validate<CreateStudyGroupRequest> { request ->
@@ -37,15 +39,15 @@ fun Application.groupRoutes() {
             }
             post {
                 val body = call.receive<CreateStudyGroupRequest>()
-                studyGroupRepository.add(body)
+                addStudyGroup(body)
                 call.respond(HttpStatusCode.OK, "Group created")
             }
             route("/{id}") {
                 get {
                     val id = call.parameters["id"]!!
-                    studyGroupRepository.findById(UUID.fromString(id))?.let { group ->
+                    findStudyGroupById(UUID.fromString(id)).let { group ->
                         call.respond(HttpStatusCode.OK, group)
-                    } ?: throw NotFoundException()
+                    }
                 }
                 patch {
 
