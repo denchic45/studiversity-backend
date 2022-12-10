@@ -32,6 +32,6 @@ fun Application.configureDI() {
     }
     install(Koin) {
         slf4jLogger()
-        modules(appModule(), authModule, repositoryModule)
+        modules(appModule(), authModule, repositoryModule, useCaseModule)
     }
 }
