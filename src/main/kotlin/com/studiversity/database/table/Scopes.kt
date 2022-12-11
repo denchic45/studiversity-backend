@@ -21,4 +21,6 @@ class ScopeEntity(id: EntityID<UUID>) : UUIDEntity(id) {
         toReal = { it.split("/").reversed() }
     )
     var type by ScopeTypeEntity referencedOn Scopes.type
+
+    var scopeTypeId by Scopes.type
 }
