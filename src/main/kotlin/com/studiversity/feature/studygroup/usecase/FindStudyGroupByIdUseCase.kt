@@ -1,7 +1,7 @@
-package com.studiversity.feature.group.usecase
+package com.studiversity.feature.studygroup.usecase
 
-import com.studiversity.feature.group.StudyGroupRepository
-import com.studiversity.feature.group.dto.StudyGroupResponse
+import com.studiversity.feature.studygroup.model.StudyGroupResponse
+import com.studiversity.feature.studygroup.repository.StudyGroupRepository
 import io.ktor.server.plugins.*
 import java.util.*
 

@@ -1,4 +1,4 @@
-package com.studiversity.feature.group.dto
+package com.studiversity.feature.studygroup.model
 
 import kotlinx.serialization.Serializable
 
