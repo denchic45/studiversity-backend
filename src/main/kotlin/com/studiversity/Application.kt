@@ -21,6 +21,7 @@ fun Application.module() {
     )
     configureDI()
     configureSerialization()
+    configureStatusPages()
     configureAuth()
     configureRouting()
 }
