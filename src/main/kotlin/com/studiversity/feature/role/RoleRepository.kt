@@ -1,9 +1,7 @@
 package com.studiversity.feature.role
 
 import com.studiversity.database.exists
-import com.studiversity.database.table.RolesCapabilities
-import com.studiversity.database.table.ScopeEntity
-import com.studiversity.database.table.UsersRolesScopes
+import com.studiversity.database.table.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
@@ -30,13 +28,13 @@ class RoleRepository {
         }
     }
 
-    fun hasCapability(userId: UUID, capabilityResource: String, scopeId: UUID): Boolean = transaction {
+    fun hasCapability(userId: UUID, capability: Capability, scopeId: UUID): Boolean = transaction {
         val path = ScopeEntity.findById(scopeId)!!.path
         for (nextScopeId in path) {
             return@transaction when (findCapabilityPermissionOfUserInScope(
                 userId,
                 UUID.fromString(nextScopeId),
-                capabilityResource
+                capability.toString()
             )) {
                 Permission.Undefined -> continue
                 Permission.Allow -> true
@@ -69,6 +67,14 @@ class RoleRepository {
             RolesCapabilities.roleId eq roleId and
                     (RolesCapabilities.capabilityResource eq capabilityResource) and
                     (RolesCapabilities.permission eq permission)
+        }
+    }
+
+    fun existRolesByScope(roles: List<String>, scopeId: UUID): Boolean = transaction {
+        roles.all { role ->
+            val roleId = RoleDao.findIdByName(role)
+            val scopeType = ScopeEntity.findById(scopeId)!!.scopeTypeId.value
+            RolesScopes.exists { RolesScopes.roleId eq roleId and (RolesScopes.scopeId eq scopeType) }
         }
     }
 }
