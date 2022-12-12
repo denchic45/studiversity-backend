@@ -6,6 +6,7 @@ data class Capability(val resource: String) {
 
     companion object {
         val CreateUser: Capability = Capability("user:create")
+        val ViewUserConfidentialData: Capability = Capability("user:view_confidential_data")
 
         val EnrollMembersInGroup: Capability = Capability("group:enroll")
     }
