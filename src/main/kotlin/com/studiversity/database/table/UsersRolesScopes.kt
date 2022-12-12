@@ -19,5 +19,5 @@ class UserRoleScopeDao(id: EntityID<Long>) : LongEntity(id) {
     var scopeId by UsersRolesScopes.scopeId
 
     var role by RoleDao referencedOn UsersRolesScopes.roleId
-
+    var user by UserDao referencedOn UsersRolesScopes.userId
 }
