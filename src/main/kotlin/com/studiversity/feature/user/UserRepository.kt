@@ -15,7 +15,7 @@ class UserRepository : AddScopeRepoExt {
                 firstName = user.firstName
                 surname = user.firstName
                 patronymic = user.patronymic
-                email = user.email
+                email = user.account.email
             }
             addScope(user.id, 2, Constants.organizationId)
         }

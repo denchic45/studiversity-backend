@@ -23,7 +23,7 @@ class StudyGroupRepository : AddScopeRepoExt {
             name = request.name
             academicYear = listOf(request.academicYear.start, request.academicYear.end)
             request.specialtyId?.apply {
-                specialty = SpecialtyDao.findById(UUID.fromString(this))
+                specialty = SpecialtyDao.findById(this)
             }
         }
         addScope(dao.id.value, 3, Constants.organizationId)

@@ -1,6 +1,7 @@
 package com.studiversity.database.table
 
 import com.studiversity.database.exists
+import com.studiversity.feature.user.Account
 import com.studiversity.feature.user.User
 import com.studiversity.util.varcharMax
 import org.jetbrains.exposed.dao.UUIDEntity
@@ -35,5 +36,5 @@ fun UserDao.toDomain(): User = User(
     firstName = firstName,
     surname = surname,
     patronymic = patronymic,
-    email = email
+    account = Account(email)
 )
