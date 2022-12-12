@@ -1,7 +1,7 @@
 package com.studiversity.feature.user
 
 import com.studiversity.Constants
-import com.studiversity.database.table.UserEntity
+import com.studiversity.database.table.UserDao
 import com.studiversity.database.table.toDomain
 import com.studiversity.feature.scope.AddScopeRepoExt
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -11,7 +11,7 @@ class UserRepository : AddScopeRepoExt {
 
     fun add(user: User) {
         transaction {
-            UserEntity.new(user.id) {
+            UserDao.new(user.id) {
                 firstName = user.firstName
                 surname = user.firstName
                 patronymic = user.patronymic
@@ -22,6 +22,6 @@ class UserRepository : AddScopeRepoExt {
     }
 
     fun findById(id: UUID): User? {
-        return UserEntity.findById(id)?.toDomain()
+        return UserDao.findById(id)?.toDomain()
     }
 }

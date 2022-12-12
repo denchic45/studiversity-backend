@@ -12,11 +12,11 @@ import java.util.*
 class RoleRepository {
 
     fun hasRole(userId: UUID, roleId: Long, scopeId: UUID): Boolean = transaction {
-        val scope = (ScopeEntity.findById(scopeId) ?: return@transaction false)
+        val scope = (ScopeDao.findById(scopeId) ?: return@transaction false)
         val scopeIds = scope.path
 
         scopeIds.any { pathScopeId ->
-            isExistRoleOfUserByScope(userId, roleId, UUID.fromString(pathScopeId))
+            isExistRoleOfUserByScope(userId, roleId, pathScopeId)
         }
     }
 
@@ -28,12 +28,18 @@ class RoleRepository {
         }
     }
 
+    private fun getUserRolesByScope(userId: UUID, scopeId: UUID): List<Long> {
+        return UserRoleScopeDao.find(
+            UsersRolesScopes.userId eq userId and (UsersRolesScopes.scopeId eq scopeId)
+        ).map { it.roleId }
+    }
+
     fun hasCapability(userId: UUID, capability: Capability, scopeId: UUID): Boolean = transaction {
-        val path = ScopeEntity.findById(scopeId)!!.path
+        val path = ScopeDao.findById(scopeId)!!.path
         for (nextScopeId in path) {
             return@transaction when (findCapabilityPermissionOfUserInScope(
                 userId,
-                UUID.fromString(nextScopeId),
+                nextScopeId,
                 capability.toString()
             )) {
                 Permission.Undefined -> continue
@@ -70,11 +76,42 @@ class RoleRepository {
         }
     }
 
-    fun existRolesByScope(roles: List<String>, scopeId: UUID): Boolean = transaction {
+    fun existRolesByScope(roles: List<Role>, scopeId: UUID): Boolean = transaction {
         roles.all { role ->
-            val roleId = RoleDao.findIdByName(role)
-            val scopeType = ScopeEntity.findById(scopeId)!!.scopeTypeId.value
-            RolesScopes.exists { RolesScopes.roleId eq roleId and (RolesScopes.scopeId eq scopeType) }
+            val scopeType = ScopeDao.findById(scopeId)!!.scopeTypeId.value
+            RolesScopes.exists { RolesScopes.roleId eq role.id and (RolesScopes.scopeId eq scopeType) }
         }
+    }
+
+    fun existPermissionRolesByUserId(userId: UUID, assignRoles: List<Role>, scopeId: UUID) = transaction {
+        assignRoles.all { assignRole ->
+            existPermissionRoleByUserId(userId, assignRole, scopeId)
+        }
+    }
+
+    private fun existPermissionRoleByUserId(userId: UUID, assignRole: Role, scopeId: UUID): Boolean {
+        return ScopeDao.findById(scopeId)!!.path.all { segmentScopeId ->
+            getUserRolesByScope(userId, segmentScopeId).all { role ->
+                existRoleAssignment(role, RoleDao.findIdByName(assignRole.resource))
+            }
+        }
+    }
+
+
+    private fun existRoleAssignment(roleId: Long, assignRoleId: Long): Boolean {
+        return RolesAssignments.exists {
+            RolesAssignments.roleId eq roleId and (RolesAssignments.assignRoleId eq assignRoleId)
+        }
+    }
+
+    fun findByNames(roleNames: List<String>) = transaction {
+        roleNames.map { name ->
+            RoleDao.find(Roles.shortName eq name)
+                .singleOrNull()?.let { Role(it.id.value, it.shortName) }
+        }
+    }
+
+    fun existUserByScope(userId: UUID, scopeId: UUID) = transaction {
+        UsersRolesScopes.exists { UsersRolesScopes.userId eq userId and (UsersRolesScopes.scopeId eq scopeId) }
     }
 }
