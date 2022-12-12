@@ -13,7 +13,12 @@ private val useCaseModule = module {
     single { AddStudyGroupUseCase(get()) }
     single { UpdateStudyGroupUseCase(get()) }
     single { RemoveStudyGroupUseCase(get()) }
-    single { EnrollStudyGroupMemberUseCase(get()) }
+    single {
+        EnrollStudyGroupMemberUseCase(
+            roleRepository = get(),
+            studyGroupMemberRepository = get()
+        )
+    }
 }
 
 val repositoryModule = module {
