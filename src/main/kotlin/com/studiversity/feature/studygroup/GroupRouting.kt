@@ -28,10 +28,10 @@ fun Application.groupRoutes() {
                 validate<CreateStudyGroupRequest> { request ->
                     buildList {
                         if (request.name.isEmpty() || request.name.onlyDigits())
-                            add(GroupErrors.INVALID_GROUP_NAME)
+                            add(StudyGroupErrors.INVALID_GROUP_NAME)
 
                         if (request.academicYear.run { start > end })
-                            add(GroupErrors.INVALID_ACADEMIC_YEAR)
+                            add(StudyGroupErrors.INVALID_ACADEMIC_YEAR)
 
                     }.let { errors ->
                         if (errors.isEmpty())
@@ -42,10 +42,10 @@ fun Application.groupRoutes() {
                 validate<UpdateStudyGroupRequest> { request ->
                     buildValidationResult {
                         request.name.ifPresent {
-                            condition(it.isNotEmpty() && !it.onlyDigits(), GroupErrors.INVALID_GROUP_NAME)
+                            condition(it.isNotEmpty() && !it.onlyDigits(), StudyGroupErrors.INVALID_GROUP_NAME)
                         }
                         request.academicYear.ifPresent {
-                            condition(it.run { start <= end }, GroupErrors.INVALID_ACADEMIC_YEAR)
+                            condition(it.run { start <= end }, StudyGroupErrors.INVALID_ACADEMIC_YEAR)
                         }
                     }
                 }
