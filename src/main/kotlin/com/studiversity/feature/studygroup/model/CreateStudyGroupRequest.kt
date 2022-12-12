@@ -1,12 +1,15 @@
 package com.studiversity.feature.studygroup.model
 
+import com.studiversity.util.UUIDSerializer
 import kotlinx.serialization.Serializable
+import java.util.*
 
 @Serializable
 data class CreateStudyGroupRequest(
     val name: String,
     val academicYear: AcademicYear,
-    val specialtyId: String? = null,
+    @Serializable(UUIDSerializer::class)
+    val specialtyId: UUID? = null,
     val curatorId: String? = null
 )
 

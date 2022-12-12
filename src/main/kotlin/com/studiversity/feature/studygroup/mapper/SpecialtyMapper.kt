@@ -9,6 +9,6 @@ import com.studiversity.feature.studygroup.model.SpecialtyResponse
 //)
 
 fun SpecialtyDao.toResponse() = SpecialtyResponse(
-    id = id.value.toString(),
+    id = id.value,
     name = name
 )

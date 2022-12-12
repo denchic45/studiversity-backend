@@ -12,7 +12,7 @@ import com.studiversity.feature.studygroup.model.StudyGroupResponse
 //)
 
 fun StudyGroupDao.toResponse() = StudyGroupResponse(
-    id = id.value.toString(),
+    id = id.value,
     name = name,
     academicYear = AcademicYear(academicYear[0], academicYear[1]),
     specialty = specialty?.toResponse()

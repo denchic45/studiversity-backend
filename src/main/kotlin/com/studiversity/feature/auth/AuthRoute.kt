@@ -2,6 +2,7 @@ package com.studiversity.feature.auth
 
 import com.studiversity.feature.auth.model.CreateUserRequest
 import com.studiversity.feature.auth.model.TokenResponse
+import com.studiversity.feature.user.Account
 import com.studiversity.feature.user.User
 import com.studiversity.feature.user.UserRepository
 import com.studiversity.supabase.model.SignupResponse
@@ -15,7 +16,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
-import java.util.*
 
 fun Route.signupRoute() {
     val userRepository: UserRepository by inject()
@@ -33,7 +33,7 @@ fun Route.signupRoute() {
                 val body = body<SignupResponse>()
 
                 userRepository.add(with(createUserRequest) {
-                    User(UUID.fromString(body.user.id), firstName, surname, patronymic, email)
+                    User(body.user.id, firstName, surname, patronymic, Account(email))
                 })
 
                 this@post.call.respond(

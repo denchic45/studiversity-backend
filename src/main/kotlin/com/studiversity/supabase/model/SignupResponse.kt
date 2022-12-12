@@ -1,7 +1,9 @@
 package com.studiversity.supabase.model
 
+import com.studiversity.util.UUIDSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.util.*
 
 @Serializable
 data class SignupResponse(
@@ -41,7 +43,7 @@ data class Identities(
 
 @Serializable
 data class User(
-    @SerialName("id") val id: String,
+    @SerialName("id") @Serializable(with = UUIDSerializer::class) val id: UUID,
     @SerialName("aud") val aud: String,
     @SerialName("role") val role: String,
     @SerialName("email") val email: String? = null,
