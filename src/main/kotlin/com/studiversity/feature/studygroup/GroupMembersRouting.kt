@@ -7,6 +7,7 @@ import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.feature.role.usecase.RequirePermissionToAssignRolesUseCase
 import com.studiversity.feature.studygroup.model.EnrolStudyGroupMemberRequest
 import com.studiversity.feature.studygroup.usecase.EnrollStudyGroupMemberUseCase
+import com.studiversity.feature.studygroup.usecase.FindStudyGroupMembersUseCase
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -25,12 +26,26 @@ fun Route.groupMembersRoutes() {
         val requireAvailableRolesInScope: RequireAvailableRolesInScopeUseCase by inject()
         val requirePermissionToAssignRoles: RequirePermissionToAssignRolesUseCase by inject()
         val enrollStudyGroupMember: EnrollStudyGroupMemberUseCase by inject()
+        val findStudyGroupMembers: FindStudyGroupMembersUseCase by inject()
 
-        get { }
+        get {
+            val groupId = UUID.fromString(call.parameters["id"]!!)
+            val currentUserId = UUID.fromString(call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString())
+
+            requireCapability(
+                currentUserId,
+                Capability.ViewGroup,
+                groupId
+            )
+
+            findStudyGroupMembers(groupId).apply {
+                call.respond(HttpStatusCode.OK, this)
+            }
+        }
         post {
             val body = call.receive<EnrolStudyGroupMemberRequest>()
             val groupId = UUID.fromString(call.parameters["id"]!!)
-            val currentUserId = UUID.fromString(call.principal<JWTPrincipal>()!!.payload.getClaim("id").asString())
+            val currentUserId = UUID.fromString(call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString())
 
             requireCapability(
                 currentUserId,
@@ -43,7 +58,7 @@ fun Route.groupMembersRoutes() {
             requireAvailableRolesInScope(assignableRoles, groupId)
             requirePermissionToAssignRoles(currentUserId, assignableRoles, groupId)
 
-            enrollStudyGroupMember(groupId, UUID.fromString(body.userId), assignableRoles)
+            enrollStudyGroupMember(groupId, body.userId, assignableRoles)
             call.respond(HttpStatusCode.OK, "User has enrolled to study group")
         }
 
