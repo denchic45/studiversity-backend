@@ -13,14 +13,14 @@ object Scopes : UUIDTable("scope", "instance_id") {
     val type: Column<EntityID<Long>> = reference("type", ScopeTypes.id)
 }
 
-class ScopeEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<ScopeEntity>(Scopes)
+class ScopeDao(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<ScopeDao>(Scopes)
 
-    var path: List<String> by Scopes.path.transform(
+    var path: List<UUID> by Scopes.path.transform(
         toColumn = { it.reversed().joinToString("/") },
-        toReal = { it.split("/").reversed() }
+        toReal = { it.split("/").reversed().map(UUID::fromString) }
     )
-    var type by ScopeTypeEntity referencedOn Scopes.type
+    var type by ScopeTypeDao referencedOn Scopes.type
 
     var scopeTypeId by Scopes.type
 }

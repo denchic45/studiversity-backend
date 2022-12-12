@@ -11,8 +11,8 @@ object ScopeTypes : LongIdTable("scope_type", "scope_type_id") {
     val parent = reference("parent_scope", ScopeTypes.id)
 }
 
-class ScopeTypeEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<ScopeTypeEntity>(ScopeTypes)
+class ScopeTypeDao(id: EntityID<Long>) : LongEntity(id) {
+    companion object : LongEntityClass<ScopeTypeDao>(ScopeTypes)
 
     var name by ScopeTypes.name
     var parentId by ScopeTypes.parent

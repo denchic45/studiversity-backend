@@ -17,8 +17,8 @@ object Users : UUIDTable("user", "user_id") {
     val email = varcharMax("email")
 }
 
-class UserEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<UserEntity>(Users) {
+class UserDao(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<UserDao>(Users) {
         fun isExistEmail(email: String): Boolean {
             return table.exists { Users.email eq email }
         }
@@ -30,7 +30,7 @@ class UserEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var email by Users.email
 }
 
-fun UserEntity.toDomain(): User = User(
+fun UserDao.toDomain(): User = User(
     id = id.value,
     firstName = firstName,
     surname = surname,

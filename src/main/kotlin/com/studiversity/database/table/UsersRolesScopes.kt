@@ -11,7 +11,13 @@ object UsersRolesScopes : LongIdTable("user_role_scope", "user_role_scope_id") {
     val scopeId = uuid("scope_id").references(Scopes.id)
 }
 
-class UserRoleScopeEntity(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<UserRoleScopeEntity>(UsersRolesScopes)
+class UserRoleScopeDao(id: EntityID<Long>) : LongEntity(id) {
+    companion object : LongEntityClass<UserRoleScopeDao>(UsersRolesScopes)
+
+    var userId by UsersRolesScopes.userId
+    var roleId by UsersRolesScopes.roleId
+    var scopeId by UsersRolesScopes.scopeId
+
+    var role by RoleDao referencedOn UsersRolesScopes.roleId
 
 }
