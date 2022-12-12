@@ -4,10 +4,6 @@ import com.studiversity.feature.studygroup.repository.StudyGroupRepository
 import com.studiversity.feature.studygroup.usecase.*
 import org.koin.dsl.module
 
-val studyGroupModule = module {
-    includes(useCaseModule, repositoryModule)
-}
-
 private val useCaseModule = module {
     single { FindStudyGroupByIdUseCase(get()) }
     single { AddStudyGroupUseCase(get()) }
@@ -23,4 +19,8 @@ private val useCaseModule = module {
 
 val repositoryModule = module {
     single { StudyGroupRepository() }
+}
+
+val studyGroupModule = module {
+    includes(useCaseModule, repositoryModule)
 }
