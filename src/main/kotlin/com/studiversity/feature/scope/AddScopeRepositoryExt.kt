@@ -15,7 +15,7 @@ interface AddScopeRepoExt {
             )
         ScopeEntity.new(scopeId) {
             type = ScopeTypeEntity.findById(scopeTypeId)!!
-            path = listOf(scopeId.toString()) + parentScope.path
+            path = listOf(scopeId) + parentScope.path
         }
     }
 }
