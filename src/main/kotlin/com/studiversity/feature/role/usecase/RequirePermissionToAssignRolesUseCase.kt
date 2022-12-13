@@ -9,7 +9,7 @@ import java.util.*
 class RequirePermissionToAssignRolesUseCase(private val roleRepository: RoleRepository) {
 
     operator fun invoke(userId: UUID, roles: List<Role>, scopeId: UUID) {
-        if (roleRepository.existPermissionRolesByUserId(userId, roles, scopeId))
+        if (!roleRepository.existPermissionRolesByUserId(userId, roles, scopeId))
             throw ForbiddenException(RoleErrors.PERMISSION_DENIED_TO_ASSIGN_ROLE)
     }
 }
