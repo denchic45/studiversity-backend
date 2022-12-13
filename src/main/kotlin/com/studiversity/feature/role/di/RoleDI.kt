@@ -1,10 +1,7 @@
 package com.studiversity.feature.role.di
 
 import com.studiversity.feature.role.repository.RoleRepository
-import com.studiversity.feature.role.usecase.FindRolesByNamesUseCase
-import com.studiversity.feature.role.usecase.RequireAvailableRolesInScopeUseCase
-import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
-import com.studiversity.feature.role.usecase.RequirePermissionToAssignRolesUseCase
+import com.studiversity.feature.role.usecase.*
 import org.koin.dsl.module
 
 private val useCaseModule = module {
@@ -12,6 +9,10 @@ private val useCaseModule = module {
     single { RequireAvailableRolesInScopeUseCase(get()) }
     single { RequirePermissionToAssignRolesUseCase(get()) }
     single { FindRolesByNamesUseCase(get()) }
+    single { FindAssignedUserRolesInScopeUseCase(get()) }
+    single { UpdateUserRolesInScopeUseCase(get()) }
+    single { AddUserToScopeUseCase(get()) }
+    single { RemoveUserFromScopeUseCase(get()) }
 }
 
 private val repositoryModule = module {
