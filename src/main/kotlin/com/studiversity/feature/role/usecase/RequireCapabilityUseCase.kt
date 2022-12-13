@@ -2,7 +2,7 @@ package com.studiversity.feature.role.usecase
 
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.ForbiddenException
-import com.studiversity.feature.role.RoleRepository
+import com.studiversity.feature.role.repository.RoleRepository
 import java.util.*
 
 class RequireCapabilityUseCase(private val roleRepository: RoleRepository) {

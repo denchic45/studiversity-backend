@@ -1,5 +1,6 @@
 package com.studiversity.feature.role
 
+import com.studiversity.feature.role.repository.RoleRepository
 import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test

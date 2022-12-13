@@ -1,7 +1,7 @@
 package com.studiversity.feature.studygroup.usecase
 
 import com.studiversity.feature.role.Role
-import com.studiversity.feature.role.RoleRepository
+import com.studiversity.feature.role.repository.RoleRepository
 import com.studiversity.feature.studygroup.StudyGroupErrors
 import com.studiversity.feature.studygroup.repository.StudyGroupMemberRepository
 import io.ktor.server.plugins.*

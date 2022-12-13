@@ -1,4 +1,4 @@
-package com.studiversity.feature.scope
+package com.studiversity.feature.role.repository
 
 import com.studiversity.database.table.ScopeDao
 import com.studiversity.database.table.ScopeTypeDao

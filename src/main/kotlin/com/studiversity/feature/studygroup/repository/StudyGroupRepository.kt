@@ -5,7 +5,7 @@ import com.studiversity.database.table.Scopes
 import com.studiversity.database.table.SpecialtyDao
 import com.studiversity.database.table.StudyGroupDao
 import com.studiversity.database.table.StudyGroups
-import com.studiversity.feature.scope.AddScopeRepoExt
+import com.studiversity.feature.role.repository.AddScopeRepoExt
 import com.studiversity.feature.studygroup.mapper.toResponse
 import com.studiversity.feature.studygroup.model.CreateStudyGroupRequest
 import com.studiversity.feature.studygroup.model.StudyGroupResponse

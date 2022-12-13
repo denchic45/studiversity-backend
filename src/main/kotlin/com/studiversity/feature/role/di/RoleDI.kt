@@ -1,6 +1,6 @@
 package com.studiversity.feature.role.di
 
-import com.studiversity.feature.role.RoleRepository
+import com.studiversity.feature.role.repository.RoleRepository
 import com.studiversity.feature.role.usecase.FindRolesByNamesUseCase
 import com.studiversity.feature.role.usecase.RequireAvailableRolesInScopeUseCase
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase

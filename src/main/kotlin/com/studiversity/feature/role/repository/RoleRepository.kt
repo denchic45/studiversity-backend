@@ -1,7 +1,11 @@
-package com.studiversity.feature.role
+package com.studiversity.feature.role.repository
 
 import com.studiversity.database.exists
 import com.studiversity.database.table.*
+import com.studiversity.feature.role.Capability
+import com.studiversity.feature.role.Permission
+import com.studiversity.feature.role.Role
+import com.studiversity.feature.role.combinedPermission
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
