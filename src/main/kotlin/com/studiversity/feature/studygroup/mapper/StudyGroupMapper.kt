@@ -7,6 +7,7 @@ import com.studiversity.feature.studygroup.domain.StudyGroupMember
 import com.studiversity.feature.studygroup.domain.StudyGroupMembers
 import com.studiversity.feature.studygroup.model.AcademicYear
 import com.studiversity.feature.studygroup.model.StudyGroupResponse
+import java.util.UUID
 
 //fun StudyGroupDao.toStudyGroup() = StudyGroup(
 //    id = id.value,
@@ -22,8 +23,8 @@ fun StudyGroupDao.toResponse() = StudyGroupResponse(
     specialty = specialty?.toResponse()
 )
 
-fun Iterable<UserRoleScopeDao>.toStudyGroupMembers(): StudyGroupMembers = StudyGroupMembers(
-    studyGroupId = first().scopeId,
+fun Iterable<UserRoleScopeDao>.toStudyGroupMembers(groupId:UUID): StudyGroupMembers = StudyGroupMembers(
+    studyGroupId = groupId,
     members = groupBy(UserRoleScopeDao::user)
         .map { (user, userRoleScopeDaoList) ->
             user.let { userDao ->

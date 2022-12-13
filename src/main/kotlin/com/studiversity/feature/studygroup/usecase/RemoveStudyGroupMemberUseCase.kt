@@ -8,7 +8,7 @@ import java.util.*
 class RemoveStudyGroupMemberUseCase(private val studyGroupMemberRepository: StudyGroupMemberRepository) {
 
     operator fun invoke(groupId: UUID, memberId: UUID) {
-        if (studyGroupMemberRepository.isExist(groupId, memberId)) {
+        if (!studyGroupMemberRepository.isExist(groupId, memberId)) {
             throw BadRequestException(StudyGroupErrors.MEMBER_NOT_ENROLLED_IN_GROUP)
         }
         studyGroupMemberRepository.remove(groupId, memberId).let {

@@ -1,5 +1,6 @@
 package com.studiversity.feature.studygroup.model
 
+import com.studiversity.feature.role.Role
 import com.studiversity.util.UUIDSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
@@ -8,5 +9,5 @@ import java.util.*
 data class EnrolStudyGroupMemberRequest(
     @Serializable(UUIDSerializer::class)
     val userId: UUID,
-    val roles: List<String>
+    val roles: List<Role>
 )
