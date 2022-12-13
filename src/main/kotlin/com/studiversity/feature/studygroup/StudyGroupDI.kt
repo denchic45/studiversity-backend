@@ -16,9 +16,9 @@ private val useCaseModule = module {
             studyGroupMemberRepository = get()
         )
     }
-    single {
-        FindStudyGroupMembersUseCase(get())
-    }
+    single { FindStudyGroupMembersUseCase(get()) }
+    single { RemoveStudyGroupMemberUseCase(get()) }
+    single { UpdateStudyGroupMemberUseCase(get()) }
 }
 
 val repositoryModule = module {
