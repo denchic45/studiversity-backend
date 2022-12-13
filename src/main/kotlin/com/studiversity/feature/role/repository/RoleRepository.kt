@@ -60,14 +60,14 @@ class RoleRepository {
         capabilityResource: String
     ): Permission = UsersRolesScopes.slice(UsersRolesScopes.roleId)
         .select(
-            UsersRolesScopes.userId eq userId and
-                    (UsersRolesScopes.scopeId eq scopeId)
+            UsersRolesScopes.userId eq userId
+                    and (UsersRolesScopes.scopeId eq scopeId)
         ).map { usersRolesScopesRow ->
             val roleId = usersRolesScopesRow[UsersRolesScopes.roleId]
             RolesCapabilities.slice(RolesCapabilities.permission)
                 .select(
-                    RolesCapabilities.roleId eq roleId and
-                            (RolesCapabilities.capabilityResource eq capabilityResource)
+                    RolesCapabilities.roleId eq roleId
+                            and (RolesCapabilities.capabilityResource eq capabilityResource)
                 ).map { rolesCapabilitiesRow -> rolesCapabilitiesRow[RolesCapabilities.permission] }
                 .firstOrNull() ?: Permission.Undefined
         }.combinedPermission()
