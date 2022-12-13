@@ -23,17 +23,20 @@ fun StudyGroupDao.toResponse() = StudyGroupResponse(
     specialty = specialty?.toResponse()
 )
 
-fun Iterable<UserRoleScopeDao>.toStudyGroupMembers(groupId:UUID): StudyGroupMembers = StudyGroupMembers(
+fun Iterable<UserRoleScopeDao>.toStudyGroupMembers(groupId: UUID): StudyGroupMembers = StudyGroupMembers(
     studyGroupId = groupId,
-    members = groupBy(UserRoleScopeDao::user)
-        .map { (user, userRoleScopeDaoList) ->
-            user.let { userDao ->
-                StudyGroupMember(id = userDao.id.value,
-                    firstName = userDao.firstName,
-                    surname = userDao.surname,
-                    patronymic = userDao.patronymic,
-                    roles = userRoleScopeDaoList.map { it.role.toRole() }
-                )
-            }
+    members = groupBy(UserRoleScopeDao::userId)
+        .map { (userId, userRoleScopeDaoList) ->
+            userRoleScopeDaoList.toStudyGroupMember()
         }
 )
+
+fun Iterable<UserRoleScopeDao>.toStudyGroupMember(): StudyGroupMember = first().user
+    .let { userDao ->
+        StudyGroupMember(id = userDao.id.value,
+            firstName = userDao.firstName,
+            surname = userDao.surname,
+            patronymic = userDao.patronymic,
+            roles = map { it.role.toRole() }
+        )
+    }
