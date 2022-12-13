@@ -2,6 +2,7 @@ package com.studiversity.feature.studygroup.mapper
 
 import com.studiversity.database.table.StudyGroupDao
 import com.studiversity.database.table.UserRoleScopeDao
+import com.studiversity.feature.role.mapper.toRole
 import com.studiversity.feature.studygroup.domain.StudyGroupMember
 import com.studiversity.feature.studygroup.domain.StudyGroupMembers
 import com.studiversity.feature.studygroup.model.AcademicYear
@@ -23,14 +24,14 @@ fun StudyGroupDao.toResponse() = StudyGroupResponse(
 
 fun Iterable<UserRoleScopeDao>.toStudyGroupMembers(): StudyGroupMembers = StudyGroupMembers(
     studyGroupId = first().scopeId,
-    members = groupBy { it.user }
+    members = groupBy(UserRoleScopeDao::user)
         .map { (user, userRoleScopeDaoList) ->
             user.let { userDao ->
                 StudyGroupMember(id = userDao.id.value,
                     firstName = userDao.firstName,
                     surname = userDao.surname,
                     patronymic = userDao.patronymic,
-                    roles = userRoleScopeDaoList.map { it.role.shortName }
+                    roles = userRoleScopeDaoList.map { it.role.toRole() }
                 )
             }
         }

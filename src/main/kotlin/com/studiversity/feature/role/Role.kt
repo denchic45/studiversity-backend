@@ -1,5 +1,8 @@
 package com.studiversity.feature.role
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Role(val id: Long, val resource: String) {
 
     override fun toString(): String = resource

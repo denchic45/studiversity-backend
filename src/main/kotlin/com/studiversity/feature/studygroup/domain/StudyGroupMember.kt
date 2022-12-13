@@ -1,5 +1,6 @@
 package com.studiversity.feature.studygroup.domain
 
+import com.studiversity.feature.role.Role
 import com.studiversity.util.UUIDSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
@@ -18,5 +19,5 @@ data class StudyGroupMember(
     val firstName: String,
     val surname: String,
     val patronymic: String?,
-    val roles: List<String>
+    val roles: List<Role>
 )
