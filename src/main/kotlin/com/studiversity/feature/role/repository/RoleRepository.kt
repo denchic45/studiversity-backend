@@ -6,8 +6,12 @@ import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.Permission
 import com.studiversity.feature.role.Role
 import com.studiversity.feature.role.combinedPermission
+import com.studiversity.feature.role.mapper.toUserRolesResponse
+import com.studiversity.feature.role.model.UpdateUserRolesRequest
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -40,18 +44,22 @@ class RoleRepository {
 
     fun hasCapability(userId: UUID, capability: Capability, scopeId: UUID): Boolean = transaction {
         val path = ScopeDao.findById(scopeId)!!.path
+        var has = false
         for (nextScopeId in path) {
-            return@transaction when (findCapabilityPermissionOfUserInScope(
+            when (findCapabilityPermissionOfUserInScope(
                 userId,
                 nextScopeId,
                 capability.toString()
             )) {
                 Permission.Undefined -> continue
-                Permission.Allow -> true
-                Permission.Prohibit -> false
+                Permission.Allow -> has = true
+                Permission.Prohibit -> {
+                    has = false
+                    break
+                }
             }
         }
-        return@transaction false
+        return@transaction has
     }
 
     private fun findCapabilityPermissionOfUserInScope(
@@ -96,7 +104,7 @@ class RoleRepository {
     private fun existPermissionRoleByUserId(userId: UUID, assignRole: Role, scopeId: UUID): Boolean {
         return ScopeDao.findById(scopeId)!!.path.all { segmentScopeId ->
             getUserRolesByScope(userId, segmentScopeId).all { role ->
-                existRoleAssignment(role, RoleDao.findIdByName(assignRole.resource))
+                existRoleAssignment(role, assignRole.id)
             }
         }
     }
@@ -117,5 +125,44 @@ class RoleRepository {
 
     fun existUserByScope(userId: UUID, scopeId: UUID) = transaction {
         UsersRolesScopes.exists { UsersRolesScopes.userId eq userId and (UsersRolesScopes.scopeId eq scopeId) }
+    }
+
+    fun findByUserIdAndScopeId(userId: UUID, scopeId: UUID) = transaction {
+        if (!existUserByScope(userId, scopeId)) {
+            return@transaction null
+        }
+        UserRoleScopeDao.find(
+            UsersRolesScopes.userId eq userId
+                    and (UsersRolesScopes.scopeId eq scopeId)
+        ).toUserRolesResponse(userId)
+    }
+
+    fun addByUserAndScope(userId: UUID, scopeId: UUID, roles: List<Role>) = transaction {
+        roles.map { role ->
+            UsersRolesScopes.insert {
+                it[UsersRolesScopes.userId] = userId
+                it[this.scopeId] = scopeId
+                it[roleId] = role.id
+            }.run { insertedCount > 0 }
+        }.all { it }
+    }
+
+    fun removeByUserAndScope(userId: UUID, scopeId: UUID) = transaction {
+        UsersRolesScopes.deleteWhere { UsersRolesScopes.scopeId eq scopeId and (UsersRolesScopes.userId eq userId) }
+    }.let { it > 0 }
+
+    fun updateByUserAndScope(
+        userId: UUID,
+        scopeId: UUID,
+        updateUserRolesRequest: UpdateUserRolesRequest
+    ) = transaction {
+        if (!existUserByScope(userId, scopeId)) {
+            return@transaction null
+        }
+        updateUserRolesRequest.roles.let { roles ->
+            removeByUserAndScope(userId, scopeId)
+            addByUserAndScope(userId, scopeId, roles)
+        }
+        findByUserIdAndScopeId(userId, scopeId)
     }
 }
