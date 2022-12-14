@@ -12,7 +12,7 @@ private val useCaseModule = module {
     single { RemoveStudyGroupUseCase(get()) }
 }
 
-val repositoryModule = module {
+private val repositoryModule = module {
     single { StudyGroupRepository() }
     single { StudyGroupMemberRepository() }
 }

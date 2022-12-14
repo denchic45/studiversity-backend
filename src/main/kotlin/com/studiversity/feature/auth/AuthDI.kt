@@ -1,4 +1,4 @@
-package com.studiversity.di
+package com.studiversity.feature.auth
 
 import com.studiversity.Constants
 import io.ktor.client.*
