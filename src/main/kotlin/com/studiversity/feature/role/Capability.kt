@@ -10,5 +10,8 @@ data class Capability(val resource: String) {
 
         val ViewGroup: Capability = Capability("group:view")
         val EnrollMembersInGroup: Capability = Capability("group:enroll")
+
+        val CreateCourse: Capability = Capability("course:create")
+        val ViewCourse: Capability = Capability("course:view")
     }
 }
