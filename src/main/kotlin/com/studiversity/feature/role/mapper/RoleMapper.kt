@@ -4,6 +4,7 @@ import com.studiversity.database.table.RoleDao
 import com.studiversity.database.table.UserRoleScopeDao
 import com.studiversity.feature.role.Role
 import com.studiversity.feature.role.model.UserRolesResponse
+import com.studiversity.feature.role.model.UserWithRolesResponse
 import java.util.*
 
 fun RoleDao.toRole(): Role = Role(id = id.value, resource = shortName)
@@ -12,3 +13,20 @@ fun Iterable<UserRoleScopeDao>.toUserRolesResponse(userId: UUID): UserRolesRespo
     userId = userId,
     roles = map { it.role.toRole() }
 )
+
+fun Iterable<UserRoleScopeDao>.toUserWithRoles(): UserWithRolesResponse = first().user
+    .let { userDao ->
+        UserWithRolesResponse(id = userDao.id.value,
+            firstName = userDao.firstName,
+            surname = userDao.surname,
+            patronymic = userDao.patronymic,
+            roles = map { it.role.toRole() }
+        )
+    }
+
+fun Iterable<UserRoleScopeDao>.toUsersWithRoles(): List<UserWithRolesResponse> {
+    return groupBy(UserRoleScopeDao::userId)
+        .map { (_, userRoleScopeDaoList) ->
+            userRoleScopeDaoList.toUserWithRoles()
+        }
+}

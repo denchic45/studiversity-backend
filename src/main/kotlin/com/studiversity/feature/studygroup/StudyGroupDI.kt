@@ -10,7 +10,6 @@ private val useCaseModule = module {
     single { AddStudyGroupUseCase(get()) }
     single { UpdateStudyGroupUseCase(get()) }
     single { RemoveStudyGroupUseCase(get()) }
-    single { FindStudyGroupMembersUseCase(get()) }
 }
 
 val repositoryModule = module {

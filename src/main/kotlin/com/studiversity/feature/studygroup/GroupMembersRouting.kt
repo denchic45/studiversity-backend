@@ -5,7 +5,6 @@ import com.studiversity.feature.role.RoleErrors
 import com.studiversity.feature.role.model.UpdateUserRolesRequest
 import com.studiversity.feature.role.usecase.*
 import com.studiversity.feature.studygroup.model.EnrolStudyGroupMemberRequest
-import com.studiversity.feature.studygroup.usecase.FindStudyGroupMembersUseCase
 import com.studiversity.util.hasNotDuplicates
 import com.studiversity.util.toUUID
 import com.studiversity.validation.buildValidationResult
@@ -26,7 +25,7 @@ fun Route.groupMembersRoutes() {
         val requireAvailableRolesInScope: RequireAvailableRolesInScopeUseCase by inject()
         val requirePermissionToAssignRoles: RequirePermissionToAssignRolesUseCase by inject()
         val addUserToScope: AddUserToScopeUseCase by inject()
-        val findStudyGroupMembers: FindStudyGroupMembersUseCase by inject()
+        val findUsersInScope: FindUsersInScopeUseCase by inject()
 
         get {
             val groupId = call.parameters["id"]!!.toUUID()
@@ -34,7 +33,7 @@ fun Route.groupMembersRoutes() {
 
             requireCapability(currentUserId, Capability.ViewGroup, groupId)
 
-            findStudyGroupMembers(groupId).apply {
+            findUsersInScope(groupId).apply {
                 call.respond(HttpStatusCode.OK, this)
             }
         }

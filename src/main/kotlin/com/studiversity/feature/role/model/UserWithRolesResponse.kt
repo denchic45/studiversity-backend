@@ -1,4 +1,4 @@
-package com.studiversity.feature.studygroup.domain
+package com.studiversity.feature.role.model
 
 import com.studiversity.feature.role.Role
 import com.studiversity.util.UUIDSerializer
@@ -6,14 +6,7 @@ import kotlinx.serialization.Serializable
 import java.util.*
 
 @Serializable
-data class StudyGroupMembers(
-    @Serializable(UUIDSerializer::class)
-    val studyGroupId: UUID,
-    val members: List<StudyGroupMember>
-)
-
-@Serializable
-data class StudyGroupMember(
+data class UserWithRolesResponse(
     @Serializable(with = UUIDSerializer::class)
     val id: UUID,
     val firstName: String,

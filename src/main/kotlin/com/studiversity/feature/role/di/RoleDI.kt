@@ -13,6 +13,7 @@ private val useCaseModule = module {
     single { UpdateUserRolesInScopeUseCase(get()) }
     single { AddUserToScopeUseCase(get()) }
     single { RemoveUserFromScopeUseCase(get()) }
+    single { FindUsersInScopeUseCase(get()) }
 }
 
 private val repositoryModule = module {
