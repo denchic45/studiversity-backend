@@ -114,7 +114,7 @@ class RoleRepository {
 
     private fun existRoleAssignment(roleId: Long, assignRoleId: Long): Boolean {
         return RolesAssignments.exists {
-            RolesAssignments.roleId eq roleId and (RolesAssignments.assignRoleId eq assignRoleId)
+            RolesAssignments.roleId eq roleId and (RolesAssignments.assignableRoleId eq assignRoleId)
         }
     }
 
