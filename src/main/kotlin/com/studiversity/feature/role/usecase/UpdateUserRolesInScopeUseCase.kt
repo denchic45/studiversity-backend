@@ -10,7 +10,7 @@ import java.util.*
 class UpdateUserRolesInScopeUseCase(
     private val roleRepository: RoleRepository
 ) {
-    fun updateUserRolesInScope(
+    operator fun invoke(
         userId: UUID,
         scopeId: UUID,
         updateUserRolesRequest: UpdateUserRolesRequest
