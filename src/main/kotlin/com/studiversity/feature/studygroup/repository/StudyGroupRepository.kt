@@ -5,6 +5,7 @@ import com.studiversity.database.table.Scopes
 import com.studiversity.database.table.SpecialtyDao
 import com.studiversity.database.table.StudyGroupDao
 import com.studiversity.database.table.StudyGroups
+import com.studiversity.feature.role.ScopeType
 import com.studiversity.feature.role.repository.AddScopeRepoExt
 import com.studiversity.feature.studygroup.mapper.toResponse
 import com.studiversity.feature.studygroup.model.CreateStudyGroupRequest
@@ -27,7 +28,7 @@ class StudyGroupRepository : AddScopeRepoExt {
                 specialty = SpecialtyDao.findById(this)
             }
         }
-        addScope(dao.id.value, 3, Constants.organizationId)
+        addScope(dao.id.value, ScopeType.StudyGroup, Constants.organizationId)
         dao.id.value
     }
 
