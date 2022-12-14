@@ -19,7 +19,7 @@ import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
 
-fun Application.groupRoutes() {
+fun Application.studyGroupRoutes() {
     routing {
         authenticate("auth-jwt") {
             route("/groups") {
@@ -57,15 +57,14 @@ fun Application.groupRoutes() {
                     val id = addStudyGroup(body).toString()
                     call.respond(HttpStatusCode.Created, id)
                 }
-                groupRoute()
+                studyGroupByIdRoutes()
             }
         }
     }
 }
 
-private fun Route.groupRoute() {
+private fun Route.studyGroupByIdRoutes() {
     route("/{id}") {
-
         val findStudyGroupById: FindStudyGroupByIdUseCase by inject()
         val updateStudyGroup: UpdateStudyGroupUseCase by inject()
         val removeStudyGroup: RemoveStudyGroupUseCase by inject()
@@ -91,7 +90,6 @@ private fun Route.groupRoute() {
             call.respond(HttpStatusCode.NoContent, "Group deleted")
         }
 
-        groupMembersRoutes()
-
+        studyGroupMembersRoute()
     }
 }

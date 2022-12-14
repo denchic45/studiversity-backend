@@ -5,6 +5,8 @@ import com.studiversity.feature.role.RoleErrors
 import com.studiversity.feature.role.model.UpdateUserRolesRequest
 import com.studiversity.feature.role.usecase.*
 import com.studiversity.feature.studygroup.model.EnrolStudyGroupMemberRequest
+import com.studiversity.ktor.claimId
+import com.studiversity.ktor.jwtPrincipal
 import com.studiversity.util.hasNotDuplicates
 import com.studiversity.util.toUUID
 import com.studiversity.validation.buildValidationResult
@@ -18,7 +20,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
-fun Route.groupMembersRoutes() {
+fun Route.studyGroupMembersRoute() {
     route("/members") {
 
         val requireCapability: RequireCapabilityUseCase by inject()
@@ -40,7 +42,7 @@ fun Route.groupMembersRoutes() {
         post {
             val body = call.receive<EnrolStudyGroupMemberRequest>()
             val groupId = call.parameters["id"]!!.toUUID()
-            val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
+            val currentUserId = call.jwtPrincipal().payload.claimId
 
             requireCapability(currentUserId, Capability.EnrollMembersInGroup, groupId)
 
@@ -53,13 +55,12 @@ fun Route.groupMembersRoutes() {
             call.respond(HttpStatusCode.OK, "User has enrolled to study group")
         }
 
-        groupMemberRoute()
+        studyGroupMemberRoute()
     }
 }
 
-private fun Route.groupMemberRoute() {
+private fun Route.studyGroupMemberRoute() {
     route("/{memberId}") {
-
         install(RequestValidation) {
             validate<UpdateUserRolesRequest> {
                 buildValidationResult {
@@ -70,39 +71,8 @@ private fun Route.groupMemberRoute() {
         }
 
         val requireCapability: RequireCapabilityUseCase by inject()
-        val requireAvailableRolesInScope: RequireAvailableRolesInScopeUseCase by inject()
-        val requirePermissionToAssignRoles: RequirePermissionToAssignRolesUseCase by inject()
-        val updateStudyGroupMember: UpdateUserRolesInScopeUseCase by inject()
         val removeUserFromScope: RemoveUserFromScopeUseCase by inject()
-        val findAssignedUserRolesInScope: FindAssignedUserRolesInScopeUseCase by inject()
 
-        route("/roles") {
-            get {
-                val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
-                val groupId = call.parameters["id"]!!.toUUID()
-                val memberId = call.parameters["memberId"]!!.toUUID()
-
-                requireCapability(currentUserId, Capability.EnrollMembersInGroup, groupId)
-
-                call.respond(HttpStatusCode.OK, findAssignedUserRolesInScope(memberId, groupId))
-            }
-            put {
-                val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
-                val groupId = call.parameters["id"]!!.toUUID()
-                val memberId = call.parameters["memberId"]!!.toUUID()
-                val body = call.receive<UpdateUserRolesRequest>()
-
-                requireCapability(currentUserId, Capability.EnrollMembersInGroup, groupId)
-
-                val assignableRoles = body.roles
-
-                requireAvailableRolesInScope(assignableRoles, groupId)
-                requirePermissionToAssignRoles(currentUserId, assignableRoles, groupId)
-
-                val updatedMember = updateStudyGroupMember.updateUserRolesInScope(memberId, groupId, body)
-                call.respond(HttpStatusCode.OK, updatedMember)
-            }
-        }
         delete {
             val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
             val groupId = call.parameters["id"]!!.toUUID()
@@ -112,6 +82,43 @@ private fun Route.groupMemberRoute() {
 
             removeUserFromScope(memberId, groupId)
             call.respond(HttpStatusCode.NoContent, "Member deleted")
+        }
+        rolesRoute()
+    }
+}
+
+private fun Route.rolesRoute() {
+    route("/roles") {
+        val requireCapability: RequireCapabilityUseCase by inject()
+        val requireAvailableRolesInScope: RequireAvailableRolesInScopeUseCase by inject()
+        val requirePermissionToAssignRoles: RequirePermissionToAssignRolesUseCase by inject()
+        val findAssignedUserRolesInScope: FindAssignedUserRolesInScopeUseCase by inject()
+        val updateUserRolesInScope: UpdateUserRolesInScopeUseCase by inject()
+
+        get {
+            val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
+            val groupId = call.parameters["id"]!!.toUUID()
+            val memberId = call.parameters["memberId"]!!.toUUID()
+
+            requireCapability(currentUserId, Capability.EnrollMembersInGroup, groupId)
+
+            call.respond(HttpStatusCode.OK, findAssignedUserRolesInScope(memberId, groupId))
+        }
+        put {
+            val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
+            val groupId = call.parameters["id"]!!.toUUID()
+            val memberId = call.parameters["memberId"]!!.toUUID()
+            val body = call.receive<UpdateUserRolesRequest>()
+
+            requireCapability(currentUserId, Capability.EnrollMembersInGroup, groupId)
+
+            val assignableRoles = body.roles
+
+            requireAvailableRolesInScope(assignableRoles, groupId)
+            requirePermissionToAssignRoles(currentUserId, assignableRoles, groupId)
+
+            val updatedMember = updateUserRolesInScope(memberId, groupId, body)
+            call.respond(HttpStatusCode.OK, updatedMember)
         }
     }
 }
