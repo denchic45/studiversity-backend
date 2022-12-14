@@ -7,6 +7,7 @@ import com.studiversity.feature.studygroup.usecase.FindStudyGroupByIdUseCase
 import com.studiversity.feature.studygroup.usecase.RemoveStudyGroupUseCase
 import com.studiversity.feature.studygroup.usecase.UpdateStudyGroupUseCase
 import com.studiversity.util.onlyDigits
+import com.studiversity.util.toUUID
 import com.studiversity.validation.buildValidationResult
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -16,7 +17,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
-import java.util.*
 
 
 fun Application.groupRoutes() {
@@ -71,13 +71,13 @@ private fun Route.groupRoute() {
         val removeStudyGroup: RemoveStudyGroupUseCase by inject()
 
         get {
-            val id = UUID.fromString(call.parameters["id"]!!)
+            val id = call.parameters["id"]!!.toUUID()
             findStudyGroupById(id).let { group ->
                 call.respond(HttpStatusCode.OK, group)
             }
         }
         patch {
-            val id = UUID.fromString(call.parameters["id"]!!)
+            val id = call.parameters["id"]!!.toUUID()
             val body = call.receive<UpdateStudyGroupRequest>()
             updateStudyGroup(id, body)
             call.respond(HttpStatusCode.OK, "Group updated")
@@ -86,7 +86,7 @@ private fun Route.groupRoute() {
 
         }
         delete {
-            val id = UUID.fromString(call.parameters["id"]!!)
+            val id = call.parameters["id"]!!.toUUID()
             removeStudyGroup(id)
             call.respond(HttpStatusCode.NoContent, "Group deleted")
         }

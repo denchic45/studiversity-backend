@@ -7,6 +7,7 @@ import com.studiversity.feature.role.usecase.*
 import com.studiversity.feature.studygroup.model.EnrolStudyGroupMemberRequest
 import com.studiversity.feature.studygroup.usecase.FindStudyGroupMembersUseCase
 import com.studiversity.util.hasNotDuplicates
+import com.studiversity.util.toUUID
 import com.studiversity.validation.buildValidationResult
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -17,7 +18,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
-import java.util.*
 
 fun Route.groupMembersRoutes() {
     route("/members") {
@@ -29,8 +29,8 @@ fun Route.groupMembersRoutes() {
         val findStudyGroupMembers: FindStudyGroupMembersUseCase by inject()
 
         get {
-            val groupId = UUID.fromString(call.parameters["id"]!!)
-            val currentUserId = UUID.fromString(call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString())
+            val groupId = call.parameters["id"]!!.toUUID()
+            val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
 
             requireCapability(currentUserId, Capability.ViewGroup, groupId)
 
@@ -40,8 +40,8 @@ fun Route.groupMembersRoutes() {
         }
         post {
             val body = call.receive<EnrolStudyGroupMemberRequest>()
-            val groupId = UUID.fromString(call.parameters["id"]!!)
-            val currentUserId = UUID.fromString(call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString())
+            val groupId = call.parameters["id"]!!.toUUID()
+            val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
 
             requireCapability(currentUserId, Capability.EnrollMembersInGroup, groupId)
 
@@ -79,18 +79,18 @@ private fun Route.groupMemberRoute() {
 
         route("/roles") {
             get {
-                val currentUserId = UUID.fromString(call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString())
-                val groupId = UUID.fromString(call.parameters["id"]!!)
-                val memberId = UUID.fromString(call.parameters["memberId"]!!)
+                val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
+                val groupId = call.parameters["id"]!!.toUUID()
+                val memberId = call.parameters["memberId"]!!.toUUID()
 
                 requireCapability(currentUserId, Capability.EnrollMembersInGroup, groupId)
 
                 call.respond(HttpStatusCode.OK, findAssignedUserRolesInScope(memberId, groupId))
             }
             put {
-                val currentUserId = UUID.fromString(call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString())
-                val groupId = UUID.fromString(call.parameters["id"]!!)
-                val memberId = UUID.fromString(call.parameters["memberId"]!!)
+                val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
+                val groupId = call.parameters["id"]!!.toUUID()
+                val memberId = call.parameters["memberId"]!!.toUUID()
                 val body = call.receive<UpdateUserRolesRequest>()
 
                 requireCapability(currentUserId, Capability.EnrollMembersInGroup, groupId)
@@ -105,9 +105,9 @@ private fun Route.groupMemberRoute() {
             }
         }
         delete {
-            val currentUserId = UUID.fromString(call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString())
-            val groupId = UUID.fromString(call.parameters["id"]!!)
-            val memberId = UUID.fromString(call.parameters["memberId"]!!)
+            val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
+            val groupId = call.parameters["id"]!!.toUUID()
+            val memberId = call.parameters["memberId"]!!.toUUID()
 
             requireCapability(currentUserId, Capability.EnrollMembersInGroup, groupId)
 

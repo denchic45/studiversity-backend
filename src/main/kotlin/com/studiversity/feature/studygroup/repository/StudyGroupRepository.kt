@@ -10,6 +10,7 @@ import com.studiversity.feature.studygroup.mapper.toResponse
 import com.studiversity.feature.studygroup.model.CreateStudyGroupRequest
 import com.studiversity.feature.studygroup.model.StudyGroupResponse
 import com.studiversity.feature.studygroup.model.UpdateStudyGroupRequest
+import com.studiversity.util.toUUID
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -39,7 +40,7 @@ class StudyGroupRepository : AddScopeRepoExt {
                 academicYear.ifPresent {
                     update[StudyGroups.academicYear.column] = arrayOf(it.start.toShort(), it.end.toShort())
                 }
-                specialtyId.ifPresent { update[StudyGroups.specialtyId] = it?.let { UUID.fromString(it) } }
+                specialtyId.ifPresent { update[StudyGroups.specialtyId] = it?.toUUID() }
             }
         }.run { this != 0 }
     }
