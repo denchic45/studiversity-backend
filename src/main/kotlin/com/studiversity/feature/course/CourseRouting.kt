@@ -6,13 +6,17 @@ import com.studiversity.feature.course.usecase.AddCourseUseCase
 import com.studiversity.feature.course.usecase.FindCourseByIdUseCase
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
+import com.studiversity.feature.studygroup.StudyGroupErrors
 import com.studiversity.ktor.claimId
 import com.studiversity.ktor.jwtPrincipal
+import com.studiversity.util.onlyDigits
 import com.studiversity.util.toUUID
+import com.studiversity.validation.buildValidationResult
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.server.plugins.requestvalidation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -23,13 +27,24 @@ fun Application.courseRoutes() {
         authenticate("auth-jwt") {
             route("/courses") {
 
+                install(RequestValidation) {
+                    validate<CreateCourseRequest> { request ->
+                        buildValidationResult {
+                            condition(
+                                request.name.isEmpty() || request.name.onlyDigits(),
+                                StudyGroupErrors.INVALID_GROUP_NAME
+                            )
+                        }
+                    }
+                }
+
                 val requireCapability: RequireCapabilityUseCase by inject()
                 val addCourse: AddCourseUseCase by inject()
 
                 post {
                     val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
 
-                    requireCapability(currentUserId, Capability.CreateCourse, Constants.organizationId)
+                    requireCapability(currentUserId, Capability.CreateCourses, Constants.organizationId)
 
                     val body = call.receive<CreateCourseRequest>()
 
