@@ -44,7 +44,7 @@ fun Application.courseRoutes() {
                 post {
                     val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
 
-                    requireCapability(currentUserId, Capability.CreateCourses, Constants.organizationId)
+                    requireCapability(currentUserId, Capability.WriteCourses, Constants.organizationId)
 
                     val body = call.receive<CreateCourseRequest>()
 
@@ -67,7 +67,7 @@ fun Route.courseByIdRoutes() {
 
             val currentUserId = call.jwtPrincipal().payload.claimId
 
-            requireCapability(currentUserId, Capability.ViewGroup, id)
+            requireCapability(currentUserId, Capability.ReadGroup, id)
 
             findCourseById(id).let { course -> call.respond(HttpStatusCode.OK, course) }
         }

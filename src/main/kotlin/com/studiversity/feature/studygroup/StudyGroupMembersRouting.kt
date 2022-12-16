@@ -33,7 +33,7 @@ fun Route.studyGroupMembersRoute() {
             val groupId = call.parameters["id"]!!.toUUID()
             val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
 
-            requireCapability(currentUserId, Capability.ViewGroup, groupId)
+            requireCapability(currentUserId, Capability.ReadGroup, groupId)
 
             findUsersInScope(groupId).apply {
                 call.respond(HttpStatusCode.OK, this)
@@ -44,7 +44,7 @@ fun Route.studyGroupMembersRoute() {
             val groupId = call.parameters["id"]!!.toUUID()
             val currentUserId = call.jwtPrincipal().payload.claimId
 
-            requireCapability(currentUserId, Capability.EnrollMembersInGroup, groupId)
+            requireCapability(currentUserId, Capability.WriteGroupMembers, groupId)
 
             val assignableRoles = body.roles
 
@@ -78,7 +78,7 @@ private fun Route.studyGroupMemberRoute() {
             val groupId = call.parameters["id"]!!.toUUID()
             val memberId = call.parameters["memberId"]!!.toUUID()
 
-            requireCapability(currentUserId, Capability.EnrollMembersInGroup, groupId)
+            requireCapability(currentUserId, Capability.WriteGroupMembers, groupId)
 
             removeUserFromScope(memberId, groupId)
             call.respond(HttpStatusCode.NoContent, "Member deleted")
@@ -100,7 +100,7 @@ private fun Route.rolesRoute() {
             val groupId = call.parameters["id"]!!.toUUID()
             val memberId = call.parameters["memberId"]!!.toUUID()
 
-            requireCapability(currentUserId, Capability.EnrollMembersInGroup, groupId)
+            requireCapability(currentUserId, Capability.WriteGroupMembers, groupId)
 
             call.respond(HttpStatusCode.OK, findAssignedUserRolesInScope(memberId, groupId))
         }
@@ -110,7 +110,7 @@ private fun Route.rolesRoute() {
             val memberId = call.parameters["memberId"]!!.toUUID()
             val body = call.receive<UpdateUserRolesRequest>()
 
-            requireCapability(currentUserId, Capability.EnrollMembersInGroup, groupId)
+            requireCapability(currentUserId, Capability.WriteGroupMembers, groupId)
 
             val assignableRoles = body.roles
 

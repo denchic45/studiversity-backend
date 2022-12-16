@@ -46,7 +46,7 @@ fun Application.subjectRoutes() {
                 post {
                     requireCapability(
                         call.jwtPrincipal().payload.claimId,
-                        Capability.EditSubject,
+                        Capability.WriteSubject,
                         Constants.organizationId
                     )
                     val body = call.receive<CreateSubjectRequest>()
@@ -57,7 +57,7 @@ fun Application.subjectRoutes() {
 
                     requireCapability(
                         call.jwtPrincipal().payload.claimId,
-                        Capability.ViewSubject,
+                        Capability.ReadSubject,
                         Constants.organizationId
                     )
 
@@ -102,7 +102,7 @@ fun Route.subjectByIdRoute() {
 
             requireCapability(
                 call.jwtPrincipal().payload.claimId,
-                Capability.ViewSubject,
+                Capability.ReadSubject,
                 Constants.organizationId
             )
 
@@ -115,7 +115,7 @@ fun Route.subjectByIdRoute() {
 
             requireCapability(
                 call.jwtPrincipal().payload.claimId,
-                Capability.EditSubject,
+                Capability.WriteSubject,
                 Constants.organizationId
             )
 

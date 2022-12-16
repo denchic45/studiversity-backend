@@ -5,17 +5,23 @@ data class Capability(val resource: String) {
     override fun toString(): String = resource
 
     companion object {
-        val CreateUser: Capability = Capability("user:create")
-        val ViewUserConfidentialData: Capability = Capability("user:view_confidential_data")
+        val WriteUser: Capability = Capability("user:write")
+        val DeleteUser: Capability = Capability("user:delete")
+        val ReadUserConfidentialData: Capability = Capability("user/confidential:read")
 
-        val ViewGroup: Capability = Capability("group:view")
-        val EnrollMembersInGroup: Capability = Capability("group:enroll")
+        val WriteGroup: Capability = Capability("group:write")
+        val ReadGroup: Capability = Capability("group:read")
+        val DeleteGroup: Capability = Capability("group:delete")
+        val WriteGroupMembers: Capability = Capability("group/members:write")
 
-        val CreateCourses: Capability = Capability("course:create")
-        val ViewCourse: Capability = Capability("course:view")
+        val WriteCourses: Capability = Capability("course:write")
+        val ReadCourse: Capability = Capability("course:read")
+        val DeleteCourse: Capability = Capability("course:delete")
+        val WriteCourseMembers: Capability = Capability("course/members:write")
+        val ReadCourseMembers: Capability = Capability("course/members:read")
 
-        val EditSubject: Capability = Capability("subject:edit")
+        val WriteSubject: Capability = Capability("subject:write")
+        val ReadSubject: Capability = Capability("subject:read")
         val DeleteSubject: Capability = Capability("subject:delete")
-        val ViewSubject: Capability = Capability("subject:view")
     }
 }
