@@ -2,8 +2,10 @@ package com.studiversity.feature.course
 
 import com.studiversity.Constants
 import com.studiversity.feature.course.model.CreateCourseRequest
+import com.studiversity.feature.course.model.UpdateCourseRequest
 import com.studiversity.feature.course.usecase.AddCourseUseCase
 import com.studiversity.feature.course.usecase.FindCourseByIdUseCase
+import com.studiversity.feature.course.usecase.UpdateCourseUseCase
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.feature.studygroup.StudyGroupErrors
@@ -61,15 +63,29 @@ fun Route.courseByIdRoutes() {
     route("/{id}") {
         val requireCapability: RequireCapabilityUseCase by inject()
         val findCourseById: FindCourseByIdUseCase by inject()
+        val updateCourse: UpdateCourseUseCase by inject()
 
         get {
             val id = call.parameters["id"]!!.toUUID()
 
             val currentUserId = call.jwtPrincipal().payload.claimId
 
-            requireCapability(currentUserId, Capability.ReadGroup, id)
+            requireCapability(currentUserId, Capability.ReadCourse, id)
 
             findCourseById(id).let { course -> call.respond(HttpStatusCode.OK, course) }
+        }
+
+        patch {
+            val id = call.parameters["id"]!!.toUUID()
+            val currentUserId = call.jwtPrincipal().payload.claimId
+
+            requireCapability(currentUserId, Capability.WriteCourses, id)
+
+            val body = call.receive<UpdateCourseRequest>()
+
+            updateCourse(id, body).let { course ->
+                call.respond(HttpStatusCode.OK, course)
+            }
         }
         courseMembersRoute()
     }

@@ -5,6 +5,7 @@ import com.studiversity.database.table.CourseDao
 import com.studiversity.database.table.SubjectDao
 import com.studiversity.feature.course.model.CourseResponse
 import com.studiversity.feature.course.model.CreateCourseRequest
+import com.studiversity.feature.course.model.UpdateCourseRequest
 import com.studiversity.feature.course.toResponse
 import com.studiversity.feature.role.ScopeType
 import com.studiversity.feature.role.repository.AddScopeRepoExt
@@ -26,5 +27,12 @@ class CourseRepository : AddScopeRepoExt {
 
     fun findById(id: UUID): CourseResponse? = transaction {
         CourseDao.findById(id)?.toResponse()
+    }
+
+    fun update(id: UUID, request: UpdateCourseRequest) = transaction {
+        CourseDao.findById(id)?.apply {
+            request.name.ifPresent { name = it }
+            request.subjectId.ifPresent { subject = it?.let { SubjectDao.findById(it) } }
+        }?.toResponse()
     }
 }
