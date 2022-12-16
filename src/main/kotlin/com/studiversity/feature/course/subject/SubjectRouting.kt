@@ -28,7 +28,7 @@ fun Application.subjectRoutes() {
                     validate<CreateSubjectRequest> { request ->
                         buildValidationResult {
                             condition(
-                                request.name.isEmpty() || request.name.onlyDigits(),
+                                request.name.isNotEmpty() && !request.name.onlyDigits(),
                                 SubjectErrors.INVALID_SUBJECT_NAME
                             )
                             condition(
@@ -41,7 +41,7 @@ fun Application.subjectRoutes() {
 
                 val requireCapability: RequireCapabilityUseCase by inject()
                 val addSubject: AddSubjectUseCase by inject()
-                val findSubjects: FindSubjectsUseCase by inject()
+                val findAllSubjects: FindAllSubjectsUseCase by inject()
 
                 post {
                     requireCapability(
@@ -54,14 +54,13 @@ fun Application.subjectRoutes() {
                     call.respond(HttpStatusCode.OK, subjectId)
                 }
                 get {
-
                     requireCapability(
                         call.jwtPrincipal().payload.claimId,
                         Capability.ReadSubject,
                         Constants.organizationId
                     )
 
-                    findSubjects().apply {
+                    findAllSubjects().apply {
                         call.respond(HttpStatusCode.OK, this)
                     }
                 }
@@ -78,7 +77,7 @@ fun Route.subjectByIdRoute() {
                 buildValidationResult {
                     request.name.ifPresent {
                         condition(
-                            it.isEmpty() || it.onlyDigits(),
+                            it.isNotEmpty() && !it.onlyDigits(),
                             SubjectErrors.INVALID_SUBJECT_NAME
                         )
                     }

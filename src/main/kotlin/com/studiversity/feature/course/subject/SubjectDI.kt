@@ -6,7 +6,7 @@ import org.koin.dsl.module
 private val useCaseModule = module {
     single { AddSubjectUseCase(get()) }
     single { FindSubjectByIdUseCase(get()) }
-    single { FindSubjectsUseCase(get()) }
+    single { FindAllSubjectsUseCase(get()) }
     single { UpdateSubjectUseCase(get()) }
     single { RemoveSubjectUseCase(get()) }
 }
