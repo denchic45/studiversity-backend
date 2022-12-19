@@ -8,8 +8,8 @@ import kotlin.reflect.KClass
 class MembershipService {
 
     val factory = mapOf<KClass<out Membership>, (membershipId: UUID) -> Membership>(
-        ManualMembership::class to { ManualMembership(MembershipRepository(), UserMembershipRepository()) },
-        SelfMembership::class to { SelfMembership(MembershipRepository(), UserMembershipRepository()) },
+        ManualMembership::class to { id -> ManualMembership(id,MembershipRepository(), UserMembershipRepository()) },
+        SelfMembership::class to { id -> SelfMembership(id,MembershipRepository(), UserMembershipRepository()) },
     )
 
     inline fun <reified T : Membership> getMembership(membershipId: UUID): T {
