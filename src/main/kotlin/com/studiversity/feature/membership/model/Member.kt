@@ -1,5 +1,16 @@
 package com.studiversity.feature.membership.model
 
+import com.studiversity.util.UUIDSerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import java.util.*
 
-data class Member(val id: UUID, val membershipId: UUID)
+@Serializable
+data class Member(
+    @SerialName("user_id")
+    @Serializable(UUIDSerializer::class)
+    val id: UUID,
+    @SerialName("membership_id")
+    @Serializable(UUIDSerializer::class)
+    val membershipId: UUID
+)
