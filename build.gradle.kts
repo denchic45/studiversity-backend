@@ -6,6 +6,7 @@ val logbackVersion: String by project
 val exposedVersion: String by project
 val h2Version: String by project
 val koinVersion: String by project
+val supabaseVersion: String by project
 
 plugins {
     application
@@ -100,11 +101,15 @@ dependencies {
 
     implementation("org.postgresql:postgresql:42.5.1")
 
+    implementation("io.github.jan-tennert.supabase:realtime-kt:$supabaseVersion")
+
     // Koin
     implementation("io.insert-koin:koin-ktor:$koinVersion")
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
 
-//    testImplementation(kotlin("test"))
+    // kotlin-logging
+    implementation("io.github.microutils:kotlin-logging-jvm:3.0.4")
+
     testImplementation("io.insert-koin", "koin-test-junit5", koinVersion) {
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-test-junit")
     }
