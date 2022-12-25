@@ -1,11 +1,12 @@
 package com.studiversity.database.table
 
-import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.sql.CustomFunction
+import org.jetbrains.exposed.sql.javatime.JavaInstantColumnType
 import org.jetbrains.exposed.sql.javatime.timestamp
 
-object UsersMemberships : UUIDTable("user_membership", "user_membership_id") {
+object UsersMemberships : LongIdTable("user_membership", "user_membership_id") {
     val membershipId = reference("membership_id", Memberships.id)
-    val userId = reference("user_id", Users.id)
-    val joinTimestamp = timestamp("join_timestamp")
-    val leaveTimestamp = timestamp("join_timestamp")
+    val memberId = reference("member_id", Users.id)
+    val joinAt = timestamp("join_at").defaultExpression(CustomFunction("now", JavaInstantColumnType()))
 }

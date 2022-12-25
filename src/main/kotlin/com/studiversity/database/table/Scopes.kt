@@ -9,8 +9,8 @@ import org.jetbrains.exposed.sql.Column
 import java.util.*
 
 object Scopes : UUIDTable("scope", "instance_id") {
-    val path = varcharMax("path")
     val type: Column<EntityID<Long>> = reference("type", ScopeTypes.id)
+    val path = varcharMax("path")
 }
 
 class ScopeDao(id: EntityID<UUID>) : UUIDEntity(id) {
