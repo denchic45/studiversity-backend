@@ -41,7 +41,7 @@ class RoleRepositoryTest : KoinTest {
         assertTrue(
             roleRepository.hasRole(
                 userId = UUID.fromString("43c3c223-e8f7-4b84-99d6-7e67c2832b27"),
-                roleId = 5,
+                role = Role.Moderator,
                 scopeId = UUID.fromString("43c3c223-e8f7-4b84-99d6-7e67c2832b27")
             )
         )
