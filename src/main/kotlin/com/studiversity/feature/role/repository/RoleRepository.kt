@@ -21,12 +21,19 @@ import java.util.*
 
 class RoleRepository {
 
-    fun hasRole(userId: UUID, roleId: Long, scopeId: UUID): Boolean = transaction {
+    fun hasRole(userId: UUID, role: Role, scopeId: UUID, checkParentScopes: Boolean = true): Boolean = transaction {
         val scope = (ScopeDao.findById(scopeId) ?: return@transaction false)
-        val scopeIds = scope.path
 
-        scopeIds.any { pathScopeId ->
-            isExistRoleOfUserByScope(userId, roleId, pathScopeId)
+        if (!checkParentScopes)
+            return@transaction isExistRoleOfUserByScope(userId, role.id, scopeId)
+
+        val scopeIds = scope.path
+        scopeIds.any { pathScopeId -> isExistRoleOfUserByScope(userId, role.id, pathScopeId) }
+    }
+
+    fun hasRoleIn(userId: UUID, role: Role, scopeIds: List<UUID>, checkParentScopes: Boolean = true): Boolean {
+        return transaction {
+            scopeIds.any { hasRole(userId, role, it, checkParentScopes) }
         }
     }
 
