@@ -23,16 +23,16 @@ import java.util.*
 class UserMembershipRepository(private val realtime: Realtime) {
 
 
-    fun addMember(memberId: UUID, membershipId: UUID) = transaction {
+    fun addMember(member: Member) = transaction {
         UsersMemberships.insert {
-            it[UsersMemberships.memberId] = memberId
-            it[UsersMemberships.membershipId] = membershipId
+            it[memberId] = member.id
+            it[membershipId] = member.membershipId
         }
     }
 
-    fun removeMember(memberId: UUID, membershipId: UUID) = transaction {
+    fun removeMember(member: Member) = transaction {
         UsersMemberships.deleteWhere {
-            UsersMemberships.memberId eq memberId and (UsersMemberships.membershipId eq membershipId)
+            memberId eq member.id and (membershipId eq member.membershipId)
         }
     }
 

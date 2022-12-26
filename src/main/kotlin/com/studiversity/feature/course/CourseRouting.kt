@@ -91,10 +91,4 @@ fun Route.courseByIdRoutes() {
     }
 }
 
-fun Route.courseMembersRoute() {
-    route("/members") {
-        get {
 
-        }
-    }
-}

@@ -150,7 +150,7 @@ class RoleRepository {
         UserRoleScopeDao.find(UsersRolesScopes.scopeId eq scopeId).toUsersWithRoles()
     }
 
-    fun addByUserAndScope(userId: UUID, scopeId: UUID, roles: List<Role>) = transaction {
+    fun addUserRolesToScope(userId: UUID, roles: List<Role>, scopeId: UUID) = transaction {
         roles.map { role ->
             UsersRolesScopes.insert {
                 it[UsersRolesScopes.userId] = userId
@@ -160,8 +160,11 @@ class RoleRepository {
         }.all { it }
     }
 
-    fun removeByUserAndScope(userId: UUID, scopeId: UUID) = transaction {
-        UsersRolesScopes.deleteWhere { UsersRolesScopes.scopeId eq scopeId and (UsersRolesScopes.userId eq userId) }
+    fun removeUserRolesFromScope(userId: UUID, scopeId: UUID) = transaction {
+        UsersRolesScopes.deleteWhere {
+            UsersRolesScopes.scopeId eq scopeId and
+                    (UsersRolesScopes.userId eq userId)
+        }
     }.let { it > 0 }
 
     fun updateByUserAndScope(
@@ -173,8 +176,8 @@ class RoleRepository {
             return@transaction null
         }
         updateUserRolesRequest.roles.let { roles ->
-            removeByUserAndScope(userId, scopeId)
-            addByUserAndScope(userId, scopeId, roles)
+            removeUserRolesFromScope(userId, scopeId)
+            addUserRolesToScope(userId, roles, scopeId)
         }
         findByUserIdAndScopeId(userId, scopeId)
     }

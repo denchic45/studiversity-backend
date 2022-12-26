@@ -10,6 +10,6 @@ class RemoveUserFromScopeUseCase(private val roleRepository: RoleRepository) {
         if (!roleRepository.existUserByScope(userId, scopeId)) {
             throw BadRequestException(RoleErrors.USER_NOT_EXIST_IN_SCOPE)
         }
-        roleRepository.removeByUserAndScope(userId, scopeId)
+        roleRepository.removeUserRolesFromScope(userId, scopeId)
     }
 }

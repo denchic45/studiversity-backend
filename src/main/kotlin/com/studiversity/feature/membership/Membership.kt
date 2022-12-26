@@ -24,7 +24,7 @@ class SelfMembership(
     override val membershipId: UUID,
 ) : Membership {
     fun selfJoin(userId: UUID) {
-        userMembershipRepository.addMember(userId, membershipId)
+        userMembershipRepository.addMember(Member(userId, membershipId))
     }
 }
 
