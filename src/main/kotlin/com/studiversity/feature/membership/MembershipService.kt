@@ -11,12 +11,12 @@ import kotlin.reflect.KClass
 
 class MembershipService(
     private val coroutineScope: CoroutineScope,
-    private val membershipRepository: MembershipRepository,
+    val membershipRepository: MembershipRepository,
     private val userMembershipRepository: UserMembershipRepository,
     private val roleRepository: RoleRepository,
 ) {
 
-    private val factory = mapOf<KClass<out Membership>, (membershipId: UUID) -> Membership>(
+    val factory = mapOf<KClass<out Membership>, (membershipId: UUID) -> Membership>(
         ManualMembership::class to { id -> ManualMembership(membershipRepository, userMembershipRepository, id) },
         SelfMembership::class to { id -> SelfMembership(membershipRepository, userMembershipRepository, id) },
         StudyGroupExternalMembership::class to { id ->
@@ -30,9 +30,15 @@ class MembershipService(
         }
     )
 
-    private inline fun <reified T : Membership> getMembership(membershipId: UUID): T {
+     inline fun <reified T : Membership> getMembership(membershipId: UUID): T {
         return (factory[T::class]?.invoke(membershipId)
             ?: throw IllegalArgumentException("No membership dependency with type: ${T::class}")) as T
+    }
+
+    inline fun <reified T : Membership> getMembershipByTypeAndScopeId(type:String,scopeId:UUID): T {
+        return getMembership(
+            membershipRepository.findMembershipIdByTypeAndScopeId(type,scopeId)
+        )
     }
 
     fun getGroupExternalMemberships(): List<StudyGroupExternalMembership> {

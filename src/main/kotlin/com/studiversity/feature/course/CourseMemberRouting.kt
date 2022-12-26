@@ -1,5 +1,6 @@
 package com.studiversity.feature.course
 
+import com.studiversity.feature.membership.MembershipService
 import com.studiversity.feature.membership.model.EnrolMemberRequest
 import com.studiversity.feature.membership.model.Member
 import com.studiversity.feature.membership.usecase.AddUserToMembershipUseCase
@@ -25,6 +26,7 @@ fun Route.courseMembersRoute() {
         val requireAvailableRolesInScope: RequireAvailableRolesInScopeUseCase by inject()
         val requirePermissionToAssignRoles: RequirePermissionToAssignRolesUseCase by inject()
         val addUserToMembership: AddUserToMembershipUseCase by inject()
+        val membershipService:MembershipService by inject()
         val removeUserFromMembershipUseCase: RemoveUserFromMembershipUseCase by inject()
         val findUsersInScope: FindUsersInScopeUseCase by inject()
 

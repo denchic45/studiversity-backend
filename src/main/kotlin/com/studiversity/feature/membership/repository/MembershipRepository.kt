@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonPrimitive
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -118,5 +119,11 @@ class MembershipRepository(private val realtime: Realtime, private val coroutine
         return deleteExternalStudyGroupMembershipsFlow.map {
             it.oldRecord.getValue("membership_id").jsonPrimitive.content.toUUID()
         }
+    }
+
+    fun findMembershipIdByTypeAndScopeId(type: String, scopeId: UUID): UUID {
+        return Memberships.slice(Memberships.id)
+            .select(Memberships.type eq type and (Memberships.scopeId eq scopeId))
+            .first()[Memberships.id].value
     }
 }
