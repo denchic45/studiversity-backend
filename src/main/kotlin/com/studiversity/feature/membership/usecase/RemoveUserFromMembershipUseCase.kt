@@ -11,6 +11,6 @@ class RemoveUserFromMembershipUseCase(
 ) {
     operator fun invoke(member: Member, scopeId: UUID) {
         userMembershipRepository.removeMember(member)
-        roleRepository.removeUserRolesFromScope(member.id, scopeId)
+        roleRepository.removeUserRolesFromScope(member.userId, scopeId)
     }
 }

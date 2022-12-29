@@ -44,7 +44,7 @@ fun Route.courseMembersRoute() {
             requirePermissionToAssignRoles(currentUserId, assignableRoles, courseId)
 
             addUserToMembership(
-                Member(id = body.userId, membershipId = TODO("Получать membership курса для ручного зачисления")),
+                Member(userId = body.userId, membershipId = TODO("Получать membership курса для ручного зачисления")),
                 assignableRoles,
                 courseId
             )

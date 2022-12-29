@@ -25,14 +25,14 @@ class UserMembershipRepository(private val realtime: Realtime) {
 
     fun addMember(member: Member) = transaction {
         UsersMemberships.insert {
-            it[memberId] = member.id
+            it[memberId] = member.userId
             it[membershipId] = member.membershipId
         }
     }
 
     fun removeMember(member: Member) = transaction {
         UsersMemberships.deleteWhere {
-            memberId eq member.id and (membershipId eq member.membershipId)
+            memberId eq member.userId and (membershipId eq member.membershipId)
         }
     }
 
@@ -42,7 +42,7 @@ class UserMembershipRepository(private val realtime: Realtime) {
                 UsersMemberships.select(UsersMemberships.membershipId eq membershipRow[Memberships.id])
                     .map { userMembershipRow ->
                         Member(
-                            id = userMembershipRow[UsersMemberships.memberId].value,
+                            userId = userMembershipRow[UsersMemberships.memberId].value,
                             membershipId = membershipRow[Memberships.id].value
                         )
                     }

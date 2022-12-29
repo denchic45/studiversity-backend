@@ -12,6 +12,6 @@ class AddUserToMembershipUseCase(
 ) {
     operator fun invoke(member: Member, roles: List<Role>, scopeId: UUID) {
         userMembershipRepository.addMember(member)
-        roleRepository.addUserRolesToScope(member.id, roles, scopeId)
+        roleRepository.addUserRolesToScope(member.userId, roles, scopeId)
     }
 }

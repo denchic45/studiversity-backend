@@ -128,9 +128,9 @@ class StudyGroupExternalMembership(
                         .map { Member(it, membershipId) }
                 }.merge()
                     .filter { member ->
-                        roleRepository.hasRoleIn(member.id, Role.Student, groupIds.value)
-                                && !userMembershipRepository.existMember(member.id, membershipId)
-                    }.map { listOf(it.id) }
+                        roleRepository.hasRoleIn(member.userId, Role.Student, groupIds.value)
+                                && !userMembershipRepository.existMember(member.userId, membershipId)
+                    }.map { listOf(it.userId) }
             }
     }
 

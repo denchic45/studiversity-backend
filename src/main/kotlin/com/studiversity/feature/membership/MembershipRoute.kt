@@ -1,5 +1,8 @@
-package com.studiversity.feature.studygroup
+package com.studiversity.feature.membership
 
+import com.studiversity.feature.membership.controller.MembershipControllerFactory
+import com.studiversity.feature.membership.model.Member
+import com.studiversity.feature.membership.usecase.AddUserToMembershipUseCase
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.RoleErrors
 import com.studiversity.feature.role.model.UpdateUserRolesRequest
@@ -20,44 +23,49 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
-fun Route.studyGroupMembersRoute() {
-    route("/members") {
+data class MembershipRouteBuilder(
+    var readMembersCapability: Capability? = null,
+    var writeMembersCapability: Capability? = null
+)
 
+fun Route.membershipRoute() {
+    route("/membership") {
+        post("/{type}") {
+
+        }
+    }
+}
+
+fun Route.membersRoute() {
+    route("/members") {
         val requireCapability: RequireCapabilityUseCase by inject()
         val requireAvailableRolesInScope: RequireAvailableRolesInScopeUseCase by inject()
         val requirePermissionToAssignRoles: RequirePermissionToAssignRolesUseCase by inject()
-        val addUserToScope: AddUserToScopeUseCase by inject()
+        val addUserToMembershipUseCase: AddUserToMembershipUseCase by inject()
         val findUsersInScope: FindUsersInScopeUseCase by inject()
+        val membershipService: MembershipService by inject()
 
         get {
-            val groupId = call.parameters["id"]!!.toUUID()
+            val scopeId = call.parameters["id"]!!.toUUID()
             val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
 
-            requireCapability(currentUserId, Capability.ReadGroup, groupId)
+            requireCapability(currentUserId, Capability.ReadGroup, scopeId)
 
-            findUsersInScope(groupId).apply {
+            findUsersInScope(scopeId).apply {
                 call.respond(HttpStatusCode.OK, this)
             }
         }
         post {
-            val body = call.receive<EnrolStudyGroupMemberRequest>()
-            val groupId = call.parameters["id"]!!.toUUID()
-            val currentUserId = call.jwtPrincipal().payload.claimId
+            val membershipType = call.request.queryParameters["type"] ?: "manual"
 
-            requireCapability(currentUserId, Capability.WriteGroupMembers, groupId)
 
-            val assignableRoles = body.roles
-
-            requireAvailableRolesInScope(assignableRoles, groupId)
-            requirePermissionToAssignRoles(currentUserId, assignableRoles, groupId)
-
-            addUserToScope(body.userId, groupId, assignableRoles)
-            call.respond(HttpStatusCode.OK, "User has enrolled to study group")
+            MembershipControllerFactory(call).create(membershipType).invoke()
         }
 
         memberRoute()
     }
 }
+
 
 private fun Route.memberRoute() {
     route("/{memberId}") {

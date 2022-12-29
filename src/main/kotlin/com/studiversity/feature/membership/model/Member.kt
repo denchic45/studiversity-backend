@@ -9,7 +9,7 @@ import java.util.*
 data class Member(
     @SerialName("user_id")
     @Serializable(UUIDSerializer::class)
-    val id: UUID,
+    val userId: UUID,
     @SerialName("membership_id")
     @Serializable(UUIDSerializer::class)
     val membershipId: UUID
