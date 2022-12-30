@@ -1,13 +1,10 @@
 package com.studiversity.feature.membership
 
-import com.studiversity.feature.membership.controller.MembershipControllerFactory
-import com.studiversity.feature.membership.model.Member
-import com.studiversity.feature.membership.usecase.AddUserToMembershipUseCase
+import com.studiversity.feature.membership.model.JoinMemberRequest
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.RoleErrors
 import com.studiversity.feature.role.model.UpdateUserRolesRequest
 import com.studiversity.feature.role.usecase.*
-import com.studiversity.feature.studygroup.model.EnrolStudyGroupMemberRequest
 import com.studiversity.ktor.claimId
 import com.studiversity.ktor.jwtPrincipal
 import com.studiversity.util.hasNotDuplicates
@@ -17,16 +14,12 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.server.plugins.*
 import io.ktor.server.plugins.requestvalidation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
-
-data class MembershipRouteBuilder(
-    var readMembersCapability: Capability? = null,
-    var writeMembersCapability: Capability? = null
-)
 
 fun Route.membershipRoute() {
     route("/membership") {
@@ -36,12 +29,14 @@ fun Route.membershipRoute() {
     }
 }
 
-fun Route.membersRoute() {
+fun Route.membersRoute(
+    readMembersCapability: Capability,
+    writeMembersCapability: Capability
+) {
     route("/members") {
         val requireCapability: RequireCapabilityUseCase by inject()
         val requireAvailableRolesInScope: RequireAvailableRolesInScopeUseCase by inject()
         val requirePermissionToAssignRoles: RequirePermissionToAssignRolesUseCase by inject()
-        val addUserToMembershipUseCase: AddUserToMembershipUseCase by inject()
         val findUsersInScope: FindUsersInScopeUseCase by inject()
         val membershipService: MembershipService by inject()
 
@@ -49,25 +44,44 @@ fun Route.membersRoute() {
             val scopeId = call.parameters["id"]!!.toUUID()
             val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
 
-            requireCapability(currentUserId, Capability.ReadGroup, scopeId)
+            requireCapability(currentUserId, readMembersCapability, scopeId)
 
             findUsersInScope(scopeId).apply {
                 call.respond(HttpStatusCode.OK, this)
             }
         }
         post {
-            val membershipType = call.request.queryParameters["type"] ?: "manual"
+            val currentUserId = call.jwtPrincipal().payload.claimId
+            val scopeId = call.parameters["id"]!!.toUUID()
 
+            val result = when (call.request.queryParameters["action"]!!) {
+                "manual" -> {
+                    val body = call.receive<JoinMemberRequest>()
 
-            MembershipControllerFactory(call).create(membershipType).invoke()
+                    requireCapability(currentUserId, writeMembersCapability, scopeId)
+
+                    val assignableRoles = body.roles
+                    requireAvailableRolesInScope(assignableRoles, scopeId)
+                    requirePermissionToAssignRoles(currentUserId, assignableRoles, scopeId)
+
+                    membershipService
+                        .getMembershipByTypeAndScopeId<ManualMembership>("manual", scopeId)
+                        .joinMember(body)
+                }
+
+//                "selfJoin" -> {}
+                else -> throw BadRequestException("UNKNOWN_MEMBERSHIP_ACTION")
+            }
+            call.respond(HttpStatusCode.Created, result)
         }
-
-        memberRoute()
+        memberRoute(readMembersCapability, writeMembersCapability)
     }
 }
 
-
-private fun Route.memberRoute() {
+private fun Route.memberRoute(
+    readMembersCapability: Capability,
+    writeMembersCapability: Capability
+) {
     route("/{memberId}") {
         install(RequestValidation) {
             validate<UpdateUserRolesRequest> {
@@ -83,19 +97,22 @@ private fun Route.memberRoute() {
 
         delete {
             val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
-            val groupId = call.parameters["id"]!!.toUUID()
+            val scopeId = call.parameters["id"]!!.toUUID()
             val memberId = call.parameters["memberId"]!!.toUUID()
 
-            requireCapability(currentUserId, Capability.WriteGroupMembers, groupId)
+            requireCapability(currentUserId, writeMembersCapability, scopeId)
 
-            removeUserFromScope(memberId, groupId)
+            removeUserFromScope(memberId, scopeId)
             call.respond(HttpStatusCode.NoContent, "Member deleted")
         }
-        rolesRoute()
+        memberRolesRoute(readMembersCapability, writeMembersCapability)
     }
 }
 
-private fun Route.rolesRoute() {
+private fun Route.memberRolesRoute(
+    readMembersCapability: Capability,
+    writeMembersCapability: Capability
+) {
     route("/roles") {
         val requireCapability: RequireCapabilityUseCase by inject()
         val requireAvailableRolesInScope: RequireAvailableRolesInScopeUseCase by inject()
@@ -108,7 +125,7 @@ private fun Route.rolesRoute() {
             val groupId = call.parameters["id"]!!.toUUID()
             val memberId = call.parameters["memberId"]!!.toUUID()
 
-            requireCapability(currentUserId, Capability.WriteGroupMembers, groupId)
+            requireCapability(currentUserId, readMembersCapability, groupId)
 
             call.respond(HttpStatusCode.OK, findAssignedUserRolesInScope(memberId, groupId))
         }
@@ -118,7 +135,7 @@ private fun Route.rolesRoute() {
             val memberId = call.parameters["memberId"]!!.toUUID()
             val body = call.receive<UpdateUserRolesRequest>()
 
-            requireCapability(currentUserId, Capability.WriteGroupMembers, groupId)
+            requireCapability(currentUserId, writeMembersCapability, groupId)
 
             val assignableRoles = body.roles
 

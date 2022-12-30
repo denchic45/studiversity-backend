@@ -1,6 +1,8 @@
 package com.studiversity.feature.membership
 
+import com.studiversity.feature.membership.model.JoinMemberRequest
 import com.studiversity.feature.membership.model.Member
+import com.studiversity.feature.membership.model.ScopeMember
 import com.studiversity.feature.membership.repository.MembershipRepository
 import com.studiversity.feature.membership.repository.UserMembershipRepository
 import com.studiversity.feature.role.Role
@@ -12,17 +14,22 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
 
-interface Membership {
-    val membershipRepository: MembershipRepository
-    val userMembershipRepository: UserMembershipRepository
-    val membershipId: UUID
+abstract class Membership {
+    abstract val membershipRepository: MembershipRepository
+    abstract val userMembershipRepository: UserMembershipRepository
+    abstract val roleRepository: RoleRepository
+    abstract val membershipId: UUID
+
+    val scopeId by lazy { membershipRepository.findScopeIdByMembershipId(membershipId) }
 }
 
 class SelfMembership(
     override val membershipRepository: MembershipRepository,
     override val userMembershipRepository: UserMembershipRepository,
+    override val roleRepository: RoleRepository,
     override val membershipId: UUID,
-) : Membership {
+) : Membership() {
+
     fun selfJoin(userId: UUID) {
         userMembershipRepository.addMember(Member(userId, membershipId))
     }
@@ -31,10 +38,27 @@ class SelfMembership(
 class ManualMembership(
     override val membershipRepository: MembershipRepository,
     override val userMembershipRepository: UserMembershipRepository,
+    override val roleRepository: RoleRepository,
     override val membershipId: UUID,
-) : Membership
+) : Membership() {
 
-abstract class ExternalMembership(private val coroutineScope: CoroutineScope) : Membership {
+    fun joinMember(joinMemberRequest: JoinMemberRequest): ScopeMember {
+
+        val userId = joinMemberRequest.userId
+        userMembershipRepository.addMember(
+            Member(userId = userId, membershipId = membershipId)
+        )
+        roleRepository.addUserRolesToScope(userId, joinMemberRequest.roles, scopeId)
+        return ScopeMember(
+            userId = userId,
+            scopeId = scopeId,
+            membershipIds = userMembershipRepository.findMembershipIdsByMemberIdAndScopeId(userId, scopeId),
+            roles = roleRepository.findUserRolesByScope(userId, scopeId)
+        )
+    }
+}
+
+abstract class ExternalMembership(private val coroutineScope: CoroutineScope) : Membership() {
 
     fun init() {
         syncMembers()
@@ -87,7 +111,7 @@ class StudyGroupExternalMembership(
     coroutineScope: CoroutineScope,
     override val membershipRepository: MembershipRepository,
     override val userMembershipRepository: UserMembershipRepository,
-    private val roleRepository: RoleRepository,
+    override val roleRepository: RoleRepository,
     override val membershipId: UUID,
 ) : ExternalMembership(coroutineScope) {
 

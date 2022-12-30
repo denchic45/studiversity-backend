@@ -290,4 +290,16 @@ class UserMembershipRepository(private val realtime: Realtime) {
 //        channel.join()
 //        membershipsByScopeIdFlow.collect { println("-- It's works!!! add user: $it") }
     }
+
+    fun findMembershipIdsByMemberIdAndScopeId(userId: UUID, scopeId: UUID): List<UUID> {
+        return Join(
+            table = UsersMemberships,
+            otherTable = Memberships,
+            joinType = JoinType.INNER,
+            onColumn = UsersMemberships.membershipId,
+            otherColumn = Memberships.id
+        ).slice(UsersMemberships.membershipId)
+            .select(UsersMemberships.memberId eq userId and (Memberships.scopeId eq scopeId))
+            .map { it[UsersMemberships.membershipId].value }
+    }
 }

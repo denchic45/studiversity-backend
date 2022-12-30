@@ -6,6 +6,7 @@ import com.studiversity.feature.course.model.UpdateCourseRequest
 import com.studiversity.feature.course.usecase.AddCourseUseCase
 import com.studiversity.feature.course.usecase.FindCourseByIdUseCase
 import com.studiversity.feature.course.usecase.UpdateCourseUseCase
+import com.studiversity.feature.membership.membersRoute
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.feature.studygroup.StudyGroupErrors
@@ -91,4 +92,7 @@ fun Route.courseByIdRoutes() {
     }
 }
 
+fun Route.courseMembersRoute() {
+    membersRoute(Capability.ReadCourseMembers, Capability.WriteCourseMembers)
+}
 

@@ -1,5 +1,7 @@
 package com.studiversity.feature.studygroup
 
+import com.studiversity.feature.membership.membersRoute
+import com.studiversity.feature.role.Capability
 import com.studiversity.feature.studygroup.model.CreateStudyGroupRequest
 import com.studiversity.feature.studygroup.model.UpdateStudyGroupRequest
 import com.studiversity.feature.studygroup.usecase.AddStudyGroupUseCase
@@ -89,7 +91,10 @@ private fun Route.studyGroupByIdRoutes() {
             removeStudyGroup(id)
             call.respond(HttpStatusCode.NoContent, "Group deleted")
         }
-
         studyGroupMembersRoute()
     }
+}
+
+fun Route.studyGroupMembersRoute() {
+    membersRoute(Capability.ReadGroup, Capability.WriteGroupMembers)
 }

@@ -6,6 +6,7 @@ import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.Permission
 import com.studiversity.feature.role.Role
 import com.studiversity.feature.role.combinedPermission
+import com.studiversity.feature.role.mapper.toRole
 import com.studiversity.feature.role.mapper.toUserRolesResponse
 import com.studiversity.feature.role.mapper.toUsersWithRoles
 import com.studiversity.feature.role.model.UpdateUserRolesRequest
@@ -45,10 +46,16 @@ class RoleRepository {
         }
     }
 
-    private fun getUserRolesByScope(userId: UUID, scopeId: UUID): List<Long> {
+    private fun getUserRoleIdsByScope(userId: UUID, scopeId: UUID): List<Long> {
         return UserRoleScopeDao.find(
             UsersRolesScopes.userId eq userId and (UsersRolesScopes.scopeId eq scopeId)
         ).map { it.roleId }
+    }
+
+    fun findUserRolesByScope(userId: UUID, scopeId: UUID): List<Role> {
+        return UserRoleScopeDao.find(
+            UsersRolesScopes.userId eq userId and (UsersRolesScopes.scopeId eq scopeId)
+        ).map { it.role.toRole() }
     }
 
     fun hasCapability(userId: UUID, capability: Capability, scopeId: UUID): Boolean = transaction {
@@ -112,7 +119,7 @@ class RoleRepository {
 
     private fun existPermissionRoleByUserId(userId: UUID, assignRole: Role, scopeId: UUID): Boolean {
         return ScopeDao.findById(scopeId)!!.path.any { segmentScopeId ->
-            getUserRolesByScope(userId, segmentScopeId).any { role ->
+            getUserRoleIdsByScope(userId, segmentScopeId).any { role ->
                 existRoleAssignment(role, assignRole.id)
             }
         }
