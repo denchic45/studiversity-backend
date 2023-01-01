@@ -6,10 +6,10 @@ import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.Permission
 import com.studiversity.feature.role.Role
 import com.studiversity.feature.role.combinedPermission
-import com.studiversity.feature.role.mapper.toRole
 import com.studiversity.feature.role.mapper.toUserRolesResponse
 import com.studiversity.feature.role.mapper.toUsersWithRoles
 import com.studiversity.feature.role.model.UpdateUserRolesRequest
+import com.studiversity.feature.role.model.UserRolesResponse
 import com.studiversity.feature.role.model.UserWithRolesResponse
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
@@ -50,12 +50,6 @@ class RoleRepository {
         return UserRoleScopeDao.find(
             UsersRolesScopes.userId eq userId and (UsersRolesScopes.scopeId eq scopeId)
         ).map { it.roleId }
-    }
-
-    fun findUserRolesByScope(userId: UUID, scopeId: UUID): List<Role> {
-        return UserRoleScopeDao.find(
-            UsersRolesScopes.userId eq userId and (UsersRolesScopes.scopeId eq scopeId)
-        ).map { it.role.toRole() }
     }
 
     fun hasCapability(userId: UUID, capability: Capability, scopeId: UUID): Boolean = transaction {
@@ -104,23 +98,23 @@ class RoleRepository {
         .firstOrNull() ?: Permission.Undefined
 
 
-    fun existRolesByScope(roles: List<Role>, scopeId: UUID): Boolean = transaction {
-        roles.all { role ->
+    fun existRolesByScope(roles: List<Long>, scopeId: UUID): Boolean = transaction {
+        roles.all { roleId ->
             val scopeType = ScopeDao.findById(scopeId)!!.scopeTypeId.value
-            RolesScopes.exists { RolesScopes.roleId eq role.id and (RolesScopes.scopeId eq scopeType) }
+            RolesScopes.exists { RolesScopes.roleId eq roleId and (RolesScopes.scopeId eq scopeType) }
         }
     }
 
-    fun existPermissionRolesByUserId(userId: UUID, assignRoles: List<Role>, scopeId: UUID) = transaction {
+    fun existPermissionRolesByUserId(userId: UUID, assignRoles: List<Long>, scopeId: UUID) = transaction {
         assignRoles.all { assignRole ->
             existPermissionRoleByUserId(userId, assignRole, scopeId)
         }
     }
 
-    private fun existPermissionRoleByUserId(userId: UUID, assignRole: Role, scopeId: UUID): Boolean {
+    private fun existPermissionRoleByUserId(userId: UUID, assignRoleId: Long, scopeId: UUID): Boolean {
         return ScopeDao.findById(scopeId)!!.path.any { segmentScopeId ->
             getUserRoleIdsByScope(userId, segmentScopeId).any { role ->
-                existRoleAssignment(role, assignRole.id)
+                existRoleAssignment(role, assignRoleId)
             }
         }
     }
@@ -143,26 +137,24 @@ class RoleRepository {
         UsersRolesScopes.exists { UsersRolesScopes.userId eq userId and (UsersRolesScopes.scopeId eq scopeId) }
     }
 
-    fun findByUserIdAndScopeId(userId: UUID, scopeId: UUID) = transaction {
-        if (!existUserByScope(userId, scopeId)) {
-            return@transaction null
-        }
-        UserRoleScopeDao.find(
+    fun findUserRolesByScopeId(userId: UUID, scopeId: UUID): UserRolesResponse {
+        return UserRoleScopeDao.find(
             UsersRolesScopes.userId eq userId
                     and (UsersRolesScopes.scopeId eq scopeId)
         ).toUserRolesResponse(userId)
     }
 
+
     fun findUsersByScopeId(scopeId: UUID): List<UserWithRolesResponse> = transaction {
         UserRoleScopeDao.find(UsersRolesScopes.scopeId eq scopeId).toUsersWithRoles()
     }
 
-    fun addUserRolesToScope(userId: UUID, roles: List<Role>, scopeId: UUID) = transaction {
-        roles.map { role ->
+    fun addUserRolesToScope(userId: UUID, roles: List<Long>, scopeId: UUID) = transaction {
+        roles.map { roleId ->
             UsersRolesScopes.insert {
                 it[UsersRolesScopes.userId] = userId
                 it[this.scopeId] = scopeId
-                it[roleId] = role.id
+                it[UsersRolesScopes.roleId] = roleId
             }.run { insertedCount > 0 }
         }.all { it }
     }
@@ -178,14 +170,11 @@ class RoleRepository {
         userId: UUID,
         scopeId: UUID,
         updateUserRolesRequest: UpdateUserRolesRequest
-    ) = transaction {
-        if (!existUserByScope(userId, scopeId)) {
-            return@transaction null
-        }
-        updateUserRolesRequest.roles.let { roles ->
+    ): UserRolesResponse {
+        updateUserRolesRequest.roleIds.let { roles ->
             removeUserRolesFromScope(userId, scopeId)
             addUserRolesToScope(userId, roles, scopeId)
         }
-        findByUserIdAndScopeId(userId, scopeId)
+        return findUserRolesByScopeId(userId, scopeId)
     }
 }
