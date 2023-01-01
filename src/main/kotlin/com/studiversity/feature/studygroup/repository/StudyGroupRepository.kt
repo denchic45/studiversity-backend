@@ -1,5 +1,6 @@
 package com.studiversity.feature.studygroup.repository
 
+import com.studiversity.database.exists
 import com.studiversity.database.table.SpecialtyDao
 import com.studiversity.database.table.StudyGroupDao
 import com.studiversity.database.table.StudyGroups
@@ -41,4 +42,8 @@ class StudyGroupRepository {
     fun findById(id: UUID): StudyGroupResponse? = StudyGroupDao.findById(id)?.toResponse()
 
     fun remove(id: UUID) = StudyGroups.deleteWhere { StudyGroups.id eq id }.run { this != 0 }
+
+    fun exist(id: UUID): Boolean {
+        return StudyGroups.exists { StudyGroups.id eq id }
+    }
 }

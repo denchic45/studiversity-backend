@@ -4,10 +4,7 @@ import com.studiversity.feature.membership.membersRoute
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.studygroup.model.CreateStudyGroupRequest
 import com.studiversity.feature.studygroup.model.UpdateStudyGroupRequest
-import com.studiversity.feature.studygroup.usecase.AddStudyGroupUseCase
-import com.studiversity.feature.studygroup.usecase.FindStudyGroupByIdUseCase
-import com.studiversity.feature.studygroup.usecase.RemoveStudyGroupUseCase
-import com.studiversity.feature.studygroup.usecase.UpdateStudyGroupUseCase
+import com.studiversity.feature.studygroup.usecase.*
 import com.studiversity.util.onlyDigits
 import com.studiversity.util.toUUID
 import com.studiversity.validation.buildValidationResult
@@ -96,5 +93,8 @@ private fun Route.studyGroupByIdRoutes() {
 }
 
 fun Route.studyGroupMembersRoute() {
-    membersRoute(Capability.ReadGroup, Capability.WriteGroupMembers)
+    val requireExistStudyGroupUseCase: RequireExistStudyGroupUseCase by inject()
+    membersRoute(Capability.ReadGroup, Capability.WriteGroupMembers) {
+        requireExistStudyGroupUseCase(parameters["id"]!!.toUUID())
+    }
 }

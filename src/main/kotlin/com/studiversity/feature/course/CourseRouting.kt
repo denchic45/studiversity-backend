@@ -5,6 +5,7 @@ import com.studiversity.feature.course.model.CreateCourseRequest
 import com.studiversity.feature.course.model.UpdateCourseRequest
 import com.studiversity.feature.course.usecase.AddCourseUseCase
 import com.studiversity.feature.course.usecase.FindCourseByIdUseCase
+import com.studiversity.feature.course.usecase.RequireExistCourseUseCase
 import com.studiversity.feature.course.usecase.UpdateCourseUseCase
 import com.studiversity.feature.membership.membersRoute
 import com.studiversity.feature.role.Capability
@@ -93,6 +94,9 @@ fun Route.courseByIdRoutes() {
 }
 
 fun Route.courseMembersRoute() {
-    membersRoute(Capability.ReadCourseMembers, Capability.WriteCourseMembers)
+    val requireExistCourseUseCase:RequireExistCourseUseCase by inject()
+    membersRoute(Capability.ReadCourseMembers, Capability.WriteCourseMembers) {
+        requireExistCourseUseCase(parameters["id"]!!.toUUID())
+    }
 }
 

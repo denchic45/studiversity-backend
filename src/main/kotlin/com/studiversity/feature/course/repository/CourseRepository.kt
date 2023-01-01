@@ -1,6 +1,8 @@
 package com.studiversity.feature.course.repository
 
+import com.studiversity.database.exists
 import com.studiversity.database.table.CourseDao
+import com.studiversity.database.table.Courses
 import com.studiversity.database.table.SubjectDao
 import com.studiversity.feature.course.model.CourseResponse
 import com.studiversity.feature.course.model.CreateCourseRequest
@@ -30,5 +32,9 @@ class CourseRepository {
             request.name.ifPresent { name = it }
             request.subjectId.ifPresent { subject = it?.let { SubjectDao.findById(it) } }
         }?.toResponse()
+    }
+
+    fun exist(id: UUID): Boolean {
+       return Courses.exists { Courses.id eq id }
     }
 }
