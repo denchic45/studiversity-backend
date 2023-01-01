@@ -1,16 +1,21 @@
 package com.studiversity.feature.membership.repository
 
 import com.studiversity.database.exists
-import com.studiversity.database.table.Memberships
-import com.studiversity.database.table.UsersMemberships
+import com.studiversity.database.table.*
 import com.studiversity.feature.membership.model.Member
+import com.studiversity.feature.membership.model.MembershipResponse
+import com.studiversity.feature.membership.model.ScopeMember
+import com.studiversity.feature.role.mapper.toRole
 import com.studiversity.logger.logger
 import com.studiversity.util.toUUID
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.realtime.createChannel
 import io.github.jan.supabase.realtime.postgresChangeFlow
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.jsonPrimitive
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -36,19 +41,41 @@ class UserMembershipRepository(private val realtime: Realtime) {
         }
     }
 
-    fun findMembersByScope(scopeId: UUID) = flowOf(
-        transaction {
-            getMembershipsByScope(scopeId).flatMap { membershipRow ->
-                UsersMemberships.select(UsersMemberships.membershipId eq membershipRow[Memberships.id])
-                    .map { userMembershipRow ->
-                        Member(
-                            userId = userMembershipRow[UsersMemberships.memberId].value,
-                            membershipId = membershipRow[Memberships.id].value
-                        )
-                    }
-            }
+    fun findMembersByScope(scopeId: UUID) = Memberships
+        .innerJoin(UsersMemberships, { Memberships.id }, { membershipId })
+        .innerJoin(Users, { UsersMemberships.memberId }, { Users.id })
+        .select(Memberships.scopeId eq scopeId)
+        .groupBy { it[UsersMemberships.memberId].value }
+        .map { (userId, rows) ->
+            ScopeMember(
+                userId = userId,
+                firstName = rows.first()[Users.firstName],
+                surname = rows.first()[Users.surname],
+                patronymic = rows.first()[Users.patronymic],
+                scopeId = scopeId,
+                membershipIds = rows.map { it[UsersMemberships.membershipId].value },
+                roles = UserRoleScopeDao.find(
+                    UsersRolesScopes.scopeId eq scopeId and (UsersRolesScopes.userId eq userId)
+                ).map { it.role.toRole() }
+            )
         }
-    )
+
+    fun findMemberByScope(userId: UUID, scopeId: UUID) = Memberships
+        .innerJoin(UsersMemberships, { Memberships.id }, { membershipId })
+        .innerJoin(Users, { UsersMemberships.memberId }, { Users.id })
+        .select(Memberships.scopeId eq scopeId and (Users.id eq userId))
+        .let { rows ->
+            ScopeMember(
+                userId = userId,
+                firstName = rows.first()[Users.firstName],
+                surname = rows.first()[Users.surname],
+                patronymic = rows.first()[Users.patronymic],
+                scopeId = scopeId,
+                membershipIds = rows.map { it[UsersMemberships.membershipId].value },
+                roles = UserRoleScopeDao.find(UsersRolesScopes.scopeId eq scopeId and (UsersRolesScopes.userId eq userId))
+                    .map { it.role.toRole() }
+            )
+        }
 
     /**
      * Find members who are exist in one of the membership sources but not exist in target membership.
@@ -201,11 +228,11 @@ class UserMembershipRepository(private val realtime: Realtime) {
         return Memberships.select(Memberships.scopeId eq scopeId)
     }
 
-    private fun getJoinTimestampOfLastMemberByScope(scopeId: UUID) = transaction {
-        getMembershipsByScope(scopeId).mapNotNull { membershipRow ->
-            getMembersByMembershipAndMaxJoinTimestamp(membershipRow)
-        }.maxByOrNull { it }
-    }
+//    private fun getJoinTimestampOfLastMemberByScope(scopeId: UUID) = transaction {
+//        getMembershipsByScope(scopeId).mapNotNull { membershipRow ->
+//            getMembersByMembershipAndMaxJoinTimestamp(membershipRow)
+//        }.maxByOrNull { it }
+//    }
 
     fun observeAddedMembersByMembershipId(membershipId: UUID): Flow<UUID> = flow {
         logger.info { "observing added members by membership = $membershipId" }
@@ -302,4 +329,20 @@ class UserMembershipRepository(private val realtime: Realtime) {
             .select(UsersMemberships.memberId eq userId and (Memberships.scopeId eq scopeId))
             .map { it[UsersMemberships.membershipId].value }
     }
+
+    fun findMemberByMembershipTypesAndScopeId(
+        userId: UUID,
+        membershipTypes: List<String>,
+        scopeId: UUID
+    ): List<MembershipResponse> = Join(
+        table = UsersMemberships,
+        otherTable = Memberships,
+        joinType = JoinType.INNER,
+        onColumn = UsersMemberships.membershipId,
+        otherColumn = Memberships.id
+    ).slice(Memberships.id, Memberships.type).select(
+        UsersMemberships.memberId eq userId and
+                (Memberships.scopeId eq scopeId) and
+                (Memberships.type inList membershipTypes)
+    ).map { MembershipResponse(it[Memberships.id].value, it[Memberships.type]) }
 }

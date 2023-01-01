@@ -22,7 +22,6 @@ fun Application.module() = runBlocking {
         user = "postgres",
         password = "4G4x#!nKhwexYgM"
     )
-
     configureDI()
     configureSerialization()
     configureStatusPages()

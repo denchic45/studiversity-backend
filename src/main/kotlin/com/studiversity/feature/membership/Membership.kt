@@ -8,6 +8,7 @@ import com.studiversity.feature.membership.repository.UserMembershipRepository
 import com.studiversity.feature.role.Role
 import com.studiversity.feature.role.repository.RoleRepository
 import com.studiversity.logger.logger
+import com.studiversity.transaction.TransactionWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
@@ -15,6 +16,7 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 abstract class Membership {
+    abstract val transactionWorker: TransactionWorker
     abstract val membershipRepository: MembershipRepository
     abstract val userMembershipRepository: UserMembershipRepository
     abstract val roleRepository: RoleRepository
@@ -24,6 +26,7 @@ abstract class Membership {
 }
 
 class SelfMembership(
+    override val transactionWorker: TransactionWorker,
     override val membershipRepository: MembershipRepository,
     override val userMembershipRepository: UserMembershipRepository,
     override val roleRepository: RoleRepository,
@@ -36,25 +39,20 @@ class SelfMembership(
 }
 
 class ManualMembership(
+    override val transactionWorker: TransactionWorker,
     override val membershipRepository: MembershipRepository,
     override val userMembershipRepository: UserMembershipRepository,
     override val roleRepository: RoleRepository,
     override val membershipId: UUID,
 ) : Membership() {
 
-    fun joinMember(joinMemberRequest: JoinMemberRequest): ScopeMember {
-
+    fun joinMember(joinMemberRequest: JoinMemberRequest): ScopeMember = transactionWorker {
         val userId = joinMemberRequest.userId
         userMembershipRepository.addMember(
             Member(userId = userId, membershipId = membershipId)
         )
         roleRepository.addUserRolesToScope(userId, joinMemberRequest.roles, scopeId)
-        return ScopeMember(
-            userId = userId,
-            scopeId = scopeId,
-            membershipIds = userMembershipRepository.findMembershipIdsByMemberIdAndScopeId(userId, scopeId),
-            roles = roleRepository.findUserRolesByScope(userId, scopeId)
-        )
+        userMembershipRepository.findMemberByScope(userId, scopeId)
     }
 }
 
@@ -109,6 +107,7 @@ abstract class ExternalMembership(private val coroutineScope: CoroutineScope) : 
 
 class StudyGroupExternalMembership(
     coroutineScope: CoroutineScope,
+    override val transactionWorker: TransactionWorker,
     override val membershipRepository: MembershipRepository,
     override val userMembershipRepository: UserMembershipRepository,
     override val roleRepository: RoleRepository,

@@ -9,6 +9,9 @@ import java.util.*
 data class ScopeMember(
     @Serializable(UUIDSerializer::class)
     val userId: UUID,
+    val firstName: String,
+    val surname: String,
+    val patronymic: String?,
     @Serializable(UUIDSerializer::class)
     val scopeId: UUID,
     val membershipIds: List<@Serializable(UUIDSerializer::class) UUID>,

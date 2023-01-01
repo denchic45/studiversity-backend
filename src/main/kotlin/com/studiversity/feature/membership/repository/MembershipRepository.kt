@@ -2,6 +2,7 @@ package com.studiversity.feature.membership.repository
 
 import com.studiversity.database.table.ExternalStudyGroupsMemberships
 import com.studiversity.database.table.Memberships
+import com.studiversity.feature.membership.model.CreateMembershipRequest
 import com.studiversity.logger.logger
 import com.studiversity.util.toUUID
 import io.github.jan.supabase.realtime.*
@@ -12,6 +13,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -27,7 +29,6 @@ class MembershipRepository(private val realtime: Realtime, private val coroutine
     private val deleteExternalStudyGroupMembershipsFlow =
         membershipChannel.postgresChangeFlow<PostgresAction.Delete>(schema = "public") {
             table = "membership"
-//            filter = "type=eq.by_group"
         }.filter { it.oldRecord.getValue("type").jsonPrimitive.content == "by_group" }
             .shareIn(coroutineScope, SharingStarted.Lazily)
 
@@ -37,8 +38,12 @@ class MembershipRepository(private val realtime: Realtime, private val coroutine
         }
     }
 
-    fun addMembership() = transaction {
-        //TODO
+    fun addManualMembership(createMembershipRequest: CreateMembershipRequest) {
+        Memberships.insert {
+            it[scopeId] = createMembershipRequest.scopeId
+            it[active] = true
+            it[type] = createMembershipRequest.type
+        }
     }
 
     private suspend fun listenMembershipsByScopeIds(scopeIds: List<UUID>): Flow<PostgresAction> {

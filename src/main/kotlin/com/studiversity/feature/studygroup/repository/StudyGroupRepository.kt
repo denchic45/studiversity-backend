@@ -1,12 +1,8 @@
 package com.studiversity.feature.studygroup.repository
 
-import com.studiversity.Constants
-import com.studiversity.database.table.Scopes
 import com.studiversity.database.table.SpecialtyDao
 import com.studiversity.database.table.StudyGroupDao
 import com.studiversity.database.table.StudyGroups
-import com.studiversity.feature.role.ScopeType
-import com.studiversity.feature.role.repository.AddScopeRepoExt
 import com.studiversity.feature.studygroup.mapper.toResponse
 import com.studiversity.feature.studygroup.model.CreateStudyGroupRequest
 import com.studiversity.feature.studygroup.model.StudyGroupResponse
@@ -14,13 +10,12 @@ import com.studiversity.feature.studygroup.model.UpdateStudyGroupRequest
 import com.studiversity.util.toUUID
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import java.util.*
 
-class StudyGroupRepository : AddScopeRepoExt {
+class StudyGroupRepository {
 
-    fun add(request: CreateStudyGroupRequest) = transaction {
+    fun add(request: CreateStudyGroupRequest): UUID {
         val dao = StudyGroupDao.new {
             name = request.name
             academicYear = listOf(request.academicYear.start, request.academicYear.end)
@@ -28,14 +23,11 @@ class StudyGroupRepository : AddScopeRepoExt {
                 specialty = SpecialtyDao.findById(this)
             }
         }
-        addScope(dao.id.value, ScopeType.StudyGroup, Constants.organizationId)
-        dao.id.value
+        return dao.id.value
     }
 
-    fun update(id: UUID, updateStudyGroupRequest: UpdateStudyGroupRequest) = transaction {
-        StudyGroups.update(
-            { StudyGroups.id eq id }
-        ) { update ->
+    fun update(id: UUID, updateStudyGroupRequest: UpdateStudyGroupRequest): Boolean {
+        return StudyGroups.update({ StudyGroups.id eq id }) { update ->
             updateStudyGroupRequest.apply {
                 name.ifPresent { update[StudyGroups.name] = it }
                 academicYear.ifPresent {
@@ -46,12 +38,7 @@ class StudyGroupRepository : AddScopeRepoExt {
         }.run { this != 0 }
     }
 
-    fun findById(id: UUID): StudyGroupResponse? = transaction {
-        StudyGroupDao.findById(id)?.toResponse()
-    }
+    fun findById(id: UUID): StudyGroupResponse? = StudyGroupDao.findById(id)?.toResponse()
 
-    fun remove(id: UUID) = transaction {
-        Scopes.deleteWhere { Scopes.id eq id }
-        StudyGroups.deleteWhere { StudyGroups.id eq id }
-    }.run { this != 0 }
+    fun remove(id: UUID) = StudyGroups.deleteWhere { StudyGroups.id eq id }.run { this != 0 }
 }

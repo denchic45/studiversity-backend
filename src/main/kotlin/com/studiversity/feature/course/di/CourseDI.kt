@@ -7,8 +7,8 @@ import com.studiversity.feature.course.usecase.UpdateCourseUseCase
 import org.koin.dsl.module
 
 private val useCaseModule = module {
-    single { AddCourseUseCase(get()) }
-    single { FindCourseByIdUseCase(get()) }
+    single { AddCourseUseCase(get(), get(), get(), get()) }
+    single { FindCourseByIdUseCase(get(), get()) }
     single { UpdateCourseUseCase(get()) }
 }
 

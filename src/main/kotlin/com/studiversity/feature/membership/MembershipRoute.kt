@@ -37,7 +37,7 @@ fun Route.membersRoute(
         val requireCapability: RequireCapabilityUseCase by inject()
         val requireAvailableRolesInScope: RequireAvailableRolesInScopeUseCase by inject()
         val requirePermissionToAssignRoles: RequirePermissionToAssignRolesUseCase by inject()
-        val findUsersInScope: FindUsersInScopeUseCase by inject()
+        val findMembersInScope: FindMembersInScopeUseCase by inject()
         val membershipService: MembershipService by inject()
 
         get {
@@ -46,7 +46,7 @@ fun Route.membersRoute(
 
             requireCapability(currentUserId, readMembersCapability, scopeId)
 
-            findUsersInScope(scopeId).apply {
+            findMembersInScope(scopeId).apply {
                 call.respond(HttpStatusCode.OK, this)
             }
         }
@@ -104,6 +104,7 @@ private fun Route.memberRoute(
 
             removeUserFromScope(memberId, scopeId)
             call.respond(HttpStatusCode.NoContent, "Member deleted")
+
         }
         memberRolesRoute(readMembersCapability, writeMembersCapability)
     }
