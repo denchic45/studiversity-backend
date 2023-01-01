@@ -9,6 +9,7 @@ import com.studiversity.feature.role.Role
 import com.studiversity.feature.role.repository.RoleRepository
 import com.studiversity.logger.logger
 import com.studiversity.transaction.TransactionWorker
+import io.ktor.server.plugins.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
@@ -48,10 +49,12 @@ class ManualMembership(
 
     fun joinMember(joinMemberRequest: JoinMemberRequest): ScopeMember = transactionWorker {
         val userId = joinMemberRequest.userId
+        if (userMembershipRepository.existMember(userId, membershipId))
+            throw BadRequestException(MembershipErrors.MEMBER_ALREADY_EXIST_IN_MEMBERSHIP)
         userMembershipRepository.addMember(
             Member(userId = userId, membershipId = membershipId)
         )
-        roleRepository.addUserRolesToScope(userId, joinMemberRequest.roles, scopeId)
+        roleRepository.addUserRolesToScope(userId, joinMemberRequest.roleIds, scopeId)
         userMembershipRepository.findMemberByScope(userId, scopeId)
     }
 }
@@ -142,10 +145,6 @@ class StudyGroupExternalMembership(
     override fun onAddMember(): Flow<List<UUID>> {
         return observeStudyGroupMembershipsByScopeId
             .flatMapConcat { membershipIds ->
-                //TODO Слушать отдельно каждый membership и брать из него членов.
-                // Переиспользовать также для прослушивания удаленных пользователей.
-                // Не допускать добавления уже существующего члена!
-
                 membershipIds.map { membershipId ->
                     userMembershipRepository.observeAddedMembersByMembershipId(membershipId)
                         .map { Member(it, membershipId) }
@@ -157,23 +156,14 @@ class StudyGroupExternalMembership(
             }
     }
 
-
     @OptIn(FlowPreview::class)
     override fun onRemoveMember(): Flow<List<UUID>> {
-        //TODO Перед удалением члена, убедиться, что его нет в других членствах других групп (scopes), иначе ничего не делать!
         return observeStudyGroupMembershipsByScopeId.flatMapConcat { membershipIds ->
             membershipIds.map { membershipId ->
                 userMembershipRepository.observeRemovedMembersByMembershipId(membershipId)
             }.merge()
                 .filterNot { userMembershipRepository.existMemberByScopeIds(it, groupIds.value) }
                 .map { listOf(it) }
-
-//                .map {
-//                userMembershipRepository.findUnrelatedMembersByOneToManyMemberships(
-//                    membershipId,
-//                    observeMembershipsByScopeId.first()
-//                )
-//            }
         }
     }
 }
