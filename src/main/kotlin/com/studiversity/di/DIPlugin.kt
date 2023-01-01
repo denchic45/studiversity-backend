@@ -1,7 +1,7 @@
 package com.studiversity.di
 
 import com.studiversity.feature.auth.authModule
-import com.studiversity.feature.course.di.courseModule
+import com.studiversity.feature.course.courseModule
 import com.studiversity.feature.course.subject.subjectModule
 import com.studiversity.feature.membership.membershipModule
 import com.studiversity.feature.role.roleModule
