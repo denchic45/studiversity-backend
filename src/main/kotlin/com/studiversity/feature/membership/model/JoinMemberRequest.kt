@@ -1,6 +1,5 @@
 package com.studiversity.feature.membership.model
 
-import com.studiversity.feature.role.Role
 import com.studiversity.util.UUIDSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
@@ -11,5 +10,5 @@ data class JoinMemberRequest(
     val userId: UUID,
     @Serializable(UUIDSerializer::class)
     val membershipId: UUID? = null,
-    val roles: List<Role>
+    val roleIds: List<Long>
 )

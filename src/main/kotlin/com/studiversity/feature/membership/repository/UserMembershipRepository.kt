@@ -188,51 +188,9 @@ class UserMembershipRepository(private val realtime: Realtime) {
         }
     }
 
-//    fun findMembersByScopeAndGreaterJoinTimestamp(scopeId: UUID, joinTimestamp: Instant) = flowOf(
-//        transaction {
-//            getMembershipsByScope(scopeId).flatMap { membershipRow ->
-//                UsersMemberships.select(
-//                    UsersMemberships.membershipId eq membershipRow[Memberships.id]
-//                            and (UsersMemberships.joinAt greaterEq joinTimestamp)
-//                ).map { userMembershipRow ->
-//                    Member(
-//                        id = userMembershipRow[UsersMemberships.memberId].value,
-//                        membershipId = membershipRow[Memberships.id].value
-//                    )
-//                }
-//            }
-//        }
-//    )
-
-//    fun findMembersByScopeAndGreaterLeaveTimestamp(scopeId: UUID, leaveTimestamp: Instant?) = flowOf(
-//        transaction {
-//            getMembershipsByScope(scopeId).flatMap { membershipRow ->
-//                UsersMemberships.select(
-//                    UsersMemberships.membershipId eq membershipRow[Memberships.id]
-//                            and (
-//                            if (leaveTimestamp != null)
-//                                UsersMemberships.leaveTimestamp greaterEq leaveTimestamp
-//                            else UsersMemberships.leaveTimestamp.isNotNull()
-//                            )
-//                ).map { userMembershipRow ->
-//                    Member(
-//                        id = userMembershipRow[UsersMemberships.userId].value,
-//                        membershipId = membershipRow[Memberships.id].value
-//                    )
-//                }
-//            }
-//        }
-//    )
-
     private fun getMembershipsByScope(scopeId: UUID): Query {
         return Memberships.select(Memberships.scopeId eq scopeId)
     }
-
-//    private fun getJoinTimestampOfLastMemberByScope(scopeId: UUID) = transaction {
-//        getMembershipsByScope(scopeId).mapNotNull { membershipRow ->
-//            getMembersByMembershipAndMaxJoinTimestamp(membershipRow)
-//        }.maxByOrNull { it }
-//    }
 
     fun observeAddedMembersByMembershipId(membershipId: UUID): Flow<UUID> = flow {
         logger.info { "observing added members by membership = $membershipId" }
@@ -345,4 +303,14 @@ class UserMembershipRepository(private val realtime: Realtime) {
                 (Memberships.scopeId eq scopeId) and
                 (Memberships.type inList membershipTypes)
     ).map { MembershipResponse(it[Memberships.id].value, it[Memberships.type]) }
+
+    fun removeMemberByScopeId(userId: UUID, scopeId: UUID) {
+        UsersMemberships.deleteWhere {
+            memberId eq userId and (membershipId inList (
+                    Memberships.slice(Memberships.id)
+                        .select(Memberships.scopeId eq scopeId)
+                        .map { it[Memberships.id] }
+                    ))
+        }
+    }
 }
