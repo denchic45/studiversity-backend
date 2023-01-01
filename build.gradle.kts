@@ -110,6 +110,8 @@ dependencies {
     // kotlin-logging
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.4")
 
+    implementation("com.michael-bull.kotlin-result:kotlin-result:1.1.16")
+
     testImplementation("io.insert-koin", "koin-test-junit5", koinVersion) {
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-test-junit")
     }
