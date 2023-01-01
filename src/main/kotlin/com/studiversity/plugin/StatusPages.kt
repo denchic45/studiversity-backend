@@ -1,6 +1,6 @@
 package com.studiversity.plugin
 
-import com.studiversity.feature.role.ForbiddenException
+import com.studiversity.ktor.ForbiddenException
 import com.studiversity.model.ErrorInfo
 import com.studiversity.model.respondWithError
 import com.studiversity.model.respondWithErrors
