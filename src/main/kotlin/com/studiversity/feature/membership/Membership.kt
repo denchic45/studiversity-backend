@@ -1,6 +1,6 @@
 package com.studiversity.feature.membership
 
-import com.studiversity.feature.membership.model.JoinMemberRequest
+import com.studiversity.feature.membership.model.ManualJoinMemberRequest
 import com.studiversity.feature.membership.model.Member
 import com.studiversity.feature.membership.model.ScopeMember
 import com.studiversity.feature.membership.repository.MembershipRepository
@@ -47,14 +47,14 @@ class ManualMembership(
     override val membershipId: UUID,
 ) : Membership() {
 
-    fun joinMember(joinMemberRequest: JoinMemberRequest): ScopeMember = transactionWorker {
-        val userId = joinMemberRequest.userId
+    fun joinMember(manualJoinMemberRequest: ManualJoinMemberRequest): ScopeMember = transactionWorker {
+        val userId = manualJoinMemberRequest.userId
         if (userMembershipRepository.existMember(userId, membershipId))
             throw BadRequestException(MembershipErrors.MEMBER_ALREADY_EXIST_IN_MEMBERSHIP)
         userMembershipRepository.addMember(
             Member(userId = userId, membershipId = membershipId)
         )
-        roleRepository.addUserRolesToScope(userId, joinMemberRequest.roleIds, scopeId)
+        roleRepository.addUserRolesToScope(userId, manualJoinMemberRequest.roleIds, scopeId)
         userMembershipRepository.findMemberByScope(userId, scopeId)
     }
 }
@@ -64,15 +64,15 @@ abstract class ExternalMembership(private val coroutineScope: CoroutineScope) : 
     fun init() {
         syncMembers()
         coroutineScope.launch {
-            onAddMember().collect {
-                logger.info { "add members: $this in membership: $membershipId" }
+            onAddMembers().collect {
+                logger.info { "add members: $it in membership: $membershipId" }
                 if (it.isNotEmpty())
                     userMembershipRepository.addMembersToMembership(it, membershipId)
             }
         }
         coroutineScope.launch {
-            onRemoveMember().collect {
-                logger.info { "remove members: $this in membership: $membershipId" }
+            onRemoveMembers().collect {
+                logger.info { "remove members: $it in membership: $membershipId instance: ${this@ExternalMembership}" }
                 if (it.isNotEmpty())
                     userMembershipRepository.removeMembersFromMembership(it, membershipId)
             }
@@ -85,14 +85,14 @@ abstract class ExternalMembership(private val coroutineScope: CoroutineScope) : 
     private fun syncMembers() {
         coroutineScope.launch {
             onSyncGetAddedMembers().collect {
-                logger.info { "first add members: $this in membership: $membershipId" }
+                logger.info { "first add members: $it in membership: $membershipId" }
                 if (it.isNotEmpty())
                     userMembershipRepository.addMembersToMembership(it, membershipId)
             }
         }
         coroutineScope.launch {
             onSyncGetRemovedMembers().collect {
-                logger.info { "first remove members: $this in membership: $membershipId" }
+                logger.info { "first remove members: $it in membership: $membershipId" }
                 if (it.isNotEmpty())
                     userMembershipRepository.removeMembersFromMembership(it, membershipId)
             }
@@ -103,9 +103,9 @@ abstract class ExternalMembership(private val coroutineScope: CoroutineScope) : 
 
     abstract suspend fun onSyncGetRemovedMembers(): Flow<List<UUID>>
 
-    abstract fun onAddMember(): Flow<List<UUID>>
+    abstract fun onAddMembers(): Flow<List<UUID>>
 
-    abstract fun onRemoveMember(): Flow<List<UUID>>
+    abstract fun onRemoveMembers(): Flow<List<UUID>>
 }
 
 class StudyGroupExternalMembership(
@@ -142,7 +142,7 @@ class StudyGroupExternalMembership(
         }
     }
 
-    override fun onAddMember(): Flow<List<UUID>> {
+    override fun onAddMembers(): Flow<List<UUID>> {
         return observeStudyGroupMembershipsByScopeId
             .flatMapConcat { membershipIds ->
                 membershipIds.map { membershipId ->
@@ -157,7 +157,7 @@ class StudyGroupExternalMembership(
     }
 
     @OptIn(FlowPreview::class)
-    override fun onRemoveMember(): Flow<List<UUID>> {
+    override fun onRemoveMembers(): Flow<List<UUID>> {
         return observeStudyGroupMembershipsByScopeId.flatMapConcat { membershipIds ->
             membershipIds.map { membershipId ->
                 userMembershipRepository.observeRemovedMembersByMembershipId(membershipId)

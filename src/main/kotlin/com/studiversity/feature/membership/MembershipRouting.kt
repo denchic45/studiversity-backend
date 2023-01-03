@@ -1,6 +1,6 @@
 package com.studiversity.feature.membership
 
-import com.studiversity.feature.membership.model.JoinMemberRequest
+import com.studiversity.feature.membership.model.ManualJoinMemberRequest
 import com.studiversity.feature.membership.usecase.RemoveMemberFromScopeUseCase
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.RoleErrors
@@ -47,7 +47,7 @@ fun Route.membersRoute(
 
         get {
             onBefore(call)
-            val scopeId = call.parameters["id"]!!.toUUID()
+            val scopeId = call.parameters["scopeId"]!!.toUUID()
             val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
 
             requireCapability(currentUserId, readMembersCapability, scopeId)
@@ -59,11 +59,11 @@ fun Route.membersRoute(
         post {
             onBefore(call)
             val currentUserId = call.jwtPrincipal().payload.claimId
-            val scopeId = call.parameters["id"]!!.toUUID()
+            val scopeId = call.parameters["scopeId"]!!.toUUID()
 
             val result = when (call.request.queryParameters["action"]!!) {
                 "manual" -> {
-                    val body = call.receive<JoinMemberRequest>()
+                    val body = call.receive<ManualJoinMemberRequest>()
 
                     requireCapability(currentUserId, writeMembersCapability, scopeId)
 
@@ -106,7 +106,7 @@ private fun Route.memberByIdRoute(
         delete {
             onBefore(call)
             val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
-            val scopeId = call.parameters["id"]!!.toUUID()
+            val scopeId = call.parameters["scopeId"]!!.toUUID()
             val memberId = call.parameters["memberId"]!!.toUUID()
 
             requireCapability(currentUserId, writeMembersCapability, scopeId)
