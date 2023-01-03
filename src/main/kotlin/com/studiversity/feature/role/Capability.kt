@@ -9,6 +9,8 @@ data class Capability(val resource: String) {
         val DeleteUser: Capability = Capability("user:delete")
         val ReadUserConfidentialData: Capability = Capability("user/confidential:read")
 
+        val WriteAssignRoles: Capability = Capability("role/assignment:write")
+
         val WriteGroup: Capability = Capability("group:write")
         val ReadGroup: Capability = Capability("group:read")
         val DeleteGroup: Capability = Capability("group:delete")
