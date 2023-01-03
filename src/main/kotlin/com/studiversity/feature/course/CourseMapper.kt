@@ -7,5 +7,6 @@ import com.studiversity.feature.course.subject.toResponse
 fun CourseDao.toResponse(): CourseResponse = CourseResponse(
     id = id.value,
     name = name,
-    subject = subject?.toResponse()
+    subject = subject?.toResponse(),
+    archived = archived
 )
