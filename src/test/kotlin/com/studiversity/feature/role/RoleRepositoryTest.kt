@@ -1,7 +1,7 @@
 package com.studiversity.feature.role
 
+import com.studiversity.database.DatabaseFactory
 import com.studiversity.feature.role.repository.RoleRepository
-import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.koin.core.context.GlobalContext.startKoin
@@ -20,12 +20,7 @@ class RoleRepositoryTest : KoinTest {
         @BeforeAll
         @JvmStatic
         fun start() {
-            Database.connect(
-                url = "jdbc:postgresql://db.twmjqqkhwizjfmbebbxj.supabase.co:5432/postgres",
-                driver = "org.postgresql.Driver",
-                user = "postgres",
-                password = "4G4x#!nKhwexYgM"
-            )
+            DatabaseFactory.database
 
             startKoin {
                 modules(

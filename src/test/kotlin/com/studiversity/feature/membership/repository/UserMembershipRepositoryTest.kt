@@ -1,5 +1,6 @@
 package com.studiversity.feature.membership.repository
 
+import com.studiversity.database.DatabaseFactory
 import com.studiversity.di.coroutineModule
 import com.studiversity.di.supabaseClientModule
 import com.studiversity.util.toUUID
@@ -9,7 +10,6 @@ import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.koin.core.context.GlobalContext
@@ -25,12 +25,7 @@ class UserMembershipRepositoryTest : KoinTest {
         @BeforeAll
         @JvmStatic
         fun start() {
-            Database.connect(
-                url = "jdbc:postgresql://db.twmjqqkhwizjfmbebbxj.supabase.co:5432/postgres",
-                driver = "org.postgresql.Driver",
-                user = "postgres",
-                password = "4G4x#!nKhwexYgM"
-            )
+            DatabaseFactory.database
 
             GlobalContext.startKoin {
                 modules(
