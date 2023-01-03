@@ -1,10 +1,7 @@
 package com.studiversity.feature.course
 
 import com.studiversity.feature.course.repository.CourseRepository
-import com.studiversity.feature.course.usecase.AddCourseUseCase
-import com.studiversity.feature.course.usecase.FindCourseByIdUseCase
-import com.studiversity.feature.course.usecase.RequireExistCourseUseCase
-import com.studiversity.feature.course.usecase.UpdateCourseUseCase
+import com.studiversity.feature.course.usecase.*
 import org.koin.dsl.module
 
 private val useCaseModule = module {
@@ -12,6 +9,12 @@ private val useCaseModule = module {
     single { FindCourseByIdUseCase(get(), get()) }
     single { UpdateCourseUseCase(get()) }
     single { RequireExistCourseUseCase(get(), get()) }
+    single { FindCourseStudyGroupsUseCase(get(), get()) }
+    single { AttachStudyGroupToCourseUseCase(get(), get()) }
+    single { DetachStudyGroupToCourseUseCase(get(), get()) }
+    single { ArchiveCourseUseCase(get(), get()) }
+    single { UnarchiveCourseUseCase(get(), get()) }
+    single { RemoveCourseUseCase(get(), get(), get()) }
 }
 
 private val repositoryModule = module { single { CourseRepository() } }
