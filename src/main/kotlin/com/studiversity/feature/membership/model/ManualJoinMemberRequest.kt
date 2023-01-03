@@ -5,10 +5,8 @@ import kotlinx.serialization.Serializable
 import java.util.*
 
 @Serializable
-data class JoinMemberRequest(
+data class ManualJoinMemberRequest(
     @Serializable(UUIDSerializer::class)
     val userId: UUID,
-    @Serializable(UUIDSerializer::class)
-    val membershipId: UUID? = null,
     val roleIds: List<Long>
 )
