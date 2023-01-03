@@ -1,5 +1,6 @@
 package com.studiversity.plugin
 
+import com.studiversity.ktor.ConflictException
 import com.studiversity.ktor.ForbiddenException
 import com.studiversity.model.ErrorInfo
 import com.studiversity.model.respondWithError
@@ -29,8 +30,11 @@ fun Application.configureStatusPages() {
         exception<ForbiddenException> { call, exception ->
             call.respondWithError(HttpStatusCode.Forbidden, ErrorInfo(exception.message ?: ""))
         }
-        exception<RequestValidationException> { call, cause ->
-            call.respondWithErrors(HttpStatusCode.BadRequest, cause.reasons.toErrors())
+        exception<RequestValidationException> { call, exception ->
+            call.respondWithErrors(HttpStatusCode.BadRequest, exception.reasons.toErrors())
+        }
+        exception<ConflictException> { call, exception ->
+            call.respondWithError(HttpStatusCode.Conflict, ErrorInfo(exception.message ?: ""))
         }
     }
 }
