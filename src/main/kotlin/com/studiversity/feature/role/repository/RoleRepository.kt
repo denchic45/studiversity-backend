@@ -144,13 +144,18 @@ class RoleRepository {
         ).toUserRolesResponse(userId)
     }
 
-
     fun findUsersByScopeId(scopeId: UUID): List<UserWithRolesResponse> = transaction {
         UserRoleScopeDao.find(UsersRolesScopes.scopeId eq scopeId).toUsersWithRoles()
     }
 
     fun addUserRolesToScope(userId: UUID, roles: List<Long>, scopeId: UUID) = transaction {
-        roles.map { roleId ->
+        roles.filterNot { roleId ->
+            UsersRolesScopes.exists {
+                UsersRolesScopes.userId eq userId and
+                        (UsersRolesScopes.roleId eq roleId) and
+                        (UsersRolesScopes.scopeId eq scopeId)
+            }
+        }.map { roleId ->
             UsersRolesScopes.insert {
                 it[UsersRolesScopes.userId] = userId
                 it[this.scopeId] = scopeId
