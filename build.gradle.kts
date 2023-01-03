@@ -75,7 +75,7 @@ tasks {
 }
 
 dependencies {
-    // Ktor
+    // Ktor server
     implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktorVersion")
@@ -86,9 +86,11 @@ dependencies {
     implementation("io.ktor:ktor-server-request-validation:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
+    // Ktor client
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-client-auth:$ktorVersion")
 
     // Exposed
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
