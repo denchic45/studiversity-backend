@@ -6,9 +6,9 @@ import com.studiversity.feature.membership.repository.MembershipRepository
 import com.studiversity.feature.role.ScopeType
 import com.studiversity.feature.role.repository.ScopeRepository
 import com.studiversity.feature.studygroup.model.CreateStudyGroupRequest
+import com.studiversity.feature.studygroup.model.StudyGroupResponse
 import com.studiversity.feature.studygroup.repository.StudyGroupRepository
 import com.studiversity.transaction.TransactionWorker
-import java.util.*
 
 class AddStudyGroupUseCase(
     private val transactionWorker: TransactionWorker,
@@ -16,10 +16,10 @@ class AddStudyGroupUseCase(
     private val scopeRepository: ScopeRepository,
     private val membershipRepository: MembershipRepository
 ) {
-    operator fun invoke(request: CreateStudyGroupRequest): UUID = transactionWorker {
-        groupRepository.add(request).also { id ->
-            scopeRepository.add(id, ScopeType.StudyGroup, Constants.organizationId)
-            membershipRepository.addManualMembership(CreateMembershipRequest("manual", id))
+    operator fun invoke(request: CreateStudyGroupRequest): StudyGroupResponse = transactionWorker {
+        groupRepository.add(request).also { response ->
+            scopeRepository.add(response.id, ScopeType.StudyGroup, Constants.organizationId)
+            membershipRepository.addManualMembership(CreateMembershipRequest("manual", response.id))
         }
     }
 }

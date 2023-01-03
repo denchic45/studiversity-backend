@@ -53,10 +53,11 @@ fun Application.studyGroupRoutes() {
                 }
                 post {
                     val body = call.receive<CreateStudyGroupRequest>()
-                    val id = addStudyGroup(body).toString()
-                    call.respond(HttpStatusCode.Created, id)
+                    val response = addStudyGroup(body)
+                    call.respond(HttpStatusCode.Created, response)
                 }
                 studyGroupByIdRoutes()
+                studyGroupMembersRoute()
             }
         }
     }
@@ -88,13 +89,14 @@ private fun Route.studyGroupByIdRoutes() {
             removeStudyGroup(id)
             call.respond(HttpStatusCode.NoContent, "Group deleted")
         }
-        studyGroupMembersRoute()
     }
 }
 
 fun Route.studyGroupMembersRoute() {
-    val requireExistStudyGroupUseCase: RequireExistStudyGroupUseCase by inject()
-    membersRoute(Capability.ReadGroup, Capability.WriteGroupMembers) {
-        requireExistStudyGroupUseCase(parameters["id"]!!.toUUID())
+    route("/{scopeId}") {
+        val requireExistStudyGroupUseCase: RequireExistStudyGroupUseCase by inject()
+        membersRoute(Capability.ReadStudyGroup, Capability.WriteStudyGroupMembers) {
+            requireExistStudyGroupUseCase(parameters["scopeId"]!!.toUUID())
+        }
     }
 }
