@@ -5,7 +5,10 @@ import com.studiversity.feature.membership.usecase.RemoveMemberFromScopeUseCase
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.RoleErrors
 import com.studiversity.feature.role.model.UpdateUserRolesRequest
-import com.studiversity.feature.role.usecase.*
+import com.studiversity.feature.role.usecase.FindMembersInScopeUseCase
+import com.studiversity.feature.role.usecase.RequireAvailableRolesInScopeUseCase
+import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
+import com.studiversity.feature.role.usecase.RequirePermissionToAssignRolesUseCase
 import com.studiversity.ktor.claimId
 import com.studiversity.ktor.jwtPrincipal
 import com.studiversity.util.hasNotDuplicates
@@ -78,7 +81,7 @@ fun Route.membersRoute(
             }
             call.respond(HttpStatusCode.Created, result)
         }
-        memberByIdRoute(readMembersCapability, writeMembersCapability,onBefore)
+        memberByIdRoute(readMembersCapability, writeMembersCapability, onBefore)
     }
 }
 
@@ -111,49 +114,6 @@ private fun Route.memberByIdRoute(
             removeMemberFromScope(memberId, scopeId)
             call.respond(HttpStatusCode.NoContent, "Member deleted")
 
-        }
-        memberRolesRoute(readMembersCapability, writeMembersCapability,onBefore)
-    }
-}
-
-private fun Route.memberRolesRoute(
-    readMembersCapability: Capability,
-    writeMembersCapability: Capability,
-    onBefore: (ApplicationCall) -> Unit
-) {
-    route("/roles") {
-        val requireCapability: RequireCapabilityUseCase by inject()
-        val requireAvailableRolesInScope: RequireAvailableRolesInScopeUseCase by inject()
-        val requirePermissionToAssignRoles: RequirePermissionToAssignRolesUseCase by inject()
-        val findAssignedUserRolesInScope: FindAssignedUserRolesInScopeUseCase by inject()
-        val updateUserRolesInScope: UpdateUserRolesInScopeUseCase by inject()
-
-        get {
-            onBefore(call)
-            val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
-            val scopeId = call.parameters["id"]!!.toUUID()
-            val memberId = call.parameters["memberId"]!!.toUUID()
-
-            requireCapability(currentUserId, readMembersCapability, scopeId)
-
-            call.respond(HttpStatusCode.OK, findAssignedUserRolesInScope(memberId, scopeId))
-        }
-        put {
-            onBefore(call)
-            val currentUserId = call.jwtPrincipal().payload.claimId
-            val scopeId = call.parameters["id"]!!.toUUID()
-            val memberId = call.parameters["memberId"]!!.toUUID()
-            val body = call.receive<UpdateUserRolesRequest>()
-
-            requireCapability(currentUserId, writeMembersCapability, scopeId)
-
-            val assignableRoles = body.roleIds
-
-            requireAvailableRolesInScope(assignableRoles, scopeId)
-            requirePermissionToAssignRoles(currentUserId, assignableRoles, scopeId)
-
-            val updatedMember = updateUserRolesInScope(memberId, scopeId, body)
-            call.respond(HttpStatusCode.OK, updatedMember)
         }
     }
 }

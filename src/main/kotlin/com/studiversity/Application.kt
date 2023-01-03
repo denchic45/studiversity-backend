@@ -3,6 +3,7 @@ package com.studiversity
 import com.studiversity.di.configureDI
 import com.studiversity.feature.auth.configureAuth
 import com.studiversity.feature.membership.configureMembership
+import com.studiversity.feature.role.configureRoles
 import com.studiversity.plugin.*
 import com.studiversity.supabase.configureSupabase
 import io.ktor.serialization.kotlinx.json.*
@@ -27,6 +28,7 @@ fun Application.module() = runBlocking {
     configureStatusPages()
     configureSupabase()
     configureAuth()
+    configureRoles()
     configureMembership()
     configureRouting()
 }
