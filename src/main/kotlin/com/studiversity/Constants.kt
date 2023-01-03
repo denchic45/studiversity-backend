@@ -9,3 +9,10 @@ object Constants {
 
     val organizationId: UUID = UUID.fromString("b3e226b3-2d90-4197-bb65-976ab7595f31")
 }
+
+object DatabaseConstants {
+    const val url = "jdbc:postgresql://db.twmjqqkhwizjfmbebbxj.supabase.co:5432/postgres"
+    const val driver = "org.postgresql.Driver"
+    const val user = "postgres"
+    const val password = "4G4x#!nKhwexYgM"
+}
