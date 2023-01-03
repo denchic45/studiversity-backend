@@ -12,10 +12,7 @@ import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.realtime.createChannel
 import io.github.jan.supabase.realtime.postgresChangeFlow
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.serialization.json.jsonPrimitive
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -213,9 +210,9 @@ class UserMembershipRepository(private val realtime: Realtime) {
 //            filter = "membership_id=eq.${membershipId}" so far this does not work in the database
         }
         channel.join()
-        emitAll(membershipsByScopeIdFlow.map {
-            it.oldRecord.getValue("member_id").jsonPrimitive.content.toUUID()
-        })
+        emitAll(membershipsByScopeIdFlow
+            .filter { it.oldRecord.getValue("membership_id").jsonPrimitive.content.toUUID() == membershipId }
+            .map { it.oldRecord.getValue("member_id").jsonPrimitive.content.toUUID() })
     }
 
     private fun getMembersByMembershipAndMaxJoinTimestamp(membershipRow: ResultRow): Instant? {
@@ -224,21 +221,6 @@ class UserMembershipRepository(private val realtime: Realtime) {
             .select(UsersMemberships.membershipId eq membershipRow[Memberships.id])
             .singleOrNull()?.get(UsersMemberships.joinAt)
     }
-
-//    fun findLeaveTimestampOfLastMemberByScope(scopeId: UUID) = flowOf(
-//        transaction {
-//            getMembershipsByScope(scopeId).mapNotNull { membershipRow ->
-//                getMembersByMembershipAndMaxLeaveTimestamp(membershipRow)
-//            }.maxByOrNull { it }
-//        }
-//    )
-
-//    private fun getMembersByMembershipAndMaxLeaveTimestamp(membershipRow: ResultRow): Instant? {
-//        return UsersMemberships
-//            .slice(UsersMemberships.id, UsersMemberships.membershipId, UsersMemberships.leaveTimestamp.max())
-//            .select(UsersMemberships.membershipId eq membershipRow[Memberships.id])
-//            .singleOrNull()?.get(UsersMemberships.leaveTimestamp)
-//    }
 
     fun existMember(memberId: UUID, membershipId: UUID) = transaction {
         UsersMemberships.exists { UsersMemberships.memberId eq memberId and (UsersMemberships.membershipId eq membershipId) }
