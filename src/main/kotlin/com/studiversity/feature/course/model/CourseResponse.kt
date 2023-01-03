@@ -10,5 +10,6 @@ data class CourseResponse(
     @Serializable(UUIDSerializer::class)
     val id: UUID,
     val name: String,
-    val subject: SubjectResponse?
+    val subject: SubjectResponse?,
+    val archived: Boolean
 )

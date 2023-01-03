@@ -10,6 +10,7 @@ import java.util.*
 object Courses : UUIDTable("course", "course_id") {
     val name = varcharMax("course_name")
     val subjectId = optReference("subject_id", Subjects.id)
+    val archived = bool("archived").default(false)
 }
 
 class CourseDao(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -18,6 +19,7 @@ class CourseDao(id: EntityID<UUID>) : UUIDEntity(id) {
 
     var name by Courses.name
     var subjectId by Courses.subjectId
+    var archived by Courses.archived
 
     var subject by SubjectDao optionalReferencedOn Courses.subjectId
 }

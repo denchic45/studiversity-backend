@@ -3,14 +3,10 @@ package com.studiversity.feature.course
 import com.studiversity.Constants
 import com.studiversity.feature.course.model.CreateCourseRequest
 import com.studiversity.feature.course.model.UpdateCourseRequest
-import com.studiversity.feature.course.usecase.AddCourseUseCase
-import com.studiversity.feature.course.usecase.FindCourseByIdUseCase
-import com.studiversity.feature.course.usecase.RequireExistCourseUseCase
-import com.studiversity.feature.course.usecase.UpdateCourseUseCase
+import com.studiversity.feature.course.usecase.*
 import com.studiversity.feature.membership.membersRoute
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
-import com.studiversity.feature.studygroup.StudyGroupErrors
 import com.studiversity.ktor.claimId
 import com.studiversity.ktor.jwtPrincipal
 import com.studiversity.util.onlyDigits
@@ -25,6 +21,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+import java.util.*
 
 fun Application.courseRoutes() {
     routing {
@@ -52,51 +49,130 @@ fun Application.courseRoutes() {
 
                     val body = call.receive<CreateCourseRequest>()
 
-                    val courseId = addCourse(body).toString()
-                    call.respond(HttpStatusCode.OK, courseId)
+                    val course = addCourse(body)
+                    call.respond(HttpStatusCode.OK, course)
                 }
                 courseByIdRoutes()
+                courseMembersRoute()
             }
         }
     }
 }
 
 fun Route.courseByIdRoutes() {
-    route("/{id}") {
+    route("/{courseId}") {
         val requireCapability: RequireCapabilityUseCase by inject()
         val findCourseById: FindCourseByIdUseCase by inject()
         val updateCourse: UpdateCourseUseCase by inject()
+        val removeCourse: RemoveCourseUseCase by inject()
 
         get {
-            val id = call.parameters["id"]!!.toUUID()
+            val courseId = call.parameters["courseId"]!!.toUUID()
 
             val currentUserId = call.jwtPrincipal().payload.claimId
 
-            requireCapability(currentUserId, Capability.ReadCourse, id)
+            requireCapability(currentUserId, Capability.ReadCourse, courseId)
 
-            findCourseById(id).let { course -> call.respond(HttpStatusCode.OK, course) }
+            findCourseById(courseId).let { course -> call.respond(HttpStatusCode.OK, course) }
         }
 
         patch {
-            val id = call.parameters["id"]!!.toUUID()
             val currentUserId = call.jwtPrincipal().payload.claimId
+            val courseId = call.parameters["courseId"]!!.toUUID()
 
-            requireCapability(currentUserId, Capability.WriteCourses, id)
+            requireCapability(currentUserId, Capability.WriteCourses, courseId)
 
             val body = call.receive<UpdateCourseRequest>()
 
-            updateCourse(id, body).let { course ->
+            updateCourse(courseId, body).let { course ->
                 call.respond(HttpStatusCode.OK, course)
             }
         }
-        courseMembersRoute()
+        route("/archived") {
+            val archiveCourse: ArchiveCourseUseCase by inject()
+            val unarchiveCourse: UnarchiveCourseUseCase by inject()
+
+            put {
+                val currentUserId = call.jwtPrincipal().payload.claimId
+                val courseId = call.parameters["courseId"]!!.toUUID()
+
+                requireCapability(currentUserId, Capability.WriteCourses, courseId)
+
+                archiveCourse(courseId)
+                call.respond(HttpStatusCode.OK)
+            }
+            delete {
+                val courseId = call.parameters["courseId"]!!.toUUID()
+                val currentUserId = call.jwtPrincipal().payload.claimId
+
+                requireCapability(currentUserId, Capability.WriteCourses, courseId)
+
+                unarchiveCourse(courseId)
+                call.respond(HttpStatusCode.NoContent)
+            }
+        }
+        delete {
+            val currentUserId = call.jwtPrincipal().payload.claimId
+            val courseId = call.parameters["courseId"]!!.toUUID()
+
+            requireCapability(currentUserId, Capability.WriteCourses, courseId)
+
+            removeCourse(courseId)
+            call.respond(HttpStatusCode.NoContent, "Course deleted")
+        }
+        courseStudyGroups()
     }
 }
 
-fun Route.courseMembersRoute() {
-    val requireExistCourseUseCase: RequireExistCourseUseCase by inject()
-    membersRoute(Capability.ReadCourseMembers, Capability.WriteCourseMembers) {
-        requireExistCourseUseCase(parameters["id"]!!.toUUID())
+private fun Route.courseStudyGroups() {
+    route("/studygroups") {
+        val requireCapability: RequireCapabilityUseCase by inject()
+        val findCourseStudyGroups: FindCourseStudyGroupsUseCase by inject()
+        val attachStudyGroupToCourse: AttachStudyGroupToCourseUseCase by inject()
+        val detachStudyGroupToCourse: DetachStudyGroupToCourseUseCase by inject()
+
+        get {
+            val currentUserId = call.jwtPrincipal().payload.claimId
+            val courseId = call.parameters["courseId"]!!.toUUID()
+
+            requireCapability(currentUserId, Capability.WriteCourseStudyGroups, courseId)
+
+            val studyGroupIds = findCourseStudyGroups(courseId).map(UUID::toString)
+            call.respond(HttpStatusCode.OK, studyGroupIds)
+        }
+
+        route("/{studyGroupId}") {
+            put {
+                val currentUserId = call.jwtPrincipal().payload.claimId
+                val courseId = call.parameters["courseId"]!!.toUUID()
+
+                requireCapability(currentUserId, Capability.WriteCourseStudyGroups, courseId)
+
+                val studyGroupId = call.parameters["studyGroupId"]!!.toUUID()
+                attachStudyGroupToCourse(courseId, studyGroupId)
+                call.respond(HttpStatusCode.Created, "")
+            }
+            delete {
+                val currentUserId = call.jwtPrincipal().payload.claimId
+                val courseId = call.parameters["courseId"]!!.toUUID()
+
+                requireCapability(currentUserId, Capability.WriteCourseStudyGroups, courseId)
+
+                val studyGroupId = call.parameters["studyGroupId"]!!.toUUID()
+                val deleted = detachStudyGroupToCourse(studyGroupId, courseId)
+                if (deleted) {
+                    call.respond(HttpStatusCode.NoContent, "Study group detached")
+                } else call.respond(HttpStatusCode.Gone, "Study group has gone")
+            }
+        }
     }
 }
 
+private fun Route.courseMembersRoute() {
+    route("/{scopeId}") {
+        val requireExistCourse: RequireExistCourseUseCase by inject()
+        membersRoute(Capability.ReadCourseMembers, Capability.WriteCourseMembers) {
+            requireExistCourse(parameters["scopeId"]!!.toUUID())
+        }
+    }
+}
