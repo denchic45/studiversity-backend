@@ -21,7 +21,7 @@ import org.koin.ktor.ext.inject
 fun Application.studyGroupRoutes() {
     routing {
         authenticate("auth-jwt") {
-            route("/groups") {
+            route("/studygroups") {
 
                 val addStudyGroup: AddStudyGroupUseCase by inject()
 
