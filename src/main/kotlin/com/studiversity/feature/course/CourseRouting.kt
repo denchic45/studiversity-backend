@@ -35,8 +35,8 @@ fun Application.courseRoutes() {
                     validate<CreateCourseRequest> { request ->
                         buildValidationResult {
                             condition(
-                                request.name.isEmpty() || request.name.onlyDigits(),
-                                StudyGroupErrors.INVALID_GROUP_NAME
+                                request.name.isNotEmpty() && !request.name.onlyDigits(),
+                                CourseErrors.INVALID_COURSE_NAME
                             )
                         }
                     }

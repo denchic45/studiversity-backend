@@ -10,4 +10,8 @@ fun Application.coursesModule() {
     subjectRoutes()
 }
 
-object CourseErrors
+object CourseErrors {
+    const val INVALID_COURSE_NAME = "INVALID_COURSE_NAME"
+    const val STUDY_GROUP_ALREADY_EXIST = "STUDY_GROUP_ALREADY_EXIST"
+    const val COURSE_IS_NOT_ARCHIVED = "COURSE_IS_NOT_ARCHIVED"
+}
