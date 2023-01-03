@@ -1,26 +1,26 @@
 package com.studiversity.feature.course.repository
 
 import com.studiversity.database.exists
-import com.studiversity.database.table.CourseDao
-import com.studiversity.database.table.Courses
-import com.studiversity.database.table.SubjectDao
+import com.studiversity.database.table.*
 import com.studiversity.feature.course.model.CourseResponse
 import com.studiversity.feature.course.model.CreateCourseRequest
 import com.studiversity.feature.course.model.UpdateCourseRequest
 import com.studiversity.feature.course.toResponse
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 class CourseRepository {
 
-    fun add(request: CreateCourseRequest): UUID {
+    fun add(request: CreateCourseRequest): CourseResponse {
         val dao = CourseDao.new {
             name = request.name
             request.subjectId?.apply {
                 subject = SubjectDao.findById(this)
             }
         }
-        return dao.id.value
+        return dao.toResponse()
     }
 
     fun findById(id: UUID): CourseResponse? {
@@ -35,6 +35,64 @@ class CourseRepository {
     }
 
     fun exist(id: UUID): Boolean {
-       return Courses.exists { Courses.id eq id }
+        return Courses.exists { Courses.id eq id }
+    }
+
+    fun existStudyGroupByCourse(courseId: UUID, studyGroupId: UUID): Boolean {
+        return ExternalStudyGroupsMemberships
+            .innerJoin(Memberships, { membershipId }, { Memberships.id })
+            .slice(ExternalStudyGroupsMemberships.studyGroupId)
+            .exists { Memberships.scopeId eq courseId and (ExternalStudyGroupsMemberships.studyGroupId eq studyGroupId) }
+    }
+
+    fun findStudyGroupsByCourse(courseId: UUID): List<UUID> {
+        return ExternalStudyGroupsMemberships
+            .innerJoin(Memberships, { membershipId }, { Memberships.id })
+            .slice(ExternalStudyGroupsMemberships.studyGroupId)
+            .select(Memberships.scopeId eq courseId)
+            .map { it[ExternalStudyGroupsMemberships.studyGroupId].value }
+    }
+
+    fun addCourseStudyGroup(courseId: UUID, studyGroupId: UUID) {
+        val membershipId = Memberships.insertIgnore {
+            it[scopeId] = courseId
+            it[active] = true
+            it[type] = "by_group"
+        }[Memberships.id]
+        ExternalStudyGroupsMemberships.insertIgnore {
+            it[ExternalStudyGroupsMemberships.membershipId] = membershipId
+            it[ExternalStudyGroupsMemberships.studyGroupId] = studyGroupId
+        }
+    }
+
+    fun removeCourseStudyGroup(courseId: UUID, studyGroupId: UUID): Boolean {
+        return ExternalStudyGroupsMemberships
+            .innerJoin(Memberships, { membershipId }, { Memberships.id })
+            .slice(Memberships.id)
+            .select(
+                Memberships.scopeId eq courseId and
+                        (ExternalStudyGroupsMemberships.studyGroupId eq studyGroupId)
+            ).run {
+                if (empty())
+                    return false
+                val membershipId = single()[Memberships.id]
+                Memberships.deleteWhere { Memberships.id eq membershipId } > 0
+            }
+    }
+
+    fun addArchivedCourse(courseId: UUID) {
+        CourseDao.findById(courseId)!!.archived = true
+    }
+
+    fun removeArchivedCourse(courseId: UUID) {
+        CourseDao.findById(courseId)!!.archived = false
+    }
+
+    fun isArchivedCourse(courseId: UUID): Boolean {
+        return CourseDao.findById(courseId)!!.archived
+    }
+
+    fun removeCourse(courseId: UUID) {
+        CourseDao.findById(courseId)!!.delete()
     }
 }
