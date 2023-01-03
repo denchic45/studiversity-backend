@@ -12,9 +12,9 @@ class UpdateUserRolesInScopeUseCase(
 ) {
     operator fun invoke(
         userId: UUID,
-        scopeId: UUID,
-        updateUserRolesRequest: UpdateUserRolesRequest
+        request: UpdateUserRolesRequest,
+        scopeId: UUID
     ): UserRolesResponse = transactionWorker {
-        roleRepository.updateByUserAndScope(userId, scopeId, updateUserRolesRequest)
+        roleRepository.updateByUserAndScope(userId, scopeId, request)
     }
 }

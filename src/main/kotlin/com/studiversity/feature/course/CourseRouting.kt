@@ -94,7 +94,7 @@ fun Route.courseByIdRoutes() {
 }
 
 fun Route.courseMembersRoute() {
-    val requireExistCourseUseCase:RequireExistCourseUseCase by inject()
+    val requireExistCourseUseCase: RequireExistCourseUseCase by inject()
     membersRoute(Capability.ReadCourseMembers, Capability.WriteCourseMembers) {
         requireExistCourseUseCase(parameters["id"]!!.toUUID())
     }
