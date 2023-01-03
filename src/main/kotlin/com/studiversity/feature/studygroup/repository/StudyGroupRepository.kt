@@ -16,7 +16,7 @@ import java.util.*
 
 class StudyGroupRepository {
 
-    fun add(request: CreateStudyGroupRequest): UUID {
+    fun add(request: CreateStudyGroupRequest): StudyGroupResponse {
         val dao = StudyGroupDao.new {
             name = request.name
             academicYear = listOf(request.academicYear.start, request.academicYear.end)
@@ -24,7 +24,7 @@ class StudyGroupRepository {
                 specialty = SpecialtyDao.findById(this)
             }
         }
-        return dao.id.value
+        return dao.toResponse()
     }
 
     fun update(id: UUID, updateStudyGroupRequest: UpdateStudyGroupRequest): Boolean {
