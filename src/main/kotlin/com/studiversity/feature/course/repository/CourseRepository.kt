@@ -54,11 +54,14 @@ class CourseRepository {
     }
 
     fun addCourseStudyGroup(courseId: UUID, studyGroupId: UUID) {
-        val membershipId = Memberships.insertIgnore {
-            it[scopeId] = courseId
-            it[active] = true
-            it[type] = "by_group"
-        }[Memberships.id]
+        val membershipId = Memberships
+            .select(Memberships.scopeId eq courseId and (Memberships.type eq "by_group"))
+            .firstOrNull()?.get(Memberships.id)
+            ?: Memberships.insertIgnore {
+                it[scopeId] = courseId
+                it[active] = true
+                it[type] = "by_group"
+            }[Memberships.id]
         ExternalStudyGroupsMemberships.insertIgnore {
             it[ExternalStudyGroupsMemberships.membershipId] = membershipId
             it[ExternalStudyGroupsMemberships.studyGroupId] = studyGroupId
@@ -66,18 +69,19 @@ class CourseRepository {
     }
 
     fun removeCourseStudyGroup(courseId: UUID, studyGroupId: UUID): Boolean {
-        return ExternalStudyGroupsMemberships
-            .innerJoin(Memberships, { membershipId }, { Memberships.id })
-            .slice(Memberships.id)
-            .select(
-                Memberships.scopeId eq courseId and
-                        (ExternalStudyGroupsMemberships.studyGroupId eq studyGroupId)
-            ).run {
-                if (empty())
-                    return false
-                val membershipId = single()[Memberships.id]
-                Memberships.deleteWhere { Memberships.id eq membershipId } > 0
-            }
+        val membershipByGroupId = Memberships.slice(Memberships.id).select(
+            Memberships.scopeId eq courseId and
+                    (Memberships.type eq "by_group")
+        ).first()[Memberships.id]
+        val courseStudyGroupDeleted = ExternalStudyGroupsMemberships.deleteWhere {
+            ExternalStudyGroupsMemberships.studyGroupId eq studyGroupId and
+                    (membershipId eq membershipByGroupId)
+        } > 0
+        if (!ExternalStudyGroupsMemberships.exists {
+                ExternalStudyGroupsMemberships.membershipId eq membershipByGroupId
+            })
+            Memberships.deleteWhere { Memberships.id eq membershipByGroupId }
+        return courseStudyGroupDeleted
     }
 
     fun addArchivedCourse(courseId: UUID) {

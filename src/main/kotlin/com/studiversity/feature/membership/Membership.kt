@@ -11,7 +11,6 @@ import com.studiversity.logger.logger
 import com.studiversity.transaction.TransactionWorker
 import io.ktor.server.plugins.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
@@ -48,6 +47,7 @@ class ManualMembership(
 ) : Membership() {
 
     fun joinMember(manualJoinMemberRequest: ManualJoinMemberRequest): ScopeMember = transactionWorker {
+        logger.debug { "JOIN MEMBER: ${manualJoinMemberRequest.userId} TO MEMBERSHIP: $membershipId" }
         val userId = manualJoinMemberRequest.userId
         if (userMembershipRepository.existMember(userId, membershipId))
             throw BadRequestException(MembershipErrors.MEMBER_ALREADY_EXIST_IN_MEMBERSHIP)
@@ -120,9 +120,10 @@ class StudyGroupExternalMembership(
     private val groupIds: StateFlow<List<UUID>> =
         membershipRepository.observeStudyGroupIdsOfExternalMembershipsByMembershipId(membershipId)
 
-    private val observeStudyGroupMembershipsByScopeId = groupIds.flatMapConcat {
+    private val observeStudyGroupMembershipsByScopeId = groupIds.flatMapLatest {
+        logger.debug { "FLAT MAP GROUP IDS: $it" }
         membershipRepository.observeMembershipsByScopeIds(it)
-    }
+    }.shareIn(coroutineScope, SharingStarted.Lazily)
 
     override suspend fun onSyncGetAddedMembers(): Flow<List<UUID>> {
         return observeStudyGroupMembershipsByScopeId.map {
@@ -143,22 +144,20 @@ class StudyGroupExternalMembership(
     }
 
     override fun onAddMembers(): Flow<List<UUID>> {
-        return observeStudyGroupMembershipsByScopeId
-            .flatMapConcat { membershipIds ->
-                membershipIds.map { membershipId ->
-                    userMembershipRepository.observeAddedMembersByMembershipId(membershipId)
-                        .map { Member(it, membershipId) }
-                }.merge()
-                    .filter { member ->
-                        roleRepository.hasRoleIn(member.userId, Role.Student, groupIds.value)
-                                && !userMembershipRepository.existMember(member.userId, membershipId)
-                    }.map { listOf(it.userId) }
-            }
+        return observeStudyGroupMembershipsByScopeId.flatMapLatest { membershipIds ->
+            membershipIds.map { membershipId ->
+                userMembershipRepository.observeAddedMembersByMembershipId(membershipId)
+                    .map { Member(it, membershipId) }
+            }.merge()
+                .filter { member ->
+                    roleRepository.hasRoleIn(member.userId, Role.Student, groupIds.value)
+                            && !userMembershipRepository.existMember(member.userId, membershipId)
+                }.map { listOf(it.userId) }
+        }
     }
 
-    @OptIn(FlowPreview::class)
     override fun onRemoveMembers(): Flow<List<UUID>> {
-        return observeStudyGroupMembershipsByScopeId.flatMapConcat { membershipIds ->
+        return observeStudyGroupMembershipsByScopeId.flatMapLatest { membershipIds ->
             membershipIds.map { membershipId ->
                 userMembershipRepository.observeRemovedMembersByMembershipId(membershipId)
             }.merge()

@@ -20,8 +20,8 @@ import java.util.*
 
 class MembershipRepository(private val realtime: Realtime, private val coroutineScope: CoroutineScope) {
 
-    private val membershipChannel: RealtimeChannel = realtime.createChannel("#membership1")
-    private val insertExternalStudyGroupMembershipsFlow =
+    private val membershipChannel: RealtimeChannel = realtime.createChannel("#membership")
+    private val insertExternalStudyGroupMembershipFlow =
         membershipChannel.postgresChangeFlow<PostgresAction.Insert>(schema = "public") {
             table = "membership"
             filter = "type=eq.by_group"
@@ -86,24 +86,27 @@ class MembershipRepository(private val realtime: Realtime, private val coroutine
         val insertedStudyGroupExternalMembershipFlow = channel.postgresChangeFlow<PostgresAction.Insert>("public") {
             table = "external_study_group_membership"
             filter = "membership_id=eq.$membershipId"
-        }.map { it.record.getValue("membership_id").jsonPrimitive.content.toUUID() }
+        }.map { it.record.getValue("study_group_id").jsonPrimitive.content.toUUID() }
+
         val deletedStudyGroupExternalMembershipFlow = channel.postgresChangeFlow<PostgresAction.Delete>("public") {
             table = "external_study_group_membership"
-        }.map { it.oldRecord.getValue("membership_id").jsonPrimitive.content.toUUID() }
-            .filter { it == membershipId }
+        }.filter {
+            it.oldRecord.getValue("membership_id").jsonPrimitive.content.toUUID() == membershipId
+        }
+            .map { it.oldRecord.getValue("study_group_id").jsonPrimitive.content.toUUID() }
 
         coroutineScope.launch {
             channel.join()
             launch {
-                insertedStudyGroupExternalMembershipFlow.collect { addedMembershipId ->
-                    logger.info { "added group to course; membershipId: $addedMembershipId" }
-                    stateFlow.update { it + addedMembershipId }
+                insertedStudyGroupExternalMembershipFlow.collect { addedStudyGroupId ->
+                    logger.info { "added group to course; studyGroupId: $addedStudyGroupId" }
+                    stateFlow.update { it + addedStudyGroupId }
                 }
             }
             launch {
-                deletedStudyGroupExternalMembershipFlow.collect { removedMembershipId ->
-                    logger.info { "removed group from course; membershipId: $removedMembershipId" }
-                    stateFlow.update { it - removedMembershipId }
+                deletedStudyGroupExternalMembershipFlow.collect { removedStudyGroupId ->
+                    logger.info { "removed group from course; studyGroupId: $removedStudyGroupId" }
+                    stateFlow.update { it - removedStudyGroupId }
                 }
             }
         }
@@ -114,14 +117,16 @@ class MembershipRepository(private val realtime: Realtime, private val coroutine
         Memberships.slice(Memberships.scopeId).select(Memberships.id eq membershipId).single()[Memberships.scopeId]
     }
 
-    fun observeAddExternalStudyGroupMemberships(): Flow<UUID> {
-        return insertExternalStudyGroupMembershipsFlow.map {
+    fun observeOnFirstAddExternalStudyGroupMembershipInMembership(): Flow<UUID> {
+        return insertExternalStudyGroupMembershipFlow.map {
+            // Check if attached study group is first, else ignore her
             it.record.getValue("membership_id").jsonPrimitive.content.toUUID()
         }
     }
 
     fun observeRemoveExternalStudyGroupMemberships(): Flow<UUID> {
         return deleteExternalStudyGroupMembershipsFlow.map {
+            // Check that there are no more attached groups left, else we ignore the deletion
             it.oldRecord.getValue("membership_id").jsonPrimitive.content.toUUID()
         }
     }

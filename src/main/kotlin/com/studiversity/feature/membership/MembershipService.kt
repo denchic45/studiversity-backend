@@ -65,7 +65,7 @@ class MembershipService(
     }
 
     fun observeAddMemberships(): Flow<StudyGroupExternalMembership> {
-        return membershipRepository.observeAddExternalStudyGroupMemberships()
+        return membershipRepository.observeOnFirstAddExternalStudyGroupMembershipInMembership()
             .map { getMembership(it) }
     }
 

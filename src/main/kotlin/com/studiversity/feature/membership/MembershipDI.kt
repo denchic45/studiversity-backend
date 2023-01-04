@@ -21,7 +21,7 @@ private val serviceModule = module {
 
 private val repositoryModule = module {
     single { MembershipRepository(get(), get()) }
-    single { UserMembershipRepository(get()) }
+    single { UserMembershipRepository(get(),get()) }
 }
 
 val membershipModule = module {

@@ -18,6 +18,7 @@ fun Application.configureMembership() {
         membershipService.observeAddMemberships().collect {
             logger.info { "Added membership: ${it.membershipId}" }
             memberships.add(it.apply { init() })
+            logger.info { "After adding membership total count: ${memberships.size}" }
         }
     }
 
@@ -25,6 +26,7 @@ fun Application.configureMembership() {
         membershipService.observeRemoveMemberships().collect { oldMembershipId ->
             logger.info { "Removed membership: $oldMembershipId" }
             memberships.removeIf { it.membershipId == oldMembershipId }
+            logger.info { "After deleting membership total count: ${memberships.size}" }
         }
     }
 }

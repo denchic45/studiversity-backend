@@ -32,7 +32,7 @@ class UserMembershipRepositoryTest : KoinTest {
                     coroutineModule,
                     supabaseClientModule,
                     module {
-                        single { UserMembershipRepository(get()) }
+                        single { UserMembershipRepository(get(),get()) }
                     })
             }
         }

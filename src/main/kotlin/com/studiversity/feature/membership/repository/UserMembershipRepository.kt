@@ -12,7 +12,9 @@ import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.realtime.createChannel
 import io.github.jan.supabase.realtime.postgresChangeFlow
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonPrimitive
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -22,8 +24,26 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
 import java.util.*
 
-class UserMembershipRepository(private val realtime: Realtime) {
+class UserMembershipRepository(
+    private val coroutineScope: CoroutineScope,
+    private val realtime: Realtime
+) {
+    private val userMembershipChannel = realtime.createChannel("#user_membership")
+    private val insertUserMembershipFlow =
+        userMembershipChannel.postgresChangeFlow<PostgresAction.Insert>(schema = "public") {
+            table = "user_membership"
+        }.shareIn(coroutineScope, SharingStarted.Lazily)
 
+    private val deleteUserMembershipFlow =
+        userMembershipChannel.postgresChangeFlow<PostgresAction.Delete>(schema = "public") {
+            table = "user_membership"
+        }.shareIn(coroutineScope, SharingStarted.Lazily)
+
+    init {
+        coroutineScope.launch {
+            userMembershipChannel.join()
+        }
+    }
 
     fun addMember(member: Member) = transaction {
         UsersMemberships.insert {
@@ -189,30 +209,40 @@ class UserMembershipRepository(private val realtime: Realtime) {
         return Memberships.select(Memberships.scopeId eq scopeId)
     }
 
-    fun observeAddedMembersByMembershipId(membershipId: UUID): Flow<UUID> = flow {
-        logger.info { "observing added members by membership = $membershipId" }
-        val channel = realtime.createChannel("#membership_insert.$membershipId")
-        val membershipsByScopeIdFlow: Flow<PostgresAction.Insert> = channel.postgresChangeFlow(schema = "public") {
-            table = "user_membership"
-            filter = "membership_id=eq.${membershipId}"
+    private val channelFlows = mutableMapOf<UUID, Flow<UUID>>()
+
+    private fun getOrCreateAddedMembersByMembershipIdFlow(membershipId: UUID): Flow<UUID> {
+        return channelFlows.getOrPut(membershipId) {
+            flow {
+                val channel = realtime.createChannel("#membership_insert.$membershipId")
+                val membershipsByScopeIdFlow: Flow<PostgresAction.Insert> =
+                    channel.postgresChangeFlow(schema = "public") {
+                        table = "user_membership"
+                        filter = "membership_id=eq.${membershipId}"
+                    }
+                channel.join()
+                emitAll(membershipsByScopeIdFlow.map {
+                    it.record.getValue("member_id").jsonPrimitive.content.toUUID()
+                })
+            }.shareIn(coroutineScope, SharingStarted.Lazily)
         }
-        channel.join()
-        emitAll(membershipsByScopeIdFlow.map {
-            it.record.getValue("member_id").jsonPrimitive.content.toUUID()
-        })
     }
 
-    fun observeRemovedMembersByMembershipId(membershipId: UUID): Flow<UUID> = flow {
-        logger.info { "observing removed members by membership = $membershipId" }
-        val channel = realtime.createChannel("#membership_delete.$membershipId")
-        val membershipsByScopeIdFlow: Flow<PostgresAction.Delete> = channel.postgresChangeFlow(schema = "public") {
-            table = "user_membership"
-//            filter = "membership_id=eq.${membershipId}" so far this does not work in the database
+    fun observeAddedMembersByMembershipId(membershipId: UUID): Flow<UUID> {
+        logger.info { "observing added members by membership = $membershipId" }
+        return insertUserMembershipFlow.mapNotNull {
+            if (membershipId != it.record.getValue("membership_id").jsonPrimitive.content.toUUID())
+                return@mapNotNull null
+            it.record.getValue("member_id").jsonPrimitive.content.toUUID()
         }
-        channel.join()
-        emitAll(membershipsByScopeIdFlow
-            .filter { it.oldRecord.getValue("membership_id").jsonPrimitive.content.toUUID() == membershipId }
-            .map { it.oldRecord.getValue("member_id").jsonPrimitive.content.toUUID() })
+    }
+
+    fun observeRemovedMembersByMembershipId(membershipId: UUID): Flow<UUID> {
+        return deleteUserMembershipFlow.mapNotNull {
+            if (membershipId != it.oldRecord.getValue("membership_id").jsonPrimitive.content.toUUID())
+                return@mapNotNull null
+            it.oldRecord.getValue("member_id").jsonPrimitive.content.toUUID()
+        }
     }
 
     private fun getMembersByMembershipAndMaxJoinTimestamp(membershipRow: ResultRow): Instant? {

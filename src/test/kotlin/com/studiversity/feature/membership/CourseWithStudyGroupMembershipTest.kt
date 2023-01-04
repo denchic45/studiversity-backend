@@ -9,6 +9,7 @@ import com.studiversity.feature.studygroup.model.CreateStudyGroupRequest
 import com.studiversity.feature.studygroup.model.StudyGroupResponse
 import com.studiversity.supabase.model.SignupResponse
 import com.studiversity.util.toUUID
+import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
@@ -24,6 +25,8 @@ class CourseWithStudyGroupMembershipTest {
 
     var token = ""
     var refreshToken = ""
+
+//    private var startData: StartData by Delegates.notNull()
 
     @Test
     fun testMembersOnAttachDetachStudyGroupsToCourse() = testApplication {
@@ -84,6 +87,8 @@ class CourseWithStudyGroupMembershipTest {
             body
         }
 
+//        startData = StartData(studyGroup1, studyGroup2, course)
+
         client.put("/courses/${course.id}/studygroups/${studyGroup1.id}") {
             authHeader()
         }
@@ -114,6 +119,17 @@ class CourseWithStudyGroupMembershipTest {
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
         }
+
+        delay(15000)
+
+        client.get("/courses/${course.id}/members") {
+            authHeader()
+            contentType(ContentType.Application.Json)
+        }.body<List<ScopeMember>>()
+            .apply {
+                assertEquals(setOf(user1Id), map { it.userId }.toSet())
+            }
+
         client.post("/studygroups/${studyGroup1.id}/members?action=manual") {
             authHeader()
             contentType(ContentType.Application.Json)
@@ -122,7 +138,7 @@ class CourseWithStudyGroupMembershipTest {
             assertEquals(HttpStatusCode.Created, status)
         }
 
-        delay(15000)
+        delay(8000)
 
         client.get("/courses/${course.id}/members") {
             authHeader()
@@ -132,13 +148,13 @@ class CourseWithStudyGroupMembershipTest {
                 assertEquals(setOf(user1Id, user2Id), map { it.userId }.toSet())
             }
 
+        // delete first group and check members of course
         client.delete("/courses/${course.id}/studygroups/${studyGroup1.id}") {
             authHeader()
         }
 
-        delay(15000)
+        delay(8000)
 
-        // delete first group and check members of course
         client.get("/courses/${course.id}/members") {
             authHeader()
             contentType(ContentType.Application.Json)
@@ -147,13 +163,13 @@ class CourseWithStudyGroupMembershipTest {
                 assertEquals(setOf(user1Id), map { it.userId }.toSet())
             }
 
+        // delete second group and check members of course
         client.delete("/courses/${course.id}/studygroups/${studyGroup2.id}") {
             authHeader()
         }
 
-        delay(15000)
+        delay(8000)
 
-        // delete second group and check members of course
         client.get("/courses/${course.id}/members") {
             authHeader()
             contentType(ContentType.Application.Json)
@@ -161,7 +177,15 @@ class CourseWithStudyGroupMembershipTest {
             .apply {
                 assertEquals(emptySet(), map { it.userId }.toSet())
             }
+        clearData(client, studyGroup1, studyGroup2, course)
+    }
 
+    private suspend fun clearData(
+        client: HttpClient,
+        studyGroup1: StudyGroupResponse,
+        studyGroup2: StudyGroupResponse,
+        course: CourseResponse
+    ) {
         // delete data
         assertEquals(
             HttpStatusCode.NoContent,
@@ -185,3 +209,9 @@ class CourseWithStudyGroupMembershipTest {
         header("Authorization", "Bearer $token")
     }
 }
+
+private data class StartData(
+    val studyGroup1: StudyGroupResponse,
+    val studyGroup2: StudyGroupResponse,
+    val course: CourseResponse
+)
