@@ -74,7 +74,7 @@ class CourseWithStudyGroupMembershipTest {
 
         client.get("/courses/${course.id}/studygroups")
             .body<List<String>>().apply {
-                assertEquals(map(String::toUUID).toSet(), setOf(studyGroup1.id, studyGroup2.id))
+                assertEquals(listOf(studyGroup1.id, studyGroup2.id).sorted(), map(String::toUUID).sorted())
             }
 
         val user1Id = "7a98cdcf-d404-4556-96bd-4ce9137c8cbe".toUUID()
@@ -82,26 +82,27 @@ class CourseWithStudyGroupMembershipTest {
 
         enrolStudentsToGroups(client, studyGroup1, studyGroup2, user2Id, user1Id)
 
-        client.get("/courses/${course.id}/members").body<List<ScopeMember>>()
-            .apply { assertEquals(setOf(user1Id, user2Id), map { it.userId }.toSet()) }
+        client.get("/courses/${course.id}/members").body<List<ScopeMember>>().apply {
+            assertEquals(listOf(user1Id, user2Id).sorted(), map(ScopeMember::userId).sorted())
+        }
 
         // delete first group and check members of course
         client.delete("/courses/${course.id}/studygroups/${studyGroup1.id}")
 
         delay(8000)
 
-        client.get("/courses/${course.id}/members").body<List<ScopeMember>>()
-            .apply { assertEquals(setOf(user1Id), map { it.userId }.toSet()) }
+        client.get("/courses/${course.id}/members").body<List<ScopeMember>>().apply {
+            assertEquals(listOf(user1Id), map(ScopeMember::userId))
+        }
 
         // delete second group and check members of course
         client.delete("/courses/${course.id}/studygroups/${studyGroup2.id}")
 
         delay(8000)
 
-        client.get("/courses/${course.id}/members").body<List<ScopeMember>>()
-            .apply {
-                assertEquals(emptySet(), map { it.userId }.toSet())
-            }
+        client.get("/courses/${course.id}/members").body<List<ScopeMember>>().apply {
+            assertEquals(emptyList(), map(ScopeMember::userId))
+        }
     }
 
     @Test
@@ -115,42 +116,47 @@ class CourseWithStudyGroupMembershipTest {
         enrolStudentsToGroups(client, studyGroup1, studyGroup2, user2Id, user1Id)
         attachGroupsToCourse(client, course, studyGroup1, studyGroup2)
 
-        client.get("/courses/${course.id}/studygroups")
-            .body<List<String>>().apply {
-                assertEquals(map(String::toUUID).toSet(), setOf(studyGroup1.id, studyGroup2.id))
-            }
-        client.get("/courses/${course.id}/members").body<List<ScopeMember>>()
-            .apply { assertEquals(setOf(user1Id, user2Id), map { it.userId }.toSet()) }
+        client.get("/courses/${course.id}/studygroups").body<List<String>>().apply {
+            assertEquals(listOf(studyGroup1.id, studyGroup2.id).sorted(), map(String::toUUID).sorted())
+        }
+        client.get("/courses/${course.id}/members").body<List<ScopeMember>>().apply {
+            assertEquals(listOf(user1Id, user2Id).sorted(), map(ScopeMember::userId).sorted())
+        }
 
         // delete first user from first group
         client.delete("/studygroups/${studyGroup1.id}/members/$user1Id")
         delay(8000)
 
         // assert only second member in first group
-        client.get("/studygroups/${studyGroup1.id}/members").body<List<ScopeMember>>()
-            .apply { assertEquals(setOf(user2Id), map { it.userId }.toSet()) }
+        client.get("/studygroups/${studyGroup1.id}/members").body<List<ScopeMember>>().apply {
+            assertEquals(listOf(user2Id), map(ScopeMember::userId))
+        }
         // assert two members of course
-        client.get("/courses/${course.id}/members").body<List<ScopeMember>>()
-            .apply { assertEquals(setOf(user1Id, user2Id), map { it.userId }.toSet()) }
+        client.get("/courses/${course.id}/members").body<List<ScopeMember>>().apply {
+            assertEquals(listOf(user1Id, user2Id).sorted(), map(ScopeMember::userId).sorted())
+        }
 
         // delete second user from first group
         client.delete("/studygroups/${studyGroup1.id}/members/$user2Id")
         delay(8000)
 
         // assert zero members in first group
-        client.get("/studygroups/${studyGroup1.id}/members").body<List<ScopeMember>>()
-            .apply { assertEquals(emptyList(), map { it.userId }) }
+        client.get("/studygroups/${studyGroup1.id}/members").body<List<ScopeMember>>().apply {
+            assertEquals(emptyList(), map(ScopeMember::userId))
+        }
         // assert only first member of course
-        client.get("/courses/${course.id}/members").body<List<ScopeMember>>()
-            .apply { assertEquals(listOf(user1Id), map { it.userId }) }
+        client.get("/courses/${course.id}/members").body<List<ScopeMember>>().apply {
+            assertEquals(listOf(user1Id), map(ScopeMember::userId))
+        }
 
         // delete first user from second group
         client.delete("/studygroups/${studyGroup2.id}/members/$user1Id")
         delay(8000)
 
         // assert zero members of course
-        client.get("/courses/${course.id}/members").body<List<ScopeMember>>()
-            .apply { assertEquals(emptyList(), map { it.userId }) }
+        client.get("/courses/${course.id}/members").body<List<ScopeMember>>().apply {
+            assertEquals(emptyList(), map(ScopeMember::userId))
+        }
     }
 
     private suspend fun enrolStudentsToGroups(
