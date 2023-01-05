@@ -11,6 +11,7 @@ import com.studiversity.logger.logger
 import com.studiversity.transaction.TransactionWorker
 import io.ktor.server.plugins.*
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
@@ -47,7 +48,6 @@ class ManualMembership(
 ) : Membership() {
 
     fun joinMember(manualJoinMemberRequest: ManualJoinMemberRequest): ScopeMember = transactionWorker {
-        logger.debug { "JOIN MEMBER: ${manualJoinMemberRequest.userId} TO MEMBERSHIP: $membershipId" }
         val userId = manualJoinMemberRequest.userId
         if (userMembershipRepository.existMember(userId, membershipId))
             throw BadRequestException(MembershipErrors.MEMBER_ALREADY_EXIST_IN_MEMBERSHIP)
@@ -62,7 +62,6 @@ class ManualMembership(
 abstract class ExternalMembership(private val coroutineScope: CoroutineScope) : Membership() {
 
     fun init() {
-        syncMembers()
         coroutineScope.launch {
             onAddMembers().collect {
                 logger.info { "add members: $it in membership: $membershipId" }
@@ -72,36 +71,33 @@ abstract class ExternalMembership(private val coroutineScope: CoroutineScope) : 
         }
         coroutineScope.launch {
             onRemoveMembers().collect {
-                logger.info { "remove members: $it in membership: $membershipId instance: ${this@ExternalMembership}" }
+                logger.info { "remove members: $it in membership: $membershipId" }
                 if (it.isNotEmpty())
                     userMembershipRepository.removeMembersFromMembership(it, membershipId)
             }
         }
-        coroutineScope.launch {
-            userMembershipRepository.listenTestRealtime()
-        }
     }
 
-    private fun syncMembers() {
+    fun syncMembers() {
         coroutineScope.launch {
-            onSyncGetAddedMembers().collect {
-                logger.info { "first add members: $it in membership: $membershipId" }
+            onSyncGetAddedMembers().let {
+                logger.info { "sync add members: $it in membership: $membershipId" }
                 if (it.isNotEmpty())
                     userMembershipRepository.addMembersToMembership(it, membershipId)
             }
         }
         coroutineScope.launch {
-            onSyncGetRemovedMembers().collect {
-                logger.info { "first remove members: $it in membership: $membershipId" }
+            onSyncGetRemovedMembers().let {
+                logger.info { "sync remove members: $it in membership: $membershipId" }
                 if (it.isNotEmpty())
                     userMembershipRepository.removeMembersFromMembership(it, membershipId)
             }
         }
     }
 
-    abstract suspend fun onSyncGetAddedMembers(): Flow<List<UUID>>
+    abstract suspend fun onSyncGetAddedMembers(): List<UUID>
 
-    abstract suspend fun onSyncGetRemovedMembers(): Flow<List<UUID>>
+    abstract suspend fun onSyncGetRemovedMembers(): List<UUID>
 
     abstract fun onAddMembers(): Flow<List<UUID>>
 
@@ -120,31 +116,34 @@ class StudyGroupExternalMembership(
     private val groupIds: StateFlow<List<UUID>> =
         membershipRepository.observeStudyGroupIdsOfExternalMembershipsByMembershipId(membershipId)
 
-    private val observeStudyGroupMembershipsByScopeId = groupIds.flatMapLatest {
-        logger.debug { "FLAT MAP GROUP IDS: $it" }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val studyGroupMembershipsByScopeId = groupIds.flatMapLatest {
         membershipRepository.observeMembershipsByScopeIds(it)
-    }.shareIn(coroutineScope, SharingStarted.Lazily)
+    }.shareIn(coroutineScope, SharingStarted.Lazily, 1)
 
-    override suspend fun onSyncGetAddedMembers(): Flow<List<UUID>> {
-        return observeStudyGroupMembershipsByScopeId.map {
-            userMembershipRepository.findUnrelatedMembersByManyToOneMemberships(
-                it,
-                membershipId
-            )
+    init {
+        coroutineScope.launch {
+            studyGroupMembershipsByScopeId.collect {
+                syncMembers()
+            }
         }
     }
 
-    override suspend fun onSyncGetRemovedMembers(): Flow<List<UUID>> {
-        return observeStudyGroupMembershipsByScopeId.map {
-            userMembershipRepository.findUnrelatedMembersByOneToManyMemberships(
-                membershipId,
-                it
-            )
+    override suspend fun onSyncGetAddedMembers(): List<UUID> {
+        return studyGroupMembershipsByScopeId.first().let {
+            userMembershipRepository.findUnrelatedMembersByManyToOneMemberships(it, membershipId)
         }
     }
 
+    override suspend fun onSyncGetRemovedMembers(): List<UUID> {
+        return studyGroupMembershipsByScopeId.first().let {
+            userMembershipRepository.findUnrelatedMembersByOneToManyMemberships(membershipId, it)
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun onAddMembers(): Flow<List<UUID>> {
-        return observeStudyGroupMembershipsByScopeId.flatMapLatest { membershipIds ->
+        return studyGroupMembershipsByScopeId.flatMapLatest { membershipIds ->
             membershipIds.map { membershipId ->
                 userMembershipRepository.observeAddedMembersByMembershipId(membershipId)
                     .map { Member(it, membershipId) }
@@ -156,8 +155,9 @@ class StudyGroupExternalMembership(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun onRemoveMembers(): Flow<List<UUID>> {
-        return observeStudyGroupMembershipsByScopeId.flatMapLatest { membershipIds ->
+        return studyGroupMembershipsByScopeId.flatMapLatest { membershipIds ->
             membershipIds.map { membershipId ->
                 userMembershipRepository.observeRemovedMembersByMembershipId(membershipId)
             }.merge()

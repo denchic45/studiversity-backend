@@ -13,7 +13,10 @@ import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.realtime.createChannel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonPrimitive
 import org.jetbrains.exposed.sql.*
@@ -25,8 +28,8 @@ import java.time.Instant
 import java.util.*
 
 class UserMembershipRepository(
-    private val coroutineScope: CoroutineScope,
-    private val realtime: Realtime
+    coroutineScope: CoroutineScope,
+    realtime: Realtime
 ) {
     private val userMembershipChannel = realtime.createChannel("#user_membership")
     private val insertUserMembershipFlow =
@@ -209,25 +212,6 @@ class UserMembershipRepository(
         return Memberships.select(Memberships.scopeId eq scopeId)
     }
 
-    private val channelFlows = mutableMapOf<UUID, Flow<UUID>>()
-
-    private fun getOrCreateAddedMembersByMembershipIdFlow(membershipId: UUID): Flow<UUID> {
-        return channelFlows.getOrPut(membershipId) {
-            flow {
-                val channel = realtime.createChannel("#membership_insert.$membershipId")
-                val membershipsByScopeIdFlow: Flow<PostgresAction.Insert> =
-                    channel.postgresChangeFlow(schema = "public") {
-                        table = "user_membership"
-                        filter = "membership_id=eq.${membershipId}"
-                    }
-                channel.join()
-                emitAll(membershipsByScopeIdFlow.map {
-                    it.record.getValue("member_id").jsonPrimitive.content.toUUID()
-                })
-            }.shareIn(coroutineScope, SharingStarted.Lazily)
-        }
-    }
-
     fun observeAddedMembersByMembershipId(membershipId: UUID): Flow<UUID> {
         logger.info { "observing added members by membership = $membershipId" }
         return insertUserMembershipFlow.mapNotNull {
@@ -276,16 +260,6 @@ class UserMembershipRepository(
             .select(
                 Memberships.scopeId inList scopeIds and (UsersMemberships.memberId eq memberId)
             ).count() > 0
-    }
-
-    suspend fun listenTestRealtime() {
-//        val channel = realtime.createChannel("#test")
-//        val membershipsByScopeIdFlow: Flow<PostgresAction.Insert> = channel.postgresChangeFlow(schema = "public") {
-//            table = "user_membership"
-//            filter = "membership_id=eq.${"aabbae18-438f-4ea4-be78-d8b051167619"}"
-//        }
-//        channel.join()
-//        membershipsByScopeIdFlow.collect { println("-- It's works!!! add user: $it") }
     }
 
     fun findMembershipIdsByMemberIdAndScopeId(userId: UUID, scopeId: UUID): List<UUID> {
