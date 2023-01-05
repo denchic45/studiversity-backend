@@ -32,5 +32,4 @@ out/
 /nbdist/
 /.nb-gradle/
 
-### VS Code ###
-.vscode/
+src/main/kotlin/com/studiversity/Constants.kt

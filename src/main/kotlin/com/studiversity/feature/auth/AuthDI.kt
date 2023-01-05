@@ -1,6 +1,6 @@
 package com.studiversity.feature.auth
 
-import com.studiversity.Constants
+import com.studiversity.SupabaseConstants
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
@@ -14,8 +14,8 @@ val authModule = module {
     single {
         HttpClient(CIO) {
             defaultRequest {
-                url(Constants.url)
-                header("apikey", Constants.key)
+                url(SupabaseConstants.url)
+                header("apikey", SupabaseConstants.key)
             }
             install(ContentNegotiation) {
                 json(Json {
