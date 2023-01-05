@@ -1,10 +1,11 @@
 package com.studiversity.feature.studygroup
 
-import com.studiversity.feature.membership.membersRoute
-import com.studiversity.feature.role.Capability
 import com.studiversity.feature.studygroup.model.CreateStudyGroupRequest
 import com.studiversity.feature.studygroup.model.UpdateStudyGroupRequest
-import com.studiversity.feature.studygroup.usecase.*
+import com.studiversity.feature.studygroup.usecase.AddStudyGroupUseCase
+import com.studiversity.feature.studygroup.usecase.FindStudyGroupByIdUseCase
+import com.studiversity.feature.studygroup.usecase.RemoveStudyGroupUseCase
+import com.studiversity.feature.studygroup.usecase.UpdateStudyGroupUseCase
 import com.studiversity.util.onlyDigits
 import com.studiversity.util.toUUID
 import com.studiversity.validation.buildValidationResult
@@ -57,7 +58,6 @@ fun Application.studyGroupRoutes() {
                     call.respond(HttpStatusCode.Created, response)
                 }
                 studyGroupByIdRoutes()
-                studyGroupMembersRoute()
             }
         }
     }
@@ -88,15 +88,6 @@ private fun Route.studyGroupByIdRoutes() {
             val id = call.parameters["id"]!!.toUUID()
             removeStudyGroup(id)
             call.respond(HttpStatusCode.NoContent, "Group deleted")
-        }
-    }
-}
-
-fun Route.studyGroupMembersRoute() {
-    route("/{scopeId}") {
-        val requireExistStudyGroupUseCase: RequireExistStudyGroupUseCase by inject()
-        membersRoute(Capability.ReadStudyGroup, Capability.WriteStudyGroupMembers) {
-            requireExistStudyGroupUseCase(parameters["scopeId"]!!.toUUID())
         }
     }
 }

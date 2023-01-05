@@ -4,7 +4,6 @@ import com.studiversity.Constants
 import com.studiversity.feature.course.model.CreateCourseRequest
 import com.studiversity.feature.course.model.UpdateCourseRequest
 import com.studiversity.feature.course.usecase.*
-import com.studiversity.feature.membership.membersRoute
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.ktor.claimId
@@ -53,7 +52,6 @@ fun Application.courseRoutes() {
                     call.respond(HttpStatusCode.OK, course)
                 }
                 courseByIdRoutes()
-                courseMembersRoute()
             }
         }
     }
@@ -164,15 +162,6 @@ private fun Route.courseStudyGroups() {
                     call.respond(HttpStatusCode.NoContent, "Study group detached")
                 } else call.respond(HttpStatusCode.Gone, "Study group has gone")
             }
-        }
-    }
-}
-
-private fun Route.courseMembersRoute() {
-    route("/{scopeId}") {
-        val requireExistCourse: RequireExistCourseUseCase by inject()
-        membersRoute(Capability.ReadCourseMembers, Capability.WriteCourseMembers) {
-            requireExistCourse(parameters["scopeId"]!!.toUUID())
         }
     }
 }

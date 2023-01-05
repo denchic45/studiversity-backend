@@ -7,6 +7,11 @@ import kotlinx.coroutines.launch
 import org.koin.ktor.ext.inject
 
 fun Application.configureMembership() {
+    membershipRoutes()
+    configureSyncMemberships()
+}
+
+private fun Application.configureSyncMemberships() {
     val membershipService: MembershipService by inject()
     val coroutineScope: CoroutineScope by inject()
 

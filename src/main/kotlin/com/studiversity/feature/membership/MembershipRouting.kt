@@ -25,19 +25,22 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
-fun Route.membershipRoute() {
-    route("/membership") {
-        post("/{type}") {
+fun Application.membershipRoutes() {
+    routing {
+        authenticate("auth-jwt") {
+            route("/scopes/{scopeId}") {
+                membersRoute()
+            }
+            route("/membership") {
+                post("/{type}") {
 
+                }
+            }
         }
     }
 }
 
-fun Route.membersRoute(
-    readMembersCapability: Capability,
-    writeMembersCapability: Capability,
-    onBefore: ApplicationCall.() -> Unit
-) {
+fun Route.membersRoute() {
     route("/members") {
         val requireCapability: RequireCapabilityUseCase by inject()
         val requireAvailableRolesInScope: RequireAvailableRolesInScopeUseCase by inject()
@@ -46,18 +49,16 @@ fun Route.membersRoute(
         val membershipService: MembershipService by inject()
 
         get {
-            onBefore(call)
             val scopeId = call.parameters["scopeId"]!!.toUUID()
             val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
 
-            requireCapability(currentUserId, readMembersCapability, scopeId)
+            requireCapability(currentUserId, Capability.ReadMembers, scopeId)
 
             findMembersInScope(scopeId).apply {
                 call.respond(HttpStatusCode.OK, this)
             }
         }
         post {
-            onBefore(call)
             val currentUserId = call.jwtPrincipal().payload.claimId
             val scopeId = call.parameters["scopeId"]!!.toUUID()
 
@@ -65,7 +66,7 @@ fun Route.membersRoute(
                 "manual" -> {
                     val body = call.receive<ManualJoinMemberRequest>()
 
-                    requireCapability(currentUserId, writeMembersCapability, scopeId)
+                    requireCapability(currentUserId, Capability.WriteMembers, scopeId)
 
                     val assignableRoles = body.roleIds
                     requireAvailableRolesInScope(assignableRoles, scopeId)
@@ -81,15 +82,11 @@ fun Route.membersRoute(
             }
             call.respond(HttpStatusCode.Created, result)
         }
-        memberByIdRoute(readMembersCapability, writeMembersCapability, onBefore)
+        memberByIdRoute()
     }
 }
 
-private fun Route.memberByIdRoute(
-    readMembersCapability: Capability,
-    writeMembersCapability: Capability,
-    onBefore: (ApplicationCall) -> Unit
-) {
+private fun Route.memberByIdRoute() {
     route("/{memberId}") {
         install(RequestValidation) {
             validate<UpdateUserRolesRequest> {
@@ -104,12 +101,11 @@ private fun Route.memberByIdRoute(
         val removeMemberFromScope: RemoveMemberFromScopeUseCase by inject()
 
         delete {
-            onBefore(call)
             val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
             val scopeId = call.parameters["scopeId"]!!.toUUID()
             val memberId = call.parameters["memberId"]!!.toUUID()
 
-            requireCapability(currentUserId, writeMembersCapability, scopeId)
+            requireCapability(currentUserId, Capability.WriteMembers, scopeId)
 
             removeMemberFromScope(memberId, scopeId)
             call.respond(HttpStatusCode.NoContent, "Member deleted")

@@ -82,7 +82,7 @@ class CourseWithStudyGroupMembershipTest {
 
         enrolStudentsToGroups(client, studyGroup1, studyGroup2, user2Id, user1Id)
 
-        client.get("/courses/${course.id}/members").body<List<ScopeMember>>().apply {
+        client.get("/scopes/${course.id}/members").body<List<ScopeMember>>().apply {
             assertEquals(listOf(user1Id, user2Id).sorted(), map(ScopeMember::userId).sorted())
         }
 
@@ -91,7 +91,7 @@ class CourseWithStudyGroupMembershipTest {
 
         delay(8000)
 
-        client.get("/courses/${course.id}/members").body<List<ScopeMember>>().apply {
+        client.get("/scopes/${course.id}/members").body<List<ScopeMember>>().apply {
             assertEquals(listOf(user1Id), map(ScopeMember::userId))
         }
 
@@ -100,7 +100,7 @@ class CourseWithStudyGroupMembershipTest {
 
         delay(8000)
 
-        client.get("/courses/${course.id}/members").body<List<ScopeMember>>().apply {
+        client.get("/scopes/${course.id}/members").body<List<ScopeMember>>().apply {
             assertEquals(emptyList(), map(ScopeMember::userId))
         }
     }
@@ -119,42 +119,42 @@ class CourseWithStudyGroupMembershipTest {
         client.get("/courses/${course.id}/studygroups").body<List<String>>().apply {
             assertEquals(listOf(studyGroup1.id, studyGroup2.id).sorted(), map(String::toUUID).sorted())
         }
-        client.get("/courses/${course.id}/members").body<List<ScopeMember>>().apply {
+        client.get("/scopes/${course.id}/members").body<List<ScopeMember>>().apply {
             assertEquals(listOf(user1Id, user2Id).sorted(), map(ScopeMember::userId).sorted())
         }
 
         // delete first user from first group
-        client.delete("/studygroups/${studyGroup1.id}/members/$user1Id")
+        client.delete("/scopes/${studyGroup1.id}/members/$user1Id")
         delay(8000)
 
         // assert only second member in first group
-        client.get("/studygroups/${studyGroup1.id}/members").body<List<ScopeMember>>().apply {
+        client.get("/scopes/${studyGroup1.id}/members").body<List<ScopeMember>>().apply {
             assertEquals(listOf(user2Id), map(ScopeMember::userId))
         }
         // assert two members of course
-        client.get("/courses/${course.id}/members").body<List<ScopeMember>>().apply {
+        client.get("/scopes/${course.id}/members").body<List<ScopeMember>>().apply {
             assertEquals(listOf(user1Id, user2Id).sorted(), map(ScopeMember::userId).sorted())
         }
 
         // delete second user from first group
-        client.delete("/studygroups/${studyGroup1.id}/members/$user2Id")
+        client.delete("/scopes/${studyGroup1.id}/members/$user2Id")
         delay(8000)
 
         // assert zero members in first group
-        client.get("/studygroups/${studyGroup1.id}/members").body<List<ScopeMember>>().apply {
+        client.get("/scopes/${studyGroup1.id}/members").body<List<ScopeMember>>().apply {
             assertEquals(emptyList(), map(ScopeMember::userId))
         }
         // assert only first member of course
-        client.get("/courses/${course.id}/members").body<List<ScopeMember>>().apply {
+        client.get("/scopes/${course.id}/members").body<List<ScopeMember>>().apply {
             assertEquals(listOf(user1Id), map(ScopeMember::userId))
         }
 
         // delete first user from second group
-        client.delete("/studygroups/${studyGroup2.id}/members/$user1Id")
+        client.delete("/scopes/${studyGroup2.id}/members/$user1Id")
         delay(8000)
 
         // assert zero members of course
-        client.get("/courses/${course.id}/members").body<List<ScopeMember>>().apply {
+        client.get("/scopes/${course.id}/members").body<List<ScopeMember>>().apply {
             assertEquals(emptyList(), map(ScopeMember::userId))
         }
     }
@@ -166,15 +166,15 @@ class CourseWithStudyGroupMembershipTest {
         user2Id: UUID,
         user1Id: UUID
     ) {
-        client.post("/studygroups/${studyGroup1.id}/members?action=manual") {
+        client.post("/scopes/${studyGroup1.id}/members?action=manual") {
             contentType(ContentType.Application.Json)
             setBody(ManualJoinMemberRequest(user1Id, roleIds = listOf(3)))
         }.apply { assertEquals(HttpStatusCode.Created, status) }
-        client.post("/studygroups/${studyGroup2.id}/members?action=manual") {
+        client.post("/scopes/${studyGroup2.id}/members?action=manual") {
             contentType(ContentType.Application.Json)
             setBody(ManualJoinMemberRequest(user1Id, roleIds = listOf(3)))
         }.apply { assertEquals(HttpStatusCode.Created, status) }
-        client.post("/studygroups/${studyGroup1.id}/members?action=manual") {
+        client.post("/scopes/${studyGroup1.id}/members?action=manual") {
             contentType(ContentType.Application.Json)
             setBody(ManualJoinMemberRequest(user2Id, roleIds = listOf(3)))
         }.apply { assertEquals(HttpStatusCode.Created, status) }
