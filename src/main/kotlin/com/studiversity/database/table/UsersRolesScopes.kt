@@ -9,6 +9,10 @@ object UsersRolesScopes : LongIdTable("user_role_scope", "user_role_scope_id") {
     val userId = reference("user_id", Users.id)
     val roleId = reference("role_id", Roles.id)
     val scopeId = uuid("scope_id").references(Scopes.id)
+
+    init {
+        uniqueIndex("user_role_scope_un", userId, roleId, scopeId)
+    }
 }
 
 class UserRoleScopeDao(id: EntityID<Long>) : LongEntity(id) {
