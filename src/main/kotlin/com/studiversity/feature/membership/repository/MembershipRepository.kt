@@ -13,6 +13,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -21,20 +22,31 @@ import java.util.*
 class MembershipRepository(private val realtime: Realtime, private val coroutineScope: CoroutineScope) {
 
     private val membershipChannel: RealtimeChannel = realtime.createChannel("#membership")
-    private val insertExternalStudyGroupMembershipFlow =
+    private val insertMembershipByGroupFlow =
         membershipChannel.postgresChangeFlow<PostgresAction.Insert>(schema = "public") {
             table = "membership"
             filter = "type=eq.by_group"
         }.shareIn(coroutineScope, SharingStarted.Lazily)
-    private val deleteExternalStudyGroupMembershipsFlow =
+    private val deleteMembershipByGroupFlow =
         membershipChannel.postgresChangeFlow<PostgresAction.Delete>(schema = "public") {
             table = "membership"
         }.filter { it.oldRecord.getValue("type").jsonPrimitive.content == "by_group" }
             .shareIn(coroutineScope, SharingStarted.Lazily)
 
+    private val externalStudyGroupMembershipChannel = realtime.createChannel("#external_study_group_membership")
+    private val insertStudyGroupExternalMembershipFlow =
+        externalStudyGroupMembershipChannel.postgresChangeFlow<PostgresAction.Insert>("public") {
+            table = "external_study_group_membership"
+        }
+    private val deleteStudyGroupExternalMembershipFlow =
+        externalStudyGroupMembershipChannel.postgresChangeFlow<PostgresAction.Delete>("public") {
+            table = "external_study_group_membership"
+        }
+
     init {
         coroutineScope.launch {
             membershipChannel.join()
+            externalStudyGroupMembershipChannel.join()
         }
     }
 
@@ -76,35 +88,30 @@ class MembershipRepository(private val realtime: Realtime, private val coroutine
         Memberships.slice(Memberships.id).select(Memberships.type eq type).map { it[Memberships.id].value }
     }
 
-    // TODO ВОЗМОЖНО ПОЛЕ SCOPE_ID НЕ НУЖНО И ДОСТАТОЧНО ПРОСЛУШИВАТЬ ПОЛЕ MEMBERSHIP_ID
     fun observeStudyGroupIdsOfExternalMembershipsByMembershipId(membershipId: UUID): StateFlow<List<UUID>> {
         val stateFlow = MutableStateFlow(transaction {
-            ExternalStudyGroupsMemberships.select(ExternalStudyGroupsMemberships.membershipId eq membershipId)
-                .map { it[ExternalStudyGroupsMemberships.studyGroupId].value }
+            ExternalStudyGroupsMemberships.select(
+                ExternalStudyGroupsMemberships.membershipId eq membershipId
+            ).map { it[ExternalStudyGroupsMemberships.studyGroupId].value }
         })
-        val channel = realtime.createChannel("external-study-group-by-$membershipId")
-        val insertedStudyGroupExternalMembershipFlow = channel.postgresChangeFlow<PostgresAction.Insert>("public") {
-            table = "external_study_group_membership"
-            filter = "membership_id=eq.$membershipId"
-        }.map { it.record.getValue("study_group_id").jsonPrimitive.content.toUUID() }
-
-        val deletedStudyGroupExternalMembershipFlow = channel.postgresChangeFlow<PostgresAction.Delete>("public") {
-            table = "external_study_group_membership"
-        }.filter {
-            it.oldRecord.getValue("membership_id").jsonPrimitive.content.toUUID() == membershipId
-        }
-            .map { it.oldRecord.getValue("study_group_id").jsonPrimitive.content.toUUID() }
 
         coroutineScope.launch {
-            channel.join()
             launch {
-                insertedStudyGroupExternalMembershipFlow.collect { addedStudyGroupId ->
+                insertStudyGroupExternalMembershipFlow.filter {
+                    it.record.getValue("membership_id").jsonPrimitive.content.toUUID() == membershipId
+                }.map {
+                    it.record.getValue("study_group_id").jsonPrimitive.content.toUUID()
+                }.collect { addedStudyGroupId ->
                     logger.info { "added group to course; studyGroupId: $addedStudyGroupId" }
                     stateFlow.update { it + addedStudyGroupId }
                 }
             }
             launch {
-                deletedStudyGroupExternalMembershipFlow.collect { removedStudyGroupId ->
+                deleteStudyGroupExternalMembershipFlow.filter {
+                    it.oldRecord.getValue("membership_id").jsonPrimitive.content.toUUID() == membershipId
+                }.map {
+                    it.oldRecord.getValue("study_group_id").jsonPrimitive.content.toUUID()
+                }.collect { removedStudyGroupId ->
                     logger.info { "removed group from course; studyGroupId: $removedStudyGroupId" }
                     stateFlow.update { it - removedStudyGroupId }
                 }
@@ -118,14 +125,14 @@ class MembershipRepository(private val realtime: Realtime, private val coroutine
     }
 
     fun observeOnFirstAddExternalStudyGroupMembershipInMembership(): Flow<UUID> {
-        return insertExternalStudyGroupMembershipFlow.map {
+        return insertMembershipByGroupFlow.map {
             // Check if attached study group is first, else ignore her
             it.record.getValue("membership_id").jsonPrimitive.content.toUUID()
         }
     }
 
     fun observeRemoveExternalStudyGroupMemberships(): Flow<UUID> {
-        return deleteExternalStudyGroupMembershipsFlow.map {
+        return deleteMembershipByGroupFlow.map {
             // Check that there are no more attached groups left, else we ignore the deletion
             it.oldRecord.getValue("membership_id").jsonPrimitive.content.toUUID()
         }
@@ -135,5 +142,11 @@ class MembershipRepository(private val realtime: Realtime, private val coroutine
         return Memberships.slice(Memberships.id)
             .select(Memberships.type eq type and (Memberships.scopeId eq scopeId))
             .first()[Memberships.id].value
+    }
+
+    fun findMembershipIdByTypeAndScopeId(scopeId: UUID, type: String?): UUID? {
+        val query = Memberships.slice(Memberships.id).select(Memberships.scopeId eq scopeId)
+        type?.let { query.andWhere { Memberships.type eq type } }
+        return query.firstOrNull()?.get(Memberships.id)?.value
     }
 }

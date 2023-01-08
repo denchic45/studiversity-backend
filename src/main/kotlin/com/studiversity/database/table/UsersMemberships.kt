@@ -9,4 +9,8 @@ object UsersMemberships : LongIdTable("user_membership", "user_membership_id") {
     val membershipId = reference("membership_id", Memberships.id)
     val memberId = reference("member_id", Users.id)
     val joinAt = timestamp("join_at").defaultExpression(CustomFunction("now", JavaInstantColumnType()))
+
+    init {
+        uniqueIndex("user_membership_un", membershipId, memberId)
+    }
 }

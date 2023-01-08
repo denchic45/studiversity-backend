@@ -10,13 +10,14 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 object Roles : LongIdTable("role", "role_id") {
     val name = varcharMax("role_name")
     val shortName = varcharMax("short_name")
+    val parent = long("parent").references(Roles.id)
 }
 
 class RoleDao(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<RoleDao>(Roles) {
 
-        fun findIdByName(shortName: String): Long {
-            return find(Roles.shortName eq shortName).first().id.value
+        fun findChildRoleIdsByRoleId(parentRole: Long): List<Long> {
+            return find(Roles.parent eq parentRole).map { it.id.value }
         }
     }
 

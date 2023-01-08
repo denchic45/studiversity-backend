@@ -59,9 +59,9 @@ class MembershipService(
             getMembership(membershipRepository.findMembershipIdByTypeAndScopeId(type, scopeId))
         }
 
-    fun getGroupExternalMemberships(): List<StudyGroupExternalMembership> {
+    fun getExternalMemberships(): List<ExternalMembership> {
         return membershipRepository.findIdsByType("by_group")
-            .map { membershipId -> getMembership(membershipId) }
+            .map { membershipId -> getMembership<StudyGroupExternalMembership>(membershipId) }
     }
 
     fun observeAddMemberships(): Flow<StudyGroupExternalMembership> {

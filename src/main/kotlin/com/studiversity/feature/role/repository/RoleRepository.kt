@@ -49,7 +49,7 @@ class RoleRepository {
     private fun getUserRoleIdsByScope(userId: UUID, scopeId: UUID): List<Long> {
         return UserRoleScopeDao.find(
             UsersRolesScopes.userId eq userId and (UsersRolesScopes.scopeId eq scopeId)
-        ).map { it.roleId }
+        ).map { it.roleId.value }
     }
 
     fun hasCapability(userId: UUID, capability: Capability, scopeId: UUID): Boolean = transaction {
@@ -82,7 +82,7 @@ class RoleRepository {
                     and (UsersRolesScopes.scopeId eq scopeId)
         ).map { usersRolesScopesRow ->
             findPermissionByRole(
-                roleId = usersRolesScopesRow[UsersRolesScopes.roleId],
+                roleId = usersRolesScopesRow[UsersRolesScopes.roleId].value,
                 capabilityResource = capabilityResource
             )
         }.combinedPermission()

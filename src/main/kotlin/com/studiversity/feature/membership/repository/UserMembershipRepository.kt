@@ -5,6 +5,7 @@ import com.studiversity.database.table.*
 import com.studiversity.feature.membership.model.Member
 import com.studiversity.feature.membership.model.MembershipResponse
 import com.studiversity.feature.membership.model.ScopeMember
+import com.studiversity.feature.role.Role
 import com.studiversity.feature.role.mapper.toRole
 import com.studiversity.logger.logger
 import com.studiversity.util.toUUID
@@ -19,10 +20,12 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonPrimitive
+import org.jetbrains.exposed.dao.load
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInList
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
 import java.util.*
@@ -59,6 +62,10 @@ class UserMembershipRepository(
         UsersMemberships.deleteWhere {
             memberId eq member.userId and (membershipId eq member.membershipId)
         }
+        removeUsersRolesWhoNotExistInAnyMembershipByScopeId(
+            listOf(member.userId),
+            MembershipDao.findById(member.membershipId)!!.scopeId
+        )
     }
 
     fun findMembersByScope(scopeId: UUID) = Memberships
@@ -96,6 +103,103 @@ class UserMembershipRepository(
                     .map { it.role.toRole() }
             )
         }
+
+    private fun removeUsersRolesWhoNotExistInAnyMembershipByScopeId(userIds: List<UUID>, scopeId: UUID) {
+        findUsersWhoHasRolesAndNotExistInAnyMembershipByScopeId(userIds, scopeId)
+            .let { missingMemberIds ->
+                UsersRolesScopes.deleteWhere {
+                    UsersRolesScopes.scopeId eq scopeId and (userId inList missingMemberIds)
+                }
+            }
+    }
+
+    fun findUsersWhoHasRolesAndNotExistInAnyMembershipByScopeId(
+        userIds: List<UUID>,
+        scopeId: UUID
+    ) = Memberships.innerJoin(UsersMemberships, { Memberships.id }, { membershipId })
+        .rightJoin(
+            UsersRolesScopes,
+            { Memberships.scopeId },
+            { UsersRolesScopes.scopeId },
+            { UsersRolesScopes.userId eq UsersMemberships.memberId })
+        .select(
+            UsersRolesScopes.userId inList userIds
+                    and (UsersRolesScopes.scopeId eq scopeId)
+                    and (UsersMemberships.memberId.isNull())
+        ).map { it[UsersRolesScopes.userId] }
+
+    fun findAndAddMissingStudentsOfGroupsToCourse(groupIds: List<UUID>, courseMembershipId: UUID) = transaction {
+        addMembersToMembership(
+            memberIds = findMissingStudentsFromGroupsToCourse(courseMembershipId, groupIds),
+            membershipId = courseMembershipId,
+            roleId = Role.Student.id
+        )
+    }
+
+    fun findMissingStudentsFromGroupsToCourse(courseMembershipId: UUID, groupIds: List<UUID>) = transaction {
+        val courseStudentsFromGroups = UsersMemberships.slice(UsersMemberships.memberId)
+            .select(UsersMemberships.membershipId eq courseMembershipId)
+            .map { it[UsersMemberships.memberId].value }
+
+        val isAStudentRoles: List<Long> = RoleDao.findChildRoleIdsByRoleId(Role.Student.id) + Role.Student.id
+
+//        val groupsMembershipIds = findMembershipsByScopeIds(groupIds)
+
+        Memberships.innerJoin(UsersMemberships, { Memberships.id }, { membershipId })
+            .innerJoin(
+                UsersRolesScopes,
+                { Memberships.scopeId },
+                { scopeId },
+                { UsersRolesScopes.userId eq UsersMemberships.memberId })
+            .slice(UsersMemberships.memberId)
+            .select(
+                UsersRolesScopes.roleId inList isAStudentRoles
+                        and (Memberships.scopeId inList groupIds)
+                        and (UsersMemberships.memberId notInList courseStudentsFromGroups)
+            ).distinctBy { it[UsersMemberships.memberId] }
+            .map { it[UsersMemberships.memberId].value }
+    }
+
+    fun findAndRemoveRemainingStudentsOfCourseToGroups(groupIds: List<UUID>, courseMembershipId: UUID) = transaction {
+        removeMembersFromMembership(
+            memberIds = findRemainingStudentsOfCourseFromGroups(groupIds, courseMembershipId),
+            membershipId = courseMembershipId
+        )
+    }
+
+    fun findRemainingStudentsOfCourseFromGroups(groupIds: List<UUID>, courseMembershipId: UUID) = transaction {
+        val isAStudentRoles: List<Long> = RoleDao.findChildRoleIdsByRoleId(Role.Student.id) + Role.Student.id
+
+//        val groupsMembershipIds = findMembershipsByScopeIds(groupIds)
+
+        val groupStudentIds = Memberships.innerJoin(UsersMemberships, { Memberships.id }, { membershipId })
+            .innerJoin(
+                UsersRolesScopes,
+                { Memberships.scopeId },
+                { scopeId },
+                { UsersRolesScopes.userId eq UsersMemberships.memberId })
+            .slice(UsersMemberships.memberId)
+            .select(
+                Memberships.scopeId inList groupIds
+                        and (UsersRolesScopes.roleId inList isAStudentRoles)
+            ).map { it[UsersMemberships.memberId].value }
+
+        UsersMemberships.slice(UsersMemberships.memberId)
+            .select(
+                UsersMemberships.membershipId eq courseMembershipId
+                        and (UsersMemberships.memberId notInList groupStudentIds)
+            ).distinctBy { it[UsersMemberships.memberId] }
+            .map { it[UsersMemberships.memberId].value }
+    }
+
+    private fun findMembershipsByScopeIds(groupIds: List<UUID>): List<UUID> {
+        return UsersMemberships.innerJoin(Memberships,
+            { membershipId },
+            { Memberships.id },
+            { Memberships.scopeId inList groupIds })
+            .slice(UsersMemberships.membershipId)
+            .selectAll().map { it[UsersMemberships.membershipId].value }
+    }
 
     /**
      * Find members who are exist in one of the membership sources but not exist in target membership.
@@ -142,7 +246,11 @@ class UserMembershipRepository(
         findUnrelatedMembersByManyToOneMemberships(membershipIdsSources, membershipIdTarget)
             .apply {
                 if (isNotEmpty())
-                    addMembersToMembership(memberIds = this, membershipId = membershipIdTarget)
+                    addMembersToMembership(
+                        memberIds = this,
+                        membershipId = membershipIdTarget,
+                        roleId = Role.Student.id
+                    )
             }
     }
 
@@ -195,17 +303,30 @@ class UserMembershipRepository(
             }
     }
 
-    fun addMembersToMembership(memberIds: List<UUID>, membershipId: UUID) = transaction {
-        UsersMemberships.batchInsert(memberIds) {
+    fun addMembersToMembership(memberIds: List<UUID>, membershipId: UUID, roleId: Long) = transaction {
+        UsersMemberships.batchInsert(memberIds, ignore = true) {
             this[UsersMemberships.memberId] = it
             this[UsersMemberships.membershipId] = membershipId
         }
+        addRoleMembersInScope(memberIds, roleId, membershipId)
+    }
+
+    private fun addRoleMembersInScope(
+        memberIds: List<UUID>,
+        roleId: Long,
+        membershipId: UUID
+    ) = UsersRolesScopes.batchInsert(memberIds, ignore = true) {
+        this[UsersRolesScopes.userId] = it
+        this[UsersRolesScopes.roleId] = roleId
+        this[UsersRolesScopes.scopeId] = MembershipDao.findById(membershipId)!!
+            .load(MembershipDao::scope).scopeId
     }
 
     fun removeMembersFromMembership(memberIds: List<UUID>, membershipId: UUID) = transaction {
         UsersMemberships.deleteWhere {
             memberId inList memberIds and (UsersMemberships.membershipId eq membershipId)
         }
+        removeUsersRolesWhoNotExistInAnyMembershipByScopeId(memberIds, MembershipDao.findById(membershipId)!!.scopeId)
     }
 
     private fun getMembershipsByScope(scopeId: UUID): Query {
@@ -297,6 +418,9 @@ class UserMembershipRepository(
                         .select(Memberships.scopeId eq scopeId)
                         .map { it[Memberships.id] }
                     ))
+        }
+        UsersRolesScopes.deleteWhere {
+            UsersRolesScopes.userId eq userId and (UsersRolesScopes.scopeId eq scopeId)
         }
     }
 }

@@ -11,8 +11,10 @@ import com.studiversity.logger.logger
 import com.studiversity.transaction.TransactionWorker
 import io.ktor.server.plugins.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -61,47 +63,56 @@ class ManualMembership(
 
 abstract class ExternalMembership(private val coroutineScope: CoroutineScope) : Membership() {
 
+    abstract val assignedRole: Role
+
+    companion object {
+        const val SYNC_PERIOD = 60000L
+    }
+
+    private var syncJob: Job? = null
+
     fun init() {
-        coroutineScope.launch {
-            onAddMembers().collect {
-                logger.info { "add members: $it in membership: $membershipId" }
-                if (it.isNotEmpty())
-                    userMembershipRepository.addMembersToMembership(it, membershipId)
-            }
+        syncMembers()
+        syncJob = syncMembersPeriodically()
+    }
+
+    private fun syncMembersPeriodically(): Job {
+        return CoroutineScope(Dispatchers.IO).launch {
+//            while (isActive) {
+//                delay(SYNC_PERIOD)
+//                syncMembers()
+//            }
         }
+    }
+
+    protected fun syncMembers() {
         coroutineScope.launch {
-            onRemoveMembers().collect {
-                logger.info { "remove members: $it in membership: $membershipId" }
-                if (it.isNotEmpty())
-                    userMembershipRepository.removeMembersFromMembership(it, membershipId)
+            launch {
+                onSyncGetAddedMembers().let {
+                    logger.info { "sync add members: $it in membership: $membershipId" }
+                    if (it.isNotEmpty())
+                        userMembershipRepository.addMembersToMembership(it, membershipId, assignedRole.id)
+                }
+            }
+            launch {
+                onSyncGetRemovedMembers().let {
+                    logger.info { "sync remove members: $it in membership: $membershipId" }
+                    if (it.isNotEmpty())
+                        userMembershipRepository.removeMembersFromMembership(it, membershipId)
+                }
             }
         }
     }
 
-    fun syncMembers() {
-        coroutineScope.launch {
-            onSyncGetAddedMembers().let {
-                logger.info { "sync add members: $it in membership: $membershipId" }
-                if (it.isNotEmpty())
-                    userMembershipRepository.addMembersToMembership(it, membershipId)
-            }
-        }
-        coroutineScope.launch {
-            onSyncGetRemovedMembers().let {
-                logger.info { "sync remove members: $it in membership: $membershipId" }
-                if (it.isNotEmpty())
-                    userMembershipRepository.removeMembersFromMembership(it, membershipId)
-            }
-        }
+    fun forceSync() {
+        syncJob?.cancel()
+        syncMembers()
+        syncJob = syncMembersPeriodically()
     }
 
     abstract suspend fun onSyncGetAddedMembers(): List<UUID>
 
     abstract suspend fun onSyncGetRemovedMembers(): List<UUID>
-
-    abstract fun onAddMembers(): Flow<List<UUID>>
-
-    abstract fun onRemoveMembers(): Flow<List<UUID>>
 }
 
 class StudyGroupExternalMembership(
@@ -113,56 +124,22 @@ class StudyGroupExternalMembership(
     override val membershipId: UUID,
 ) : ExternalMembership(coroutineScope) {
 
+    override val assignedRole: Role = Role.Student
+
     private val groupIds: StateFlow<List<UUID>> =
         membershipRepository.observeStudyGroupIdsOfExternalMembershipsByMembershipId(membershipId)
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val studyGroupMembershipsByScopeId = groupIds.flatMapLatest {
-        membershipRepository.observeMembershipsByScopeIds(it)
-    }.shareIn(coroutineScope, SharingStarted.Lazily, 1)
-
     init {
         coroutineScope.launch {
-            studyGroupMembershipsByScopeId.collect {
-                syncMembers()
-            }
+            groupIds.collect()
         }
     }
 
     override suspend fun onSyncGetAddedMembers(): List<UUID> {
-        return studyGroupMembershipsByScopeId.first().let {
-            userMembershipRepository.findUnrelatedMembersByManyToOneMemberships(it, membershipId)
-        }
+        return userMembershipRepository.findMissingStudentsFromGroupsToCourse(membershipId, groupIds.value)
     }
 
     override suspend fun onSyncGetRemovedMembers(): List<UUID> {
-        return studyGroupMembershipsByScopeId.first().let {
-            userMembershipRepository.findUnrelatedMembersByOneToManyMemberships(membershipId, it)
-        }
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun onAddMembers(): Flow<List<UUID>> {
-        return studyGroupMembershipsByScopeId.flatMapLatest { membershipIds ->
-            membershipIds.map { membershipId ->
-                userMembershipRepository.observeAddedMembersByMembershipId(membershipId)
-                    .map { Member(it, membershipId) }
-            }.merge()
-                .filter { member ->
-                    roleRepository.hasRoleIn(member.userId, Role.Student, groupIds.value)
-                            && !userMembershipRepository.existMember(member.userId, membershipId)
-                }.map { listOf(it.userId) }
-        }
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun onRemoveMembers(): Flow<List<UUID>> {
-        return studyGroupMembershipsByScopeId.flatMapLatest { membershipIds ->
-            membershipIds.map { membershipId ->
-                userMembershipRepository.observeRemovedMembersByMembershipId(membershipId)
-            }.merge()
-                .filterNot { userMembershipRepository.existMemberByScopeIds(it, groupIds.value) }
-                .map { listOf(it) }
-        }
+        return userMembershipRepository.findRemainingStudentsOfCourseFromGroups(groupIds.value, membershipId)
     }
 }

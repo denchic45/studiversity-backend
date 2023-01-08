@@ -1,6 +1,8 @@
 package com.studiversity.feature.membership
 
+import com.studiversity.Constants
 import com.studiversity.feature.membership.model.ManualJoinMemberRequest
+import com.studiversity.feature.membership.usecase.FindMembershipByScopeUseCase
 import com.studiversity.feature.membership.usecase.RemoveMemberFromScopeUseCase
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.RoleErrors
@@ -23,17 +25,38 @@ import io.ktor.server.plugins.requestvalidation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.util.*
 import org.koin.ktor.ext.inject
+import java.util.*
 
-fun Application.membershipRoutes() {
+fun Application.membershipRoutes(memberships: Map<UUID, ExternalMembership>) {
     routing {
         authenticate("auth-jwt") {
             route("/scopes/{scopeId}") {
                 membersRoute()
-            }
-            route("/membership") {
-                post("/{type}") {
-
+                route("/memberships") {
+                    val findMembershipByScope: FindMembershipByScopeUseCase by inject()
+                    get {
+                        findMembershipByScope(
+                            call.parameters["scopeId"]!!.toUUID(),
+                            call.request.queryParameters["type"]
+                        )?.let { membershipId -> call.respond(HttpStatusCode.OK, membershipId.toString()) }
+                            ?: throw NotFoundException()
+                    }
+                    route("/{membershipId}") {
+                        val requireCapability: RequireCapabilityUseCase by inject()
+                        post("/sync") {
+                            requireCapability(
+                                call.jwtPrincipal().payload.claimId,
+                                Capability.WriteMembership,
+                                Constants.organizationId
+                            )
+                            memberships[call.parameters.getOrFail("membershipId").toUUID()]
+                                ?.forceSync()
+                                ?: throw NotFoundException()
+                            call.respond(HttpStatusCode.Accepted)
+                        }
+                    }
                 }
             }
         }
@@ -109,7 +132,6 @@ private fun Route.memberByIdRoute() {
 
             removeMemberFromScope(memberId, scopeId)
             call.respond(HttpStatusCode.NoContent, "Member deleted")
-
         }
     }
 }

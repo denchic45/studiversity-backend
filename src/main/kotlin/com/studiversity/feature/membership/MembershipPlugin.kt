@@ -7,22 +7,22 @@ import kotlinx.coroutines.launch
 import org.koin.ktor.ext.inject
 
 fun Application.configureMembership() {
-    membershipRoutes()
-    configureSyncMemberships()
-}
-
-private fun Application.configureSyncMemberships() {
     val membershipService: MembershipService by inject()
     val coroutineScope: CoroutineScope by inject()
 
-    val memberships = membershipService.getGroupExternalMemberships().toMutableList()
+    val memberships =
+        membershipService.getExternalMemberships().associateBy(ExternalMembership::membershipId).toMutableMap()
     logger.info { "started ${memberships.size} memberships" }
-    memberships.forEach(StudyGroupExternalMembership::init)
+
+    membershipRoutes(memberships)
+
+    memberships.values.forEach(ExternalMembership::init)
 
     coroutineScope.launch {
         membershipService.observeAddMemberships().collect {
             logger.info { "Added membership: ${it.membershipId}" }
-            memberships.add(it.apply { init() })
+            it.init()
+            memberships[it.membershipId] = it
             logger.info { "After adding membership total count: ${memberships.size}" }
         }
     }
@@ -30,7 +30,7 @@ private fun Application.configureSyncMemberships() {
     coroutineScope.launch {
         membershipService.observeRemoveMemberships().collect { oldMembershipId ->
             logger.info { "Removed membership: $oldMembershipId" }
-            memberships.removeIf { it.membershipId == oldMembershipId }
+            memberships.remove(oldMembershipId)
             logger.info { "After deleting membership total count: ${memberships.size}" }
         }
     }

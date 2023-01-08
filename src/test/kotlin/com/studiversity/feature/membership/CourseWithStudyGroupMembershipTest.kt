@@ -5,6 +5,7 @@ import com.studiversity.feature.course.model.CourseResponse
 import com.studiversity.feature.course.model.CreateCourseRequest
 import com.studiversity.feature.membership.model.ManualJoinMemberRequest
 import com.studiversity.feature.membership.model.ScopeMember
+import com.studiversity.feature.role.Role
 import com.studiversity.feature.studygroup.model.AcademicYear
 import com.studiversity.feature.studygroup.model.CreateStudyGroupRequest
 import com.studiversity.feature.studygroup.model.StudyGroupResponse
@@ -16,6 +17,7 @@ import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.testing.*
@@ -25,6 +27,7 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.*
 import java.util.*
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class CourseWithStudyGroupMembershipTest {
 
@@ -80,7 +83,9 @@ class CourseWithStudyGroupMembershipTest {
         val user1Id = "7a98cdcf-d404-4556-96bd-4ce9137c8cbe".toUUID()
         val user2Id = "77129e28-bf01-4dca-b19f-9fbcf576345e".toUUID()
 
-        enrolStudentsToGroups(client, studyGroup1, studyGroup2, user2Id, user1Id)
+        enrolStudentsToGroups(studyGroup1, studyGroup2, user2Id, user1Id)
+        syncMembership(course.id)
+        delay(10000)
 
         client.get("/scopes/${course.id}/members").body<List<ScopeMember>>().apply {
             assertEquals(listOf(user1Id, user2Id).sorted(), map(ScopeMember::userId).sorted())
@@ -89,7 +94,8 @@ class CourseWithStudyGroupMembershipTest {
         // delete first group and check members of course
         client.delete("/courses/${course.id}/studygroups/${studyGroup1.id}")
 
-        delay(8000)
+        syncMembership(course.id)
+        delay(10000)
 
         client.get("/scopes/${course.id}/members").body<List<ScopeMember>>().apply {
             assertEquals(listOf(user1Id), map(ScopeMember::userId))
@@ -98,7 +104,8 @@ class CourseWithStudyGroupMembershipTest {
         // delete second group and check members of course
         client.delete("/courses/${course.id}/studygroups/${studyGroup2.id}")
 
-        delay(8000)
+        syncMembership(course.id)
+        delay(10000)
 
         client.get("/scopes/${course.id}/members").body<List<ScopeMember>>().apply {
             assertEquals(emptyList(), map(ScopeMember::userId))
@@ -113,19 +120,24 @@ class CourseWithStudyGroupMembershipTest {
         val user1Id = "7a98cdcf-d404-4556-96bd-4ce9137c8cbe".toUUID()
         val user2Id = "77129e28-bf01-4dca-b19f-9fbcf576345e".toUUID()
 
-        enrolStudentsToGroups(client, studyGroup1, studyGroup2, user2Id, user1Id)
+        enrolStudentsToGroups(studyGroup1, studyGroup2, user2Id, user1Id)
         attachGroupsToCourse(client, course, studyGroup1, studyGroup2)
-
+        syncMembership(course.id)
+        // assert two attached study groups to course
         client.get("/courses/${course.id}/studygroups").body<List<String>>().apply {
             assertEquals(listOf(studyGroup1.id, studyGroup2.id).sorted(), map(String::toUUID).sorted())
         }
+        // assert two users in course membership
         client.get("/scopes/${course.id}/members").body<List<ScopeMember>>().apply {
             assertEquals(listOf(user1Id, user2Id).sorted(), map(ScopeMember::userId).sorted())
+            assertTrue(all { it.roles.contains(Role.Student) })
         }
 
         // delete first user from first group
         client.delete("/scopes/${studyGroup1.id}/members/$user1Id")
-        delay(8000)
+
+        syncMembership(course.id)
+        delay(12000)
 
         // assert only second member in first group
         client.get("/scopes/${studyGroup1.id}/members").body<List<ScopeMember>>().apply {
@@ -138,7 +150,9 @@ class CourseWithStudyGroupMembershipTest {
 
         // delete second user from first group
         client.delete("/scopes/${studyGroup1.id}/members/$user2Id")
-        delay(8000)
+
+        syncMembership(course.id)
+        delay(10000)
 
         // assert zero members in first group
         client.get("/scopes/${studyGroup1.id}/members").body<List<ScopeMember>>().apply {
@@ -151,7 +165,8 @@ class CourseWithStudyGroupMembershipTest {
 
         // delete first user from second group
         client.delete("/scopes/${studyGroup2.id}/members/$user1Id")
-        delay(8000)
+        syncMembership(course.id)
+        delay(10000)
 
         // assert zero members of course
         client.get("/scopes/${course.id}/members").body<List<ScopeMember>>().apply {
@@ -160,7 +175,6 @@ class CourseWithStudyGroupMembershipTest {
     }
 
     private suspend fun enrolStudentsToGroups(
-        client: HttpClient,
         studyGroup1: StudyGroupResponse,
         studyGroup2: StudyGroupResponse,
         user2Id: UUID,
@@ -181,6 +195,17 @@ class CourseWithStudyGroupMembershipTest {
         delay(10000)
     }
 
+    private suspend fun syncMembership(courseId: UUID) {
+        client.get("/scopes/${courseId}/memberships") {
+            parameter("type", "by_group")
+        }.run {
+            if (status == HttpStatusCode.OK)
+                client.post("/scopes/${courseId}/memberships/${bodyAsText()}/sync").apply {
+                    assertEquals(HttpStatusCode.Accepted, status)
+                }
+        }
+    }
+
     private suspend fun attachGroupsToCourse(
         client: HttpClient,
         course: CourseResponse,
@@ -188,6 +213,7 @@ class CourseWithStudyGroupMembershipTest {
         studyGroup2: StudyGroupResponse
     ) {
         client.put("/courses/${course.id}/studygroups/${studyGroup1.id}")
+        delay(14000)
         client.put("/courses/${course.id}/studygroups/${studyGroup2.id}")
         delay(10000)
     }
