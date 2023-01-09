@@ -3,6 +3,7 @@ package com.studiversity.di
 import com.studiversity.feature.auth.authModule
 import com.studiversity.feature.course.courseModule
 import com.studiversity.feature.course.subject.subjectModule
+import com.studiversity.feature.courseelement.courseElementModule
 import com.studiversity.feature.membership.membershipModule
 import com.studiversity.feature.role.roleModule
 import com.studiversity.feature.studygroup.studyGroupModule
@@ -35,6 +36,7 @@ fun Application.configureDI() {
             membershipModule,
             studyGroupModule,
             courseModule,
+            courseElementModule,
             subjectModule
         )
     }
