@@ -1,4 +1,4 @@
-package com.studiversity.util
+package com.studiversity.ktor
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind

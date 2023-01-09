@@ -2,7 +2,7 @@ package com.studiversity.feature.studygroup.model
 
 import com.studiversity.util.OptionalProperty
 import com.studiversity.util.OptionalPropertySerializer
-import com.studiversity.util.UUIDSerializer
+import com.studiversity.ktor.UUIDSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
 

@@ -1,7 +1,7 @@
 package com.studiversity.feature.membership.model
 
 import com.studiversity.feature.role.Role
-import com.studiversity.util.UUIDSerializer
+import com.studiversity.ktor.UUIDSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
 
