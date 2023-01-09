@@ -1,8 +1,8 @@
-package com.studiversity.feature.courseelement
+package com.studiversity.feature.course.element
 
-import com.studiversity.feature.courseelement.model.CourseElementDetails
-import com.studiversity.feature.courseelement.model.CreateCourseElementRequest
-import com.studiversity.feature.courseelement.usecase.AddCourseElementUseCase
+import com.studiversity.feature.course.element.model.CourseElementDetails
+import com.studiversity.feature.course.element.model.CreateCourseElementRequest
+import com.studiversity.feature.course.element.usecase.AddCourseElementUseCase
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.ktor.claimId
@@ -11,20 +11,21 @@ import com.studiversity.util.toUUID
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.util.*
 import org.koin.ktor.ext.inject
 import kotlin.reflect.KClass
 
 private val createCourseElementCapabilities: Map<KClass<out CourseElementDetails>, Capability> = mapOf(
-    CourseElementDetails.Work::class to Capability.WriteCourseWork,
+    CourseElementDetails.Work::class to Capability.WriteCourseAssignment,
     CourseElementDetails.Post::class to Capability.WriteCoursePost
 )
 
 fun Application.courseElementRoutes() {
     routing {
         authenticate("auth-jwt") {
-            route("/courses{courseId}/elements") {
+            route("/courses/{courseId}/elements") {
 
                 val requireCapability: RequireCapabilityUseCase by inject()
                 val addCourseElement: AddCourseElementUseCase by inject()
@@ -37,7 +38,9 @@ fun Application.courseElementRoutes() {
                         capability = createCourseElementCapabilities.getValue(body.details::class),
                         scopeId = courseId
                     )
-                    addCourseElement(courseId, body)
+                    addCourseElement(courseId, body).let { courseElement ->
+                        call.respond(courseElement)
+                    }
                 }
                 get { }
                 courseElementById()

@@ -1,7 +1,7 @@
 package com.studiversity.database.table
 
 import com.studiversity.database.type.timestampWithTimeZone
-import com.studiversity.feature.courseelement.ElementType
+import com.studiversity.feature.course.element.ElementType
 import com.studiversity.util.varcharMax
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
@@ -18,7 +18,7 @@ object CourseElements : UUIDTable("course_element", "course_element_id") {
     val order = integer("order")
     val createdAt = timestampWithTimeZone("created_at").defaultExpression(CurrentTimestamp())
     val updatedAt = timestampWithTimeZone("updated_at").nullable()
-    val type = enumeration("element_type", ElementType::class)
+    val type = enumerationByName<ElementType>("element_type", 10)
 }
 
 class CourseElementDao(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -33,6 +33,7 @@ class CourseElementDao(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by CourseElements.updatedAt
     var type by CourseElements.type
 
-    val work by CourseWorkDao referrersOn CourseWorks.id
     // todo add posts relation
 }
+
+sealed interface CourseElementDetailsDao

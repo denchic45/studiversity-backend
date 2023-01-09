@@ -20,7 +20,6 @@ object StudyGroups : UUIDTable("study_group", "study_group_id") {
 }
 
 class StudyGroupDao(id: EntityID<UUID>) : UUIDEntity(id) {
-
     companion object : UUIDEntityClass<StudyGroupDao>(StudyGroups)
 
     var name by StudyGroups.name

@@ -1,6 +1,6 @@
-package com.studiversity.feature.courseelement.model
+package com.studiversity.feature.course.element.model
 
-import com.studiversity.feature.courseelement.WorkType
+import com.studiversity.feature.course.element.WorkType
 import com.studiversity.ktor.LocalDateSerializer
 import com.studiversity.ktor.LocalTimeSerializer
 import kotlinx.serialization.SerialName

@@ -14,7 +14,6 @@ object Memberships : UUIDTable("membership", "membership_id") {
 }
 
 class MembershipDao(id: EntityID<UUID>) : UUIDEntity(id) {
-
     companion object : UUIDEntityClass<MembershipDao>(Memberships)
 
     var scopeId by Memberships.scopeId

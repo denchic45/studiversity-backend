@@ -26,7 +26,6 @@ fun Application.courseRoutes() {
     routing {
         authenticate("auth-jwt") {
             route("/courses") {
-
                 install(RequestValidation) {
                     validate<CreateCourseRequest> { request ->
                         buildValidationResult {
@@ -37,7 +36,6 @@ fun Application.courseRoutes() {
                         }
                     }
                 }
-
                 val requireCapability: RequireCapabilityUseCase by inject()
                 val addCourse: AddCourseUseCase by inject()
 

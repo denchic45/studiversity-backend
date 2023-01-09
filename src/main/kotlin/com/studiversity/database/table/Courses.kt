@@ -14,7 +14,6 @@ object Courses : UUIDTable("course", "course_id") {
 }
 
 class CourseDao(id: EntityID<UUID>) : UUIDEntity(id) {
-
     companion object : UUIDEntityClass<CourseDao>(Courses)
 
     var name by Courses.name
