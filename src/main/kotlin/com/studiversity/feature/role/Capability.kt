@@ -5,28 +5,30 @@ data class Capability(val resource: String) {
     override fun toString(): String = resource
 
     companion object {
+        val ReadUserConfidentialData: Capability = Capability("user/confidential:read")
         val WriteUser: Capability = Capability("user:write")
         val DeleteUser: Capability = Capability("user:delete")
-        val ReadUserConfidentialData: Capability = Capability("user/confidential:read")
 
         val WriteAssignRoles: Capability = Capability("role/assignment:write")
 
-        val WriteStudyGroup: Capability = Capability("study_group:write")
+        val ReadMembers: Capability = Capability("membership/members:read")
+        val WriteMembers: Capability = Capability("membership/members:write")
+
+        val WriteMembership: Capability = Capability("membership:write")
+
         val ReadStudyGroup: Capability = Capability("study_group:read")
+        val WriteStudyGroup: Capability = Capability("study_group:write")
         val DeleteStudyGroup: Capability = Capability("study_group:delete")
 
-        val WriteCourses: Capability = Capability("course:write")
         val ReadCourse: Capability = Capability("course:read")
+        val WriteCourse: Capability = Capability("course:write")
         val DeleteCourse: Capability = Capability("course:delete")
         val WriteCourseStudyGroups: Capability = Capability("course/study_group:write")
 
+        val ReadCourseElements: Capability = Capability("course/elements:read")
+        val DeleteCourseElements: Capability = Capability("course/elements:delete")
         val WriteCourseAssignment: Capability = Capability("course/assignment:write")
         val WriteCoursePost: Capability = Capability("course/post:write")
-
-        val WriteMembers: Capability = Capability("membership/members:write")
-        val ReadMembers: Capability = Capability("membership/members:read")
-
-        val WriteMembership: Capability = Capability("membership:write")
 
         val WriteSubject: Capability = Capability("subject:write")
         val ReadSubject: Capability = Capability("subject:read")
