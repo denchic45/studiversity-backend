@@ -8,16 +8,13 @@ import com.studiversity.feature.course.element.model.CourseElementResponse
 
 fun CourseElementDao.toResponse(detailsDao: CourseElementDetailsDao): CourseElementResponse = toResponse(
     when (detailsDao) {
-        is CourseWorkDao -> CourseElementDetails.Work(
-            dueDate = detailsDao.dueDate,
-            dueTime = detailsDao.dueTime,
-            workType = detailsDao.type
-        )
+        is CourseWorkDao -> detailsDao.toDetailsResponse()
     }
 )
 
 
 private fun CourseElementDao.toResponse(details: CourseElementDetails): CourseElementResponse = CourseElementResponse(
+    id = id.value,
     courseId = courseId,
     name = name,
     description = description,
@@ -26,7 +23,7 @@ private fun CourseElementDao.toResponse(details: CourseElementDetails): CourseEl
     details = details
 )
 
-fun CourseWorkDao.toResponse(): CourseElementDetails.Work = CourseElementDetails.Work(
+private fun CourseWorkDao.toDetailsResponse(): CourseElementDetails.Work = CourseElementDetails.Work(
     dueDate = dueDate,
     dueTime = dueTime,
     workType = type

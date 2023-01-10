@@ -38,4 +38,19 @@ class CourseElementRepository {
             is CourseElementDetails.Post -> TODO()
         })
     }
+
+    fun findById(elementId: UUID): CourseElementResponse? {
+        return CourseElementDao.findById(elementId)?.run {
+            toResponse(
+                when (type) {
+                    ElementType.Work -> CourseWorkDao.findById(elementId)!!
+                    ElementType.Post -> TODO()
+                }
+            )
+        }
+    }
+
+    fun remove(elementId: UUID):Boolean {
+       return CourseElementDao.findById(elementId)?.delete() != null
+    }
 }
