@@ -131,7 +131,7 @@ private fun Route.memberByIdRoute() {
             requireCapability(currentUserId, Capability.WriteMembers, scopeId)
 
             removeMemberFromScope(memberId, scopeId)
-            call.respond(HttpStatusCode.NoContent, "Member deleted")
+            call.respond(HttpStatusCode.NoContent)
         }
     }
 }

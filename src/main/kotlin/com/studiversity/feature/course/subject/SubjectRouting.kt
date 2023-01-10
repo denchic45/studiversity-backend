@@ -133,7 +133,7 @@ fun Route.subjectByIdRoute() {
             )
 
             removeSubject(id)
-            call.respond(HttpStatusCode.NoContent, "Subject deleted")
+            call.respond(HttpStatusCode.NoContent)
         }
     }
 }

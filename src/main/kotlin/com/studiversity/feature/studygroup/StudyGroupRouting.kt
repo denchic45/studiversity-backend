@@ -87,7 +87,7 @@ private fun Route.studyGroupByIdRoutes() {
         delete {
             val id = call.parameters["id"]!!.toUUID()
             removeStudyGroup(id)
-            call.respond(HttpStatusCode.NoContent, "Group deleted")
+            call.respond(HttpStatusCode.NoContent)
         }
     }
 }

@@ -42,7 +42,7 @@ fun Application.courseRoutes() {
                 post {
                     val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
 
-                    requireCapability(currentUserId, Capability.WriteCourses, Constants.organizationId)
+                    requireCapability(currentUserId, Capability.WriteCourse, Constants.organizationId)
 
                     val body = call.receive<CreateCourseRequest>()
 
@@ -76,7 +76,7 @@ fun Route.courseByIdRoutes() {
             val currentUserId = call.jwtPrincipal().payload.claimId
             val courseId = call.parameters["courseId"]!!.toUUID()
 
-            requireCapability(currentUserId, Capability.WriteCourses, courseId)
+            requireCapability(currentUserId, Capability.WriteCourse, courseId)
 
             val body = call.receive<UpdateCourseRequest>()
 
@@ -92,7 +92,7 @@ fun Route.courseByIdRoutes() {
                 val currentUserId = call.jwtPrincipal().payload.claimId
                 val courseId = call.parameters["courseId"]!!.toUUID()
 
-                requireCapability(currentUserId, Capability.WriteCourses, courseId)
+                requireCapability(currentUserId, Capability.WriteCourse, courseId)
 
                 archiveCourse(courseId)
                 call.respond(HttpStatusCode.OK)
@@ -101,7 +101,7 @@ fun Route.courseByIdRoutes() {
                 val courseId = call.parameters["courseId"]!!.toUUID()
                 val currentUserId = call.jwtPrincipal().payload.claimId
 
-                requireCapability(currentUserId, Capability.WriteCourses, courseId)
+                requireCapability(currentUserId, Capability.WriteCourse, courseId)
 
                 unarchiveCourse(courseId)
                 call.respond(HttpStatusCode.NoContent)
@@ -111,10 +111,10 @@ fun Route.courseByIdRoutes() {
             val currentUserId = call.jwtPrincipal().payload.claimId
             val courseId = call.parameters["courseId"]!!.toUUID()
 
-            requireCapability(currentUserId, Capability.WriteCourses, courseId)
+            requireCapability(currentUserId, Capability.WriteCourse, courseId)
 
             removeCourse(courseId)
-            call.respond(HttpStatusCode.NoContent, "Course deleted")
+            call.respond(HttpStatusCode.NoContent)
         }
         courseStudyGroups()
     }
@@ -157,7 +157,7 @@ private fun Route.courseStudyGroups() {
                 val studyGroupId = call.parameters["studyGroupId"]!!.toUUID()
                 val deleted = detachStudyGroupToCourse(studyGroupId, courseId)
                 if (deleted) {
-                    call.respond(HttpStatusCode.NoContent, "Study group detached")
+                    call.respond(HttpStatusCode.NoContent)
                 } else call.respond(HttpStatusCode.Gone, "Study group has gone")
             }
         }
