@@ -103,7 +103,9 @@ dependencies {
 
     implementation("org.postgresql:postgresql:42.5.1")
 
+    // Supabase
     implementation("io.github.jan-tennert.supabase:realtime-kt:$supabaseVersion")
+    implementation("io.github.jan-tennert.supabase:storage-kt:$supabaseVersion")
 
     // Koin
     implementation("io.insert-koin:koin-ktor:$koinVersion")
