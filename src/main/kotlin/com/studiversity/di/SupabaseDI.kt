@@ -5,6 +5,7 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.realtime.realtime
+import io.github.jan.supabase.storage.storage
 import org.koin.dsl.module
 
 val supabaseClientModule = module {
@@ -19,4 +20,5 @@ val supabaseClientModule = module {
         }
     }
     single { get<SupabaseClient>().realtime }
+    single { get<SupabaseClient>().storage }
 }
