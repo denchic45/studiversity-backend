@@ -5,6 +5,7 @@ import com.studiversity.database.table.CourseElementDetailsDao
 import com.studiversity.database.table.CourseWorkDao
 import com.studiversity.feature.course.element.model.CourseElementDetails
 import com.studiversity.feature.course.element.model.CourseElementResponse
+import com.studiversity.feature.course.element.model.CourseWork
 
 fun CourseElementDao.toResponse(detailsDao: CourseElementDetailsDao): CourseElementResponse = toResponse(
     when (detailsDao) {
@@ -23,7 +24,7 @@ private fun CourseElementDao.toResponse(details: CourseElementDetails): CourseEl
     details = details
 )
 
-private fun CourseWorkDao.toDetailsResponse(): CourseElementDetails = CourseElementDetails.Work(
+private fun CourseWorkDao.toDetailsResponse(): CourseElementDetails = CourseWork(
     dueDate = dueDate,
     dueTime = dueTime,
     workType = type,

@@ -1,6 +1,8 @@
 package com.studiversity.feature.course.element
 
 import com.studiversity.feature.course.element.model.CourseElementDetails
+import com.studiversity.feature.course.element.model.CourseMaterial
+import com.studiversity.feature.course.element.model.CourseWork
 import com.studiversity.feature.course.element.model.CreateCourseElementRequest
 import com.studiversity.feature.course.element.usecase.AddCourseWorkUseCase
 import com.studiversity.feature.course.element.usecase.FindCourseElementUseCase
@@ -23,8 +25,8 @@ import org.koin.ktor.ext.inject
 import kotlin.reflect.KClass
 
 private val createCourseElementCapabilities: Map<KClass<out CourseElementDetails>, Capability> = mapOf(
-    CourseElementDetails.Work::class to Capability.WriteCourseAssignment,
-    CourseElementDetails.Post::class to Capability.WriteCoursePost
+    CourseWork::class to Capability.WriteCourseAssignment,
+    CourseMaterial::class to Capability.WriteCoursePost
 )
 
 fun Application.courseElementRoutes() {

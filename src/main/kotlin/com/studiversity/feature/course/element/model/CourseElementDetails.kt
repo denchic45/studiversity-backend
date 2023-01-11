@@ -8,20 +8,19 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 @Serializable
-sealed class CourseElementDetails {
+sealed class CourseElementDetails
 
-    @Serializable
-    data class Work(
-        @Serializable(LocalDateSerializer::class)
-        val dueDate: LocalDate?,
-        @Serializable(LocalTimeSerializer::class)
-        val dueTime: LocalTime?,
-        val workType: CourseWorkType,
-        val workDetails: CourseWorkDetails? = null
-    ) : CourseElementDetails()
+@Serializable
+data class CourseWork(
+    @Serializable(LocalDateSerializer::class)
+    val dueDate: LocalDate?,
+    @Serializable(LocalTimeSerializer::class)
+    val dueTime: LocalTime?,
+    val workType: CourseWorkType,
+    val workDetails: CourseWorkDetails? = null
+) : CourseElementDetails()
 
-    @Serializable
-    data class Post(
-        val text: String
-    ) : CourseElementDetails()
-}
+@Serializable
+data class CourseMaterial(
+    val text: String
+) : CourseElementDetails()

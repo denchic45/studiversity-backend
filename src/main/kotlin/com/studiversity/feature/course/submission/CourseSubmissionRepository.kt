@@ -1,7 +1,7 @@
 package com.studiversity.feature.course.submission
 
 import com.studiversity.database.table.*
-import com.studiversity.feature.course.submission.model.Submission
+import com.studiversity.feature.course.submission.model.SubmissionResponse
 import com.studiversity.feature.course.submission.model.SubmissionState
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -17,7 +17,7 @@ class CourseSubmissionRepository {
         }
     }
 
-    fun find(submissionId: UUID): Submission? {
+    fun find(submissionId: UUID): SubmissionResponse? {
         return SubmissionDao.findById(submissionId)?.toResponse()
     }
 

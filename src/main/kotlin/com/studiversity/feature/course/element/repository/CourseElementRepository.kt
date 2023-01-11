@@ -3,9 +3,10 @@ package com.studiversity.feature.course.element.repository
 import com.studiversity.database.table.CourseElementDao
 import com.studiversity.database.table.CourseElements
 import com.studiversity.database.table.CourseWorkDao
-import com.studiversity.feature.course.element.ElementType
-import com.studiversity.feature.course.element.model.CourseElementDetails
+import com.studiversity.feature.course.element.CourseElementType
 import com.studiversity.feature.course.element.model.CourseElementResponse
+import com.studiversity.feature.course.element.model.CourseMaterial
+import com.studiversity.feature.course.element.model.CourseWork
 import com.studiversity.feature.course.element.model.CreateCourseElementRequest
 import com.studiversity.feature.course.element.toResponse
 import org.jetbrains.exposed.sql.max
@@ -17,8 +18,8 @@ class CourseElementRepository {
     fun add(courseId: UUID, request: CreateCourseElementRequest): CourseElementResponse {
         val elementId = UUID.randomUUID()
         val type = when (request.details) {
-            is CourseElementDetails.Work -> ElementType.Work
-            is CourseElementDetails.Post -> ElementType.Post
+            is CourseWork -> CourseElementType.Work
+            is CourseMaterial -> CourseElementType.Material
         }
         return CourseElementDao.new(elementId) {
             this.courseId = courseId
@@ -29,13 +30,13 @@ class CourseElementRepository {
                 .selectAll()
                 .single()[CourseElements.order.max()]?.let { it + 1 } ?: 1
         }.toResponse(when (val details = request.details) {
-            is CourseElementDetails.Work -> CourseWorkDao.new(elementId) {
+            is CourseWork -> CourseWorkDao.new(elementId) {
                 this.dueDate = details.dueDate
                 this.dueTime = details.dueTime
                 this.type = details.workType
             }
 
-            is CourseElementDetails.Post -> TODO()
+            is CourseMaterial -> TODO()
         })
     }
 
@@ -43,8 +44,8 @@ class CourseElementRepository {
         return CourseElementDao.findById(elementId)?.run {
             toResponse(
                 when (type) {
-                    ElementType.Work -> CourseWorkDao.findById(elementId)!!
-                    ElementType.Post -> TODO()
+                    CourseElementType.Work -> CourseWorkDao.findById(elementId)!!
+                    CourseElementType.Material -> TODO()
                 }
             )
         }
