@@ -2,9 +2,10 @@ package com.studiversity.feature.course.element
 
 import com.studiversity.feature.course.element.model.CourseElementDetails
 import com.studiversity.feature.course.element.model.CreateCourseElementRequest
-import com.studiversity.feature.course.element.usecase.AddCourseElementUseCase
+import com.studiversity.feature.course.element.usecase.AddCourseWorkUseCase
 import com.studiversity.feature.course.element.usecase.FindCourseElementUseCase
 import com.studiversity.feature.course.element.usecase.RemoveCourseElementUseCase
+import com.studiversity.feature.course.submission.courseSubmissionRoutes
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.ktor.claimId
@@ -30,9 +31,8 @@ fun Application.courseElementRoutes() {
     routing {
         authenticate("auth-jwt") {
             route("/courses/{courseId}/elements") {
-
                 val requireCapability: RequireCapabilityUseCase by inject()
-                val addCourseElement: AddCourseElementUseCase by inject()
+                val addCourseWork: AddCourseWorkUseCase by inject()
                 post {
                     val body: CreateCourseElementRequest = call.receive()
                     val courseId = call.parameters.getOrFail("courseId").toUUID()
@@ -41,7 +41,7 @@ fun Application.courseElementRoutes() {
                         capability = createCourseElementCapabilities.getValue(body.details::class),
                         scopeId = courseId
                     )
-                    addCourseElement(courseId, body).let { courseElement ->
+                    addCourseWork(courseId, body).let { courseElement ->
                         call.respond(courseElement)
                     }
                 }
@@ -86,5 +86,6 @@ fun Route.courseElementById() {
             removeCourseElement(call.parameters.getOrFail("elementId").toUUID())
             call.respond(HttpStatusCode.NoContent)
         }
+        courseSubmissionRoutes()
     }
 }

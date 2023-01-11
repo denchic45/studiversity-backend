@@ -87,6 +87,17 @@ class UserMembershipRepository(
             )
         }
 
+    fun findMemberIdsByScopeAndRole(scopeId: UUID, roleId: Long) = Memberships
+        .innerJoin(UsersMemberships, { Memberships.id }, { membershipId })
+        .innerJoin(
+            UsersRolesScopes,
+            { UsersRolesScopes.userId },
+            { UsersMemberships.memberId },
+            { UsersRolesScopes.scopeId eq Memberships.scopeId })
+        .slice(UsersMemberships.memberId)
+        .select(Memberships.scopeId eq scopeId and (UsersRolesScopes.roleId eq roleId))
+        .map { it[UsersMemberships.memberId].value }
+
     fun findMemberByScope(userId: UUID, scopeId: UUID) = Memberships
         .innerJoin(UsersMemberships, { Memberships.id }, { membershipId })
         .innerJoin(Users, { UsersMemberships.memberId }, { Users.id })

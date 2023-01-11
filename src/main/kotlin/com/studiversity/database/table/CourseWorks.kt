@@ -1,6 +1,6 @@
 package com.studiversity.database.table
 
-import com.studiversity.feature.course.element.WorkType
+import com.studiversity.feature.course.element.CourseWorkType
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -12,7 +12,7 @@ import java.util.*
 object CourseWorks : UUIDTable("course_work", "course_element_id") {
     val dueDate = date("due_date").nullable()
     val dueTime = time("due_time").nullable()
-    val type = enumerationByName("work_type", 10, WorkType::class)
+    val type = enumerationByName("work_type", 10, CourseWorkType::class)
 }
 
 class CourseWorkDao(id: EntityID<UUID>) : UUIDEntity(id), CourseElementDetailsDao {

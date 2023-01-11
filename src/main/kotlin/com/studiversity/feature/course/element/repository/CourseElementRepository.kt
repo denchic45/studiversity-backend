@@ -50,7 +50,7 @@ class CourseElementRepository {
         }
     }
 
-    fun remove(elementId: UUID):Boolean {
-       return CourseElementDao.findById(elementId)?.delete() != null
+    fun remove(elementId: UUID): Boolean {
+        return CourseElementDao.findById(elementId)?.delete() != null
     }
 }

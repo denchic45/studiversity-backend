@@ -1,28 +1,27 @@
 package com.studiversity.feature.course.element.model
 
-import com.studiversity.feature.course.element.WorkType
+import com.studiversity.feature.course.element.CourseWorkType
 import com.studiversity.ktor.LocalDateSerializer
 import com.studiversity.ktor.LocalTimeSerializer
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.time.LocalTime
 
 @Serializable
 sealed class CourseElementDetails {
+
     @Serializable
-    @SerialName("Work")
     data class Work(
         @Serializable(LocalDateSerializer::class)
-        val dueDate: LocalDate? = null,
+        val dueDate: LocalDate?,
         @Serializable(LocalTimeSerializer::class)
-        val dueTime: LocalTime? = null,
-        val workType: WorkType
+        val dueTime: LocalTime?,
+        val workType: CourseWorkType,
+        val workDetails: CourseWorkDetails? = null
     ) : CourseElementDetails()
 
     @Serializable
-    @SerialName("Post")
     data class Post(
-        val content: String
+        val text: String
     ) : CourseElementDetails()
 }

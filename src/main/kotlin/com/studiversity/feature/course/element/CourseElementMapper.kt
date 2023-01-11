@@ -23,8 +23,9 @@ private fun CourseElementDao.toResponse(details: CourseElementDetails): CourseEl
     details = details
 )
 
-private fun CourseWorkDao.toDetailsResponse(): CourseElementDetails.Work = CourseElementDetails.Work(
+private fun CourseWorkDao.toDetailsResponse(): CourseElementDetails = CourseElementDetails.Work(
     dueDate = dueDate,
     dueTime = dueTime,
-    workType = type
+    workType = type,
+    workDetails = null
 )

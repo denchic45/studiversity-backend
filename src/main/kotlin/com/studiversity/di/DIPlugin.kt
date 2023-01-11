@@ -36,8 +36,6 @@ fun Application.configureDI() {
             membershipModule,
             studyGroupModule,
             courseModule,
-            courseElementModule,
-            subjectModule
         )
     }
 }
