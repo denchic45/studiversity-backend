@@ -42,7 +42,7 @@ fun Route.submissionByIdRoute() {
             val currentUserId = call.jwtPrincipal().payload.claimId
             val submission = findSubmission(
                 call.parameters.getUuid("submissionId"),
-                call.parameters.getUuid("elementId"), currentUserId
+                currentUserId
             )
 
             val isOwnSubmission = submission.authorId == currentUserId

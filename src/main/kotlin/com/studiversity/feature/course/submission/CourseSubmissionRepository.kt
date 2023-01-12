@@ -2,12 +2,14 @@ package com.studiversity.feature.course.submission
 
 import com.studiversity.database.table.*
 import com.studiversity.feature.course.element.CourseWorkType
+import com.studiversity.feature.course.submission.model.AssignmentSubmissionResponse
 import com.studiversity.feature.course.submission.model.SubmissionResponse
 import com.studiversity.feature.course.submission.model.SubmissionState
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import java.util.*
 
 class CourseSubmissionRepository {
@@ -44,18 +46,18 @@ class CourseSubmissionRepository {
         return SubmissionDao.findById(submissionId)?.toResponse()
     }
 
-    fun findByWorkId(courseId: UUID, courseWorkId: UUID): List<SubmissionResponse> {
+    fun findByWorkId(courseId: UUID, courseWorkId: UUID, studentIds: List<UUID>): List<SubmissionResponse> {
         return Memberships.innerJoin(UsersMemberships, { Memberships.id }, { membershipId })
-            .innerJoin(
-                UsersRolesScopes,
-                { Memberships.scopeId },
-                { scopeId },
-                { UsersRolesScopes.userId eq UsersMemberships.memberId })
-            .leftJoin(Submissions, { UsersMemberships.memberId }, { authorId })
-            .select(Memberships.scopeId eq courseId and (Submissions.courseWorkId eq courseWorkId))
+            .join(CourseWorks, JoinType.INNER, additionalConstraint = { CourseWorks.id eq courseWorkId })
+            .leftJoin(
+                Submissions,
+                { CourseWorks.id },
+                { Submissions.courseWorkId },
+                { Submissions.authorId eq UsersMemberships.memberId })
+            .select(Memberships.scopeId eq courseId and (UsersMemberships.memberId inList studentIds))
             .map {
                 it.getOrNull(Submissions.id)?.let { submissionId ->
-                    SubmissionResponse(
+                    AssignmentSubmissionResponse(
                         id = submissionId.value,
                         authorId = it[Submissions.authorId],
                         state = SubmissionState.NEW,
@@ -65,7 +67,7 @@ class CourseSubmissionRepository {
                                 ?.let { content -> Json.decodeFromString(content) }
                         }
                     )
-                } ?: addNewSubmissionByStudentId(courseWorkId, it[UsersMemberships.memberId].value)
+                } ?: addNewSubmissionByStudentId(courseWorkId, it[UsersMemberships.memberId])
             }
     }
 

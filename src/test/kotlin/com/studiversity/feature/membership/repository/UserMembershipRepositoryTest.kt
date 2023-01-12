@@ -3,6 +3,7 @@ package com.studiversity.feature.membership.repository
 import com.studiversity.database.DatabaseFactory
 import com.studiversity.di.coroutineModule
 import com.studiversity.di.supabaseClientModule
+import com.studiversity.feature.role.Role
 import com.studiversity.util.toUUID
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.flatMapLatest
@@ -80,6 +81,16 @@ class UserMembershipRepositoryTest : KoinTest {
             childFlow2.collect {
                 println("child flow 2 $it")
             }
+        }
+    }
+
+    @Test
+    fun testStudentsOfCourse(): Unit = transaction {
+        userMembershipRepository.findMemberIdsByScopeAndRole(
+            "8f6ba645-ed8e-4f08-8a2e-103d6b3883ae".toUUID(),
+            Role.Student.id
+        ).apply {
+            print(this)
         }
     }
 

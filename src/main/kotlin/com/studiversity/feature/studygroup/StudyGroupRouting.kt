@@ -81,9 +81,6 @@ private fun Route.studyGroupByIdRoutes() {
             updateStudyGroup(id, body)
             call.respond(HttpStatusCode.OK, "Group updated")
         }
-        post("/archive") {
-
-        }
         delete {
             val id = call.parameters["id"]!!.toUUID()
             removeStudyGroup(id)

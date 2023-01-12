@@ -11,6 +11,7 @@ sealed interface CreateCourseElementRequest {
     val description: String?
     val topicId: UUID?
     val type: CourseElementType
+    val details: CourseElementDetails
 }
 
 @Serializable
@@ -19,6 +20,7 @@ data class CreateCourseWorkRequest(
     override val description: String? = null,
     @Serializable(UUIDSerializer::class)
     override val topicId: UUID? = null,
+    override val details: CourseWork
 ) : CreateCourseElementRequest {
     override val type: CourseElementType = CourseElementType.Work
 }

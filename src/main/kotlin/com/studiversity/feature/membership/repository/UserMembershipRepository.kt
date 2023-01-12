@@ -72,7 +72,7 @@ class UserMembershipRepository(
         .innerJoin(UsersMemberships, { Memberships.id }, { membershipId })
         .innerJoin(Users, { UsersMemberships.memberId }, { Users.id })
         .select(Memberships.scopeId eq scopeId)
-        .groupBy { it[UsersMemberships.memberId].value }
+        .groupBy { it[UsersMemberships.memberId] }
         .map { (userId, rows) ->
             ScopeMember(
                 userId = userId,
@@ -96,7 +96,7 @@ class UserMembershipRepository(
             { UsersRolesScopes.scopeId eq Memberships.scopeId })
         .slice(UsersMemberships.memberId)
         .select(Memberships.scopeId eq scopeId and (UsersRolesScopes.roleId eq roleId))
-        .map { it[UsersMemberships.memberId].value }
+        .map { it[UsersMemberships.memberId] }
 
     fun findMemberByScope(userId: UUID, scopeId: UUID) = Memberships
         .innerJoin(UsersMemberships, { Memberships.id }, { membershipId })
@@ -150,11 +150,9 @@ class UserMembershipRepository(
     fun findMissingStudentsFromGroupsToCourse(courseMembershipId: UUID, groupIds: List<UUID>) = transaction {
         val courseStudentsFromGroups = UsersMemberships.slice(UsersMemberships.memberId)
             .select(UsersMemberships.membershipId eq courseMembershipId)
-            .map { it[UsersMemberships.memberId].value }
+            .map { it[UsersMemberships.memberId] }
 
         val isAStudentRoles: List<Long> = RoleDao.findChildRoleIdsByRoleId(Role.Student.id) + Role.Student.id
-
-//        val groupsMembershipIds = findMembershipsByScopeIds(groupIds)
 
         Memberships.innerJoin(UsersMemberships, { Memberships.id }, { membershipId })
             .innerJoin(
@@ -168,7 +166,7 @@ class UserMembershipRepository(
                         and (Memberships.scopeId inList groupIds)
                         and (UsersMemberships.memberId notInList courseStudentsFromGroups)
             ).distinctBy { it[UsersMemberships.memberId] }
-            .map { it[UsersMemberships.memberId].value }
+            .map { it[UsersMemberships.memberId] }
     }
 
     fun findAndRemoveRemainingStudentsOfCourseToGroups(groupIds: List<UUID>, courseMembershipId: UUID) = transaction {
@@ -193,14 +191,14 @@ class UserMembershipRepository(
             .select(
                 Memberships.scopeId inList groupIds
                         and (UsersRolesScopes.roleId inList isAStudentRoles)
-            ).map { it[UsersMemberships.memberId].value }
+            ).map { it[UsersMemberships.memberId] }
 
         UsersMemberships.slice(UsersMemberships.memberId)
             .select(
                 UsersMemberships.membershipId eq courseMembershipId
                         and (UsersMemberships.memberId notInList groupStudentIds)
             ).distinctBy { it[UsersMemberships.memberId] }
-            .map { it[UsersMemberships.memberId].value }
+            .map { it[UsersMemberships.memberId] }
     }
 
     private fun findMembershipsByScopeIds(groupIds: List<UUID>): List<UUID> {
@@ -238,7 +236,7 @@ class UserMembershipRepository(
             .select(
                 targetUm[UsersMemberships.membershipId].isNull()
                         and (sourceUm[UsersMemberships.membershipId] inList membershipIdsSources)
-            ).map { it[sourceUm[UsersMemberships.memberId]].value }
+            ).map { it[sourceUm[UsersMemberships.memberId]] }
     }
 
     /**
@@ -291,7 +289,7 @@ class UserMembershipRepository(
             .select(
                 targetUm[UsersMemberships.membershipId].isNull()
                         and (sourceUm[UsersMemberships.membershipId] eq membershipIdSource)
-            ).map { it[sourceUm[UsersMemberships.memberId]].value }
+            ).map { it[sourceUm[UsersMemberships.memberId]] }
     }
 
     /**

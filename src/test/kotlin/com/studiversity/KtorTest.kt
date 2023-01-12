@@ -19,7 +19,7 @@ import org.junit.jupiter.api.BeforeAll
 open class KtorTest {
 
     companion object {
-        private lateinit var testApp: TestApplication
+        lateinit var testApp: TestApplication
         lateinit var client: HttpClient
 
 

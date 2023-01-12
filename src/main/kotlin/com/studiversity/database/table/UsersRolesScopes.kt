@@ -6,7 +6,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
 
 object UsersRolesScopes : LongIdTable("user_role_scope", "user_role_scope_id") {
-    val userId = reference("user_id", Users.id)
+    val userId = uuid("user_id").references(Users.id)
     val roleId = reference("role_id", Roles.id)
     val scopeId = uuid("scope_id").references(Scopes.id)
 

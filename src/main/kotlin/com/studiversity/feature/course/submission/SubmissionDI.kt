@@ -5,8 +5,8 @@ import com.studiversity.feature.course.submission.usecase.FindSubmissionsByWorkU
 import org.koin.dsl.module
 
 private val useCaseModule = module {
-    single { FindSubmissionUseCase(get(), get(),get(),get()) }
-    single { FindSubmissionsByWorkUseCase(get(), get()) }
+    single { FindSubmissionUseCase(get(), get()) }
+    single { FindSubmissionsByWorkUseCase(get(), get(), get()) }
 }
 
 private val repositoryModule = module {
