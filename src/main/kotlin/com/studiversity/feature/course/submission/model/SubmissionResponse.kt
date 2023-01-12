@@ -7,6 +7,7 @@ import java.util.*
 data class SubmissionResponse(
     val id: UUID,
     val authorId: UUID,
+    val state: SubmissionState,
     val courseWorkId: UUID,
     val content: SubmissionContent?
 )

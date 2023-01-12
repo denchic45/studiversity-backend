@@ -17,7 +17,7 @@ class AddCourseWorkUseCase(
     operator fun invoke(courseId: UUID, request: CreateCourseElementRequest) = transactionWorker {
         val response = courseElementRepository.add(courseId, request)
         val studentIds = userMembershipRepository.findMemberIdsByScopeAndRole(courseId, Role.Student.id)
-        courseSubmissionRepository.addEmptySubmissionByStudentIds(response.id, studentIds)
+        courseSubmissionRepository.addEmptySubmissionsByStudentIds(response.id, studentIds)
         response
     }
 }

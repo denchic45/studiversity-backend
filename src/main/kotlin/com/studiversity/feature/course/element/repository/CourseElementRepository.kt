@@ -51,6 +51,10 @@ class CourseElementRepository {
         }
     }
 
+    fun findCourseIdByElementId(elementId: UUID): UUID? {
+        return CourseElementDao.findById(elementId)?.courseId
+    }
+
     fun remove(elementId: UUID): Boolean {
         return CourseElementDao.findById(elementId)?.delete() != null
     }

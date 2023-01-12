@@ -383,6 +383,23 @@ class UserMembershipRepository(
             ).count() > 0
     }
 
+    fun existMemberByScopeIdAndRole(memberId: UUID, scopeId: UUID, roleId: Long) = transaction {
+        UsersMemberships.innerJoin(
+            otherTable = Memberships,
+            onColumn = { Memberships.id },
+            otherColumn = { UsersMemberships.membershipId }
+        ).innerJoin(
+            otherTable = UsersRolesScopes,
+            onColumn = { Memberships.scopeId },
+            otherColumn = { UsersRolesScopes.scopeId },
+            additionalConstraint = { UsersRolesScopes.userId eq UsersMemberships.memberId })
+            .slice(UsersMemberships.memberId)
+            .select(
+                Memberships.scopeId eq scopeId and (UsersMemberships.memberId eq memberId)
+                        and (UsersRolesScopes.roleId eq roleId)
+            ).count() > 0
+    }
+
     fun existMemberByOneOfScopeIds(memberId: UUID, scopeIds: List<UUID>) = transaction {
         UsersMemberships.innerJoin(
             otherTable = Memberships,

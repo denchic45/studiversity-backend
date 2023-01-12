@@ -10,6 +10,7 @@ import kotlinx.serialization.json.Json
 fun SubmissionDao.toResponse() = SubmissionResponse(
     id = id.value,
     authorId = authorId,
+    state = state,
     courseWorkId = courseWorkId,
     content = toContent()
 )

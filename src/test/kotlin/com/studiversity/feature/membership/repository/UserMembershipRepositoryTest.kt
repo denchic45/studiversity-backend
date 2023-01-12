@@ -4,13 +4,10 @@ import com.studiversity.database.DatabaseFactory
 import com.studiversity.di.coroutineModule
 import com.studiversity.di.supabaseClientModule
 import com.studiversity.util.toUUID
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -56,6 +53,7 @@ class UserMembershipRepositoryTest : KoinTest {
     }
 
 
+    @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
     @Test
     fun testFlow() {
         val rootFlow = flow {
@@ -64,7 +62,7 @@ class UserMembershipRepositoryTest : KoinTest {
             emit("Hello world!")
         }
 
-        val childFlow1 = rootFlow.flatMapConcat { flow { emit(it.count()) } }
+        val childFlow1 = rootFlow.flatMapLatest { flow { emit(it.count()) } }
 
         val childFlow2 = rootFlow.map { it.repeat(5) }
 
@@ -115,12 +113,12 @@ class UserMembershipRepositoryTest : KoinTest {
             ),
             scopeId = "8f6ba645-ed8e-4f08-8a2e-103d6b3883ae".toUUID()
         ).apply {
-                print(this)
-            }
+            print(this)
+        }
     }
 
     @Test
-    fun testMembersInScope():Unit = transaction {
+    fun testMembersInScope(): Unit = transaction {
         userMembershipRepository.findMembersByScope("8f6ba645-ed8e-4f08-8a2e-103d6b3883ae".toUUID())
             .apply {
                 print(this)
