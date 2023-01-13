@@ -3,21 +3,25 @@ package com.studiversity.client
 import com.studiversity.KtorTest
 import com.studiversity.feature.auth.model.LoginRequest
 import com.studiversity.feature.course.element.CourseWorkType
-import com.studiversity.feature.course.element.model.CourseElementResponse
-import com.studiversity.feature.course.element.model.CourseWork
-import com.studiversity.feature.course.element.model.CreateCourseWorkRequest
+import com.studiversity.feature.course.element.model.*
 import com.studiversity.feature.course.model.CourseResponse
 import com.studiversity.feature.course.model.CreateCourseRequest
+import com.studiversity.feature.course.submission.model.AssignmentSubmission
 import com.studiversity.feature.course.submission.model.SubmissionResponse
 import com.studiversity.feature.course.submission.model.SubmissionState
+import com.studiversity.feature.course.submission.model.UpdateSubmissionRequest
 import com.studiversity.feature.membership.model.ManualJoinMemberRequest
 import com.studiversity.supabase.model.SignupResponse
+import com.studiversity.util.OptionalProperty
+import com.studiversity.util.requirePresent
 import com.studiversity.util.toUUID
+import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.delay
@@ -164,6 +168,78 @@ class SubmissionsTest : KtorTest() {
             .body<SubmissionResponse>().also { response ->
                 assertAllStatesInCreated(response)
             }
+    }
+
+    @Test
+    fun testOnStudentFirstGetSubmissionByStudentId(): Unit = runBlocking {
+        enrolStudent(user1Id)
+        // get submission by student
+        studentClient.getSubmissionByStudent(user1Id).also { response ->
+            assertEquals(SubmissionState.CREATED, response.state)
+        }
+        client.getSubmissionByStudent(user1Id).also { response ->
+            assertEquals(SubmissionState.CREATED, response.state)
+        }
+    }
+
+    @Test
+    fun testOnTeacherFirstGetSubmissionByStudentId(): Unit = runBlocking {
+        enrolStudent(user1Id)
+        // get submission by another user (maybe teacher)
+        val submission = client.getSubmissionByStudent(user1Id).also { response ->
+            assertEquals(SubmissionState.NEW, response.state)
+        }
+        studentClient.getSubmissionByStudent(user1Id).also { response ->
+            assertEquals(SubmissionState.CREATED, response.state)
+            assertEquals(submission.id, response.id)
+        }
+        client.getSubmissionByStudent(user1Id).also { response ->
+            assertEquals(SubmissionState.CREATED, response.state)
+            assertEquals(submission.id, response.id)
+        }
+    }
+
+    @Test
+    fun testSubmitSubmission(): Unit = runBlocking {
+        enrolStudent(user1Id)
+        val submission = studentClient.getSubmissionByStudent(user1Id)
+        val request = UpdateSubmissionRequest(
+            OptionalProperty.Present(
+                AssignmentSubmission(
+                    listOf(
+                        Attachment(
+                            UUID.randomUUID(),
+                            AttachmentType.Link,
+                            "https://developers.google.com/classroom/reference/rest/v1/courses.courseWork.studentSubmissions#StudentSubmission"
+                        )
+                    )
+                )
+            )
+        )
+        client.submitSubmission(submission.id, request).apply {
+            assertEquals(HttpStatusCode.Forbidden, status)
+        }
+        studentClient.submitSubmission(submission.id, request).apply {
+            assertEquals(HttpStatusCode.OK, status)
+            val response = body<SubmissionResponse>()
+            assertEquals(SubmissionState.SUBMITTED, response.state)
+            assertEquals(request.content.requirePresent(), response.content)
+        }
+    }
+
+    private suspend fun HttpClient.getSubmissionByStudent(userId: UUID): SubmissionResponse {
+        return get("/courses/${course.id}/elements/${courseWork.id}/submissionsByStudentId/${userId}")
+            .apply { assertEquals(HttpStatusCode.OK, status) }.body()
+    }
+
+    private suspend fun HttpClient.submitSubmission(
+        submissionId: UUID,
+        updateSubmissionRequest: UpdateSubmissionRequest
+    ): HttpResponse {
+        return post("/courses/${course.id}/elements/${courseWork.id}/submissions/${submissionId}/submit") {
+            contentType(ContentType.Application.Json)
+            setBody(updateSubmissionRequest)
+        }
     }
 
     private fun assertAllStatesInCreated(response: SubmissionResponse) {

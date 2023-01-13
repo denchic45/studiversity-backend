@@ -3,9 +3,11 @@ package com.studiversity.feature.course.submission
 import com.studiversity.database.table.*
 import com.studiversity.feature.course.element.CourseWorkType
 import com.studiversity.feature.course.submission.model.AssignmentSubmissionResponse
+import com.studiversity.feature.course.submission.model.SubmissionContent
 import com.studiversity.feature.course.submission.model.SubmissionResponse
 import com.studiversity.feature.course.submission.model.SubmissionState
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -46,6 +48,12 @@ class CourseSubmissionRepository {
         return SubmissionDao.findById(submissionId)?.toResponse()
     }
 
+    fun findByStudentId(courseWorkId: UUID, studentId: UUID): SubmissionResponse? {
+        return SubmissionDao.find(
+            Submissions.courseWorkId eq courseWorkId and (Submissions.authorId eq studentId)
+        ).singleOrNull()?.toResponse()
+    }
+
     fun findByWorkId(courseId: UUID, courseWorkId: UUID, studentIds: List<UUID>): List<SubmissionResponse> {
         return Memberships.innerJoin(UsersMemberships, { Memberships.id }, { membershipId })
             .join(CourseWorks, JoinType.INNER, additionalConstraint = { CourseWorks.id eq courseWorkId })
@@ -73,5 +81,18 @@ class CourseSubmissionRepository {
 
     fun updateSubmissionState(submissionId: UUID, state: SubmissionState) {
         SubmissionDao.findById(submissionId)!!.state = state
+    }
+
+    fun updateSubmissionContent(submissionId: UUID, content: SubmissionContent?): SubmissionResponse? {
+        return SubmissionDao.findById(submissionId)?.apply {
+            this.content = Json.encodeToString(content)
+        }?.toResponse()
+    }
+
+    fun submitSubmissionContent(submissionId: UUID, content: SubmissionContent?): SubmissionResponse? {
+        return SubmissionDao.findById(submissionId)?.apply {
+            this.content = Json.encodeToString(content)
+            this.state = SubmissionState.SUBMITTED
+        }?.toResponse()
     }
 }

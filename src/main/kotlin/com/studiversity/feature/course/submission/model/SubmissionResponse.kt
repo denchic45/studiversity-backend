@@ -30,7 +30,7 @@ data class AssignmentSubmissionResponse(
     override val type: CourseElementType = CourseElementType.Work
 }
 
-@Serializable
+@Serializable(SubmissionContentSerializer::class)
 sealed interface SubmissionContent
 
 @Serializable
