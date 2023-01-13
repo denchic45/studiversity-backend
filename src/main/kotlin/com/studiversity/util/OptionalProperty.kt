@@ -10,3 +10,10 @@ sealed class OptionalProperty<out T> {
         if (this is Present) onPresent(value)
     }
 }
+
+fun <T> OptionalProperty<T>.requirePresent(): T {
+    return presentOrElse { throw IllegalStateException("Value not present") }
+}
+
+fun <T> OptionalProperty<T>.presentOrElse(defaultValue: () -> T) =
+    (this as? OptionalProperty.Present)?.value ?: defaultValue()
