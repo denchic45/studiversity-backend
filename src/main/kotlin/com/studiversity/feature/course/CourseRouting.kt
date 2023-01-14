@@ -101,7 +101,7 @@ fun Route.courseByIdRoutes() {
                 val courseId = call.parameters["courseId"]!!.toUUID()
                 val currentUserId = call.jwtPrincipal().payload.claimId
 
-                requireCapability(currentUserId, Capability.WriteCourse, courseId)
+                requireCapability(currentUserId, Capability.DeleteCourse, courseId)
 
                 unarchiveCourse(courseId)
                 call.respond(HttpStatusCode.NoContent)

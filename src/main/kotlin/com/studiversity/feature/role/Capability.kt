@@ -31,8 +31,8 @@ data class Capability(val resource: String) {
         val WriteCoursePost: Capability = Capability("course/post:write")
 
         val ReadSubmissions: Capability = Capability("course/submissions:read")
-        val WriteSubmissions: Capability = Capability("course/submissions:write")
-        val SubmitSubmission: Capability = Capability("course/submission:submit")
+        val SubmitSubmission: Capability = Capability("course/submissions:submit")
+        val GradeSubmission: Capability = Capability("course/submissions:grade")
 
         val WriteSubject: Capability = Capability("subject:write")
         val ReadSubject: Capability = Capability("subject:read")
