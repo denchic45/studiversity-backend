@@ -7,7 +7,6 @@ import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.ktor.claimId
 import com.studiversity.ktor.getUuid
 import com.studiversity.ktor.jwtPrincipal
-import com.studiversity.util.OptionalProperty
 import com.studiversity.util.presentOrElse
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -47,6 +46,8 @@ fun Route.submissionByIdRoute() {
         val findSubmission: FindSubmissionUseCase by inject()
         val updateSubmissionContent: UpdateSubmissionContentUseCase by inject()
         val submitSubmission: SubmitSubmissionUseCase by inject()
+        val gradeSubmission: GradeSubmissionUseCase by inject()
+
 
         get {
             val currentUserId = call.jwtPrincipal().payload.claimId
@@ -71,15 +72,33 @@ fun Route.submissionByIdRoute() {
             val currentUserId = call.jwtPrincipal().payload.claimId
             val body = call.receive<UpdateSubmissionRequest>()
 
-            if (body.content is OptionalProperty.Present) {
+            val courseId = call.parameters.getUuid("courseId")
+            val workId = call.parameters.getUuid("elementId")
+            val submissionId = call.parameters.getUuid("submissionId")
+
+            body.content.ifPresentSuspended {
                 requireCapability(
                     userId = currentUserId,
                     capability = Capability.SubmitSubmission,
-                    scopeId = call.parameters.getUuid("courseId")
+                    scopeId = courseId
                 )
                 val updatedSubmission = updateSubmissionContent(
-                    call.parameters.getUuid("submissionId"),
-                    body.content.value
+                    submissionId,
+                    it
+                )
+                call.respond(HttpStatusCode.OK, updatedSubmission)
+            }
+            body.grade.ifPresentSuspended {
+                requireCapability(
+                    userId = currentUserId,
+                    capability = Capability.GradeSubmission,
+                    scopeId = courseId
+                )
+                val updatedSubmission = gradeSubmission(
+                    submissionId,
+                    workId,
+                    it,
+                    currentUserId
                 )
                 call.respond(HttpStatusCode.OK, updatedSubmission)
             }

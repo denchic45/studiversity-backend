@@ -11,6 +11,7 @@ import com.studiversity.feature.course.submission.model.SubmissionResponse
 import com.studiversity.feature.course.submission.model.SubmissionState
 import com.studiversity.feature.course.submission.model.UpdateSubmissionRequest
 import com.studiversity.feature.membership.model.ManualJoinMemberRequest
+import com.studiversity.feature.role.Role
 import com.studiversity.supabase.model.SignupResponse
 import com.studiversity.util.OptionalProperty
 import com.studiversity.util.requirePresent
@@ -19,14 +20,11 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
-import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -39,18 +37,12 @@ class SubmissionsTest : KtorTest() {
     private lateinit var course: CourseResponse
     private lateinit var courseWork: CourseElementResponse
 
-    private val user1Id = "7a98cdcf-d404-4556-96bd-4ce9137c8cbe".toUUID()
-    private val user2Id = "77129e28-bf01-4dca-b19f-9fbcf576345e".toUUID()
+    private val student1Id = "7a98cdcf-d404-4556-96bd-4ce9137c8cbe".toUUID()
+    private val student2Id = "77129e28-bf01-4dca-b19f-9fbcf576345e".toUUID()
+    private val teacher1Id = "4c73fa98-2146-4688-ad05-22887c8d921d".toUUID()
 
     private val studentClient = testApp.createClient {
-        install(ContentNegotiation) {
-            json(Json {
-                prettyPrint = true
-                isLenient = true
-                ignoreUnknownKeys = true
-                encodeDefaults = true
-            })
-        }
+        installContentNegotiation()
         install(Auth) {
             bearer {
                 refreshTokens {
@@ -58,6 +50,20 @@ class SubmissionsTest : KtorTest() {
                         contentType(ContentType.Application.Json)
                         setBody(LoginRequest("slavik@gmail.com", "GHBO043g54gh"))
                     }.body<SignupResponse>().accessToken, "")
+                }
+            }
+        }
+    }
+
+    private val teacherClient = testApp.createClient {
+        installContentNegotiation()
+        install(Auth) {
+            bearer {
+                refreshTokens {
+                    BearerTokens(accessToken = client.post("/auth/token?grant_type=password") {
+                        contentType(ContentType.Application.Json)
+                        setBody(LoginRequest("denchic150@gmail.com", "OBDIhi76534g33"))
+                    }.apply { println("bearer: ${bodyAsText()}") }.body<SignupResponse>().accessToken, "")
                 }
             }
         }
@@ -76,7 +82,7 @@ class SubmissionsTest : KtorTest() {
                     "Test Assignment",
                     "some desc",
                     null,
-                    CourseWork(null, null, CourseWorkType.Assignment)
+                    CourseWork(null, null, CourseWorkType.Assignment, 5)
                 )
             )
         }.apply { assertEquals(HttpStatusCode.OK, status) }.body()
@@ -92,14 +98,22 @@ class SubmissionsTest : KtorTest() {
     }
 
     private suspend fun enrolStudentsToCourse() {
-        enrolStudent(user1Id)
-        enrolStudent(user2Id)
+        enrolStudent(student1Id)
+        enrolStudent(student2Id)
     }
 
     private suspend fun enrolStudent(userId: UUID) {
+        enrolUser(userId, Role.Student.id)
+    }
+
+    private suspend fun enrolTeacher(userId: UUID) {
+        enrolUser(userId, Role.Teacher.id)
+    }
+
+    private suspend fun enrolUser(userId: UUID, roleId: Long) {
         client.post("/scopes/${course.id}/members?action=manual") {
             contentType(ContentType.Application.Json)
-            setBody(ManualJoinMemberRequest(userId, roleIds = listOf(3)))
+            setBody(ManualJoinMemberRequest(userId, roleIds = listOf(roleId)))
         }.apply { assertEquals(HttpStatusCode.Created, status) }
         delay(8000)
     }
@@ -125,7 +139,7 @@ class SubmissionsTest : KtorTest() {
             assertEquals(2, response.size)
             assertAllStatesIsNew(response)
         }
-        val ownSubmission = submissions.first { it.authorId == user1Id }
+        val ownSubmission = submissions.first { it.authorId == student1Id }
 
         // get submission by another user (maybe teacher)
         client.get("/courses/${course.id}/elements/${courseWork.id}/submissions/${ownSubmission.id}")
@@ -151,17 +165,17 @@ class SubmissionsTest : KtorTest() {
 
     @Test
     fun testGetSubmissionsAfterAddNewStudentToCourse(): Unit = runBlocking {
-        enrolStudent(user2Id)
+        enrolStudent(student2Id)
         getAllSubmissionsByWork().also { response ->
             assertEquals(1, response.size)
         }
 
-        enrolStudent(user1Id)
+        enrolStudent(student1Id)
         val submissions = getAllSubmissionsByWork().also { response ->
             assertEquals(2, response.size)
             assertAllStatesIsNew(response)
         }
-        val ownSubmission = submissions.first { it.authorId == user1Id }
+        val ownSubmission = submissions.first { it.authorId == student1Id }
         // get submission by owner student
         studentClient.get("/courses/${course.id}/elements/${courseWork.id}/submissions/${ownSubmission.id}")
             .apply { assertEquals(HttpStatusCode.OK, status) }
@@ -172,28 +186,28 @@ class SubmissionsTest : KtorTest() {
 
     @Test
     fun testOnStudentFirstGetSubmissionByStudentId(): Unit = runBlocking {
-        enrolStudent(user1Id)
+        enrolStudent(student1Id)
         // get submission by student
-        studentClient.getSubmissionByStudent(user1Id).also { response ->
+        studentClient.getSubmissionByStudent(student1Id).also { response ->
             assertEquals(SubmissionState.CREATED, response.state)
         }
-        client.getSubmissionByStudent(user1Id).also { response ->
+        client.getSubmissionByStudent(student1Id).also { response ->
             assertEquals(SubmissionState.CREATED, response.state)
         }
     }
 
     @Test
     fun testOnTeacherFirstGetSubmissionByStudentId(): Unit = runBlocking {
-        enrolStudent(user1Id)
+        enrolStudent(student1Id)
         // get submission by another user (maybe teacher)
-        val submission = client.getSubmissionByStudent(user1Id).also { response ->
+        val submission = client.getSubmissionByStudent(student1Id).also { response ->
             assertEquals(SubmissionState.NEW, response.state)
         }
-        studentClient.getSubmissionByStudent(user1Id).also { response ->
+        studentClient.getSubmissionByStudent(student1Id).also { response ->
             assertEquals(SubmissionState.CREATED, response.state)
             assertEquals(submission.id, response.id)
         }
-        client.getSubmissionByStudent(user1Id).also { response ->
+        client.getSubmissionByStudent(student1Id).also { response ->
             assertEquals(SubmissionState.CREATED, response.state)
             assertEquals(submission.id, response.id)
         }
@@ -201,8 +215,8 @@ class SubmissionsTest : KtorTest() {
 
     @Test
     fun testSubmitSubmission(): Unit = runBlocking {
-        enrolStudent(user1Id)
-        val submission = studentClient.getSubmissionByStudent(user1Id)
+        enrolStudent(student1Id)
+        val submission = studentClient.getSubmissionByStudent(student1Id)
         val request = UpdateSubmissionRequest(
             OptionalProperty.Present(
                 AssignmentSubmission(
@@ -227,6 +241,45 @@ class SubmissionsTest : KtorTest() {
         }
     }
 
+    @Test
+    fun testGradeSubmission(): Unit = runBlocking {
+        enrolStudent(student1Id)
+        enrolTeacher(teacher1Id)
+        val submission = studentClient.getSubmissionByStudent(student1Id)
+        val request = UpdateSubmissionRequest(
+            OptionalProperty.Present(
+                AssignmentSubmission(
+                    listOf(
+                        Attachment(
+                            UUID.randomUUID(),
+                            AttachmentType.Link,
+                            "https://developers.google.com/classroom/reference/rest/v1/courses.courseWork.studentSubmissions#StudentSubmission"
+                        )
+                    )
+                )
+            )
+        )
+        val response = studentClient.submitSubmission(submission.id, request).apply {
+            assertEquals(HttpStatusCode.OK, status)
+        }.body<SubmissionResponse>()
+
+        studentClient.gradeSubmission(response.id, 6).apply {
+            assertEquals(HttpStatusCode.Forbidden, status)
+        }
+
+        teacherClient.gradeSubmission(response.id, 6).apply {
+            assertEquals(HttpStatusCode.BadRequest, status)
+        }
+
+        teacherClient.gradeSubmission(response.id, 4).apply {
+            assertEquals(HttpStatusCode.OK, status)
+            body<SubmissionResponse>().apply {
+                assertEquals(4, grade)
+                assertEquals(teacher1Id, gradedBy)
+            }
+        }
+    }
+
     private suspend fun HttpClient.getSubmissionByStudent(userId: UUID): SubmissionResponse {
         return get("/courses/${course.id}/elements/${courseWork.id}/submissionsByStudentId/${userId}")
             .apply { assertEquals(HttpStatusCode.OK, status) }.body()
@@ -239,6 +292,16 @@ class SubmissionsTest : KtorTest() {
         return post("/courses/${course.id}/elements/${courseWork.id}/submissions/${submissionId}/submit") {
             contentType(ContentType.Application.Json)
             setBody(updateSubmissionRequest)
+        }
+    }
+
+    private suspend fun HttpClient.gradeSubmission(
+        submissionId: UUID,
+        grade: Short,
+    ): HttpResponse {
+        return patch("/courses/${course.id}/elements/${courseWork.id}/submissions/${submissionId}") {
+            contentType(ContentType.Application.Json)
+            setBody(UpdateSubmissionRequest(grade = OptionalProperty.Present(grade)))
         }
     }
 

@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class UpdateSubmissionRequest(
     @Serializable(OptionalPropertySerializer::class)
-    val content: OptionalProperty<SubmissionContent?> = OptionalProperty.NotPresent
-    // todo val grade
+    val content: OptionalProperty<SubmissionContent?> = OptionalProperty.NotPresent,
+    @Serializable(OptionalPropertySerializer::class)
+    val grade: OptionalProperty<Short> = OptionalProperty.NotPresent
 )

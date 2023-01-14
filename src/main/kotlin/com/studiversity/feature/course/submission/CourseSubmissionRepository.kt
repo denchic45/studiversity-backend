@@ -89,10 +89,17 @@ class CourseSubmissionRepository {
         }?.toResponse()
     }
 
-    fun submitSubmissionContent(submissionId: UUID, content: SubmissionContent?): SubmissionResponse? {
-        return SubmissionDao.findById(submissionId)?.apply {
+    fun submitSubmissionContent(submissionId: UUID, content: SubmissionContent?): SubmissionResponse {
+        return SubmissionDao.findById(submissionId)!!.apply {
             this.content = Json.encodeToString(content)
             this.state = SubmissionState.SUBMITTED
-        }?.toResponse()
+        }.toResponse()
+    }
+
+    fun setGradeSubmission(submissionId: UUID, grade: Short, gradedBy: UUID): SubmissionResponse {
+        return SubmissionDao.findById(submissionId)!!.apply {
+            this.grade = grade
+            this.gradedBy = gradedBy
+        }.toResponse()
     }
 }

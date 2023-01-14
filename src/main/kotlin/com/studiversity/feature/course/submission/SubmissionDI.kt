@@ -9,6 +9,7 @@ private val useCaseModule = module {
     single { FindSubmissionByStudentUseCase(get(), get(), get(), get()) }
     single { UpdateSubmissionContentUseCase(get(), get()) }
     single { SubmitSubmissionUseCase(get(), get()) }
+    single { GradeSubmissionUseCase(get(),get(),get()) }
 }
 
 private val repositoryModule = module {

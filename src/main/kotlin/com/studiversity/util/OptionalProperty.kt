@@ -9,6 +9,13 @@ sealed class OptionalProperty<out T> {
     fun ifPresent(onPresent: (value: T) -> Unit) {
         if (this is Present) onPresent(value)
     }
+
+    suspend fun ifPresentSuspended(onPresent: suspend (value: T) -> Unit) {
+        if (this is Present) onPresent(value)
+    }
+
+    val isPresent: Boolean
+        get() = this is Present
 }
 
 fun <T> OptionalProperty<T>.requirePresent(): T {

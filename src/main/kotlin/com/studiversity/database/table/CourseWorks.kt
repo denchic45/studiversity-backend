@@ -13,6 +13,7 @@ object CourseWorks : UUIDTable("course_work", "course_element_id") {
     val dueDate = date("due_date").nullable()
     val dueTime = time("due_time").nullable()
     val type = enumerationByName("work_type", 10, CourseWorkType::class)
+    val maxGrade = short("max_grade")
 }
 
 class CourseWorkDao(id: EntityID<UUID>) : UUIDEntity(id), CourseElementDetailsDao {
@@ -21,4 +22,5 @@ class CourseWorkDao(id: EntityID<UUID>) : UUIDEntity(id), CourseElementDetailsDa
     var dueDate by CourseWorks.dueDate
     var dueTime by CourseWorks.dueTime
     var type by CourseWorks.type
+    var maxGrade by CourseWorks.maxGrade
 }

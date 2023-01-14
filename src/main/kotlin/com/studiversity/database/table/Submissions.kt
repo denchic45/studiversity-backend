@@ -13,6 +13,8 @@ object Submissions : UUIDTable("submission", "submission_id") {
     val courseWorkId = uuid("course_work_id").references(CourseWorks.id)
     val content = varcharMax("content").nullable()
     val state = enumerationByName<SubmissionState>("state", 20)
+    val grade = short("grade").nullable()
+    val gradedBy = uuid("graded_by").references(Users.id).nullable()
 }
 
 class SubmissionDao(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -22,6 +24,8 @@ class SubmissionDao(id: EntityID<UUID>) : UUIDEntity(id) {
     var courseWorkId by Submissions.courseWorkId
     var content by Submissions.content
     var state by Submissions.state
+    var grade by Submissions.grade
+    var gradedBy by Submissions.gradedBy
 
     val courseWork by CourseWorkDao referencedOn Submissions.courseWorkId
 }

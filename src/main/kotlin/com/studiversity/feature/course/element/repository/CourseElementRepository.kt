@@ -33,6 +33,7 @@ class CourseElementRepository {
                         this.dueDate = request.details.dueDate
                         this.dueTime = request.details.dueTime
                         this.type = request.details.workType
+                        this.maxGrade = request.details.maxGrade
                     }
                 }
             }
@@ -56,5 +57,9 @@ class CourseElementRepository {
 
     fun remove(elementId: UUID): Boolean {
         return CourseElementDao.findById(elementId)?.delete() != null
+    }
+
+    fun findMaxGradeByWorkId(workId: UUID): Short {
+      return  CourseWorkDao.findById(workId)!!.maxGrade
     }
 }

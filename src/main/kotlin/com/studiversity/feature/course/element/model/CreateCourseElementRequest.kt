@@ -2,6 +2,8 @@ package com.studiversity.feature.course.element.model
 
 import com.studiversity.feature.course.element.CourseElementType
 import com.studiversity.ktor.UUIDSerializer
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import java.util.*
 
@@ -15,12 +17,12 @@ sealed interface CreateCourseElementRequest {
 }
 
 @Serializable
-data class CreateCourseWorkRequest(
+data class CreateCourseWorkRequest @OptIn(ExperimentalSerializationApi::class) constructor(
     override val name: String,
     override val description: String? = null,
     @Serializable(UUIDSerializer::class)
     override val topicId: UUID? = null,
-    override val details: CourseWork
-) : CreateCourseElementRequest {
+    override val details: CourseWork,
+    @EncodeDefault
     override val type: CourseElementType = CourseElementType.Work
-}
+) : CreateCourseElementRequest

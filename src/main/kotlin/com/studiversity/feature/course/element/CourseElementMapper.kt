@@ -28,5 +28,6 @@ private fun CourseWorkDao.toDetailsResponse(): CourseElementDetails = CourseWork
     dueDate = dueDate,
     dueTime = dueTime,
     workType = type,
+    maxGrade = maxGrade,
     workDetails = null
 )
