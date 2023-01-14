@@ -4,6 +4,7 @@ import com.studiversity.feature.auth.model.LoginRequest
 import com.studiversity.supabase.model.SignupResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.engine.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -22,20 +23,12 @@ open class KtorTest {
         lateinit var testApp: TestApplication
         lateinit var client: HttpClient
 
-
         @JvmStatic
         @BeforeAll
         fun setup(): Unit = runBlocking {
             testApp = TestApplication {}
             client = testApp.createClient {
-                install(ContentNegotiation) {
-                    json(Json {
-                        prettyPrint = true
-                        isLenient = true
-                        ignoreUnknownKeys = true
-                        encodeDefaults = true
-                    })
-                }
+                installContentNegotiation()
                 install(Auth) {
                     bearer {
                         refreshTokens {
@@ -48,6 +41,17 @@ open class KtorTest {
                 }
             }
         }
+
+        fun HttpClientConfig<out HttpClientEngineConfig>.installContentNegotiation() {
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = true
+                    ignoreUnknownKeys = true
+                })
+            }
+        }
+
 
         @JvmStatic
         @AfterAll
