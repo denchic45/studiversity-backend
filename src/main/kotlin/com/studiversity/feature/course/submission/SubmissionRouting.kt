@@ -8,13 +8,16 @@ import com.studiversity.ktor.claimId
 import com.studiversity.ktor.getUuid
 import com.studiversity.ktor.jwtPrincipal
 import com.studiversity.util.presentOrElse
+import io.github.jan.supabase.storage.BucketApi
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+import java.time.Instant
 
 fun Route.courseSubmissionRoutes() {
     route("/submissions") {
@@ -47,7 +50,6 @@ fun Route.submissionByIdRoute() {
         val updateSubmissionContent: UpdateSubmissionContentUseCase by inject()
         val submitSubmission: SubmitSubmissionUseCase by inject()
         val gradeSubmission: GradeSubmissionUseCase by inject()
-
 
         get {
             val currentUserId = call.jwtPrincipal().payload.claimId
@@ -118,6 +120,34 @@ fun Route.submissionByIdRoute() {
                 content = content
             )
             call.respond(HttpStatusCode.OK, submittedSubmission)
+        }
+        route("/attachments") {
+            val bucket: BucketApi by inject()
+
+            post {
+                val courseId = call.parameters.getUuid("courseId")
+                val workId = call.parameters.getUuid("elementId")
+                val submissionId = call.parameters.getUuid("submissionId")
+
+                val multipartData = call.receiveMultipart()
+                multipartData.forEachPart { part ->
+                    when (part) {
+                        is PartData.FileItem -> {
+                            val fileSourceName = part.originalFileName as String
+                            val fileBytes = part.streamProvider().readBytes()
+                            val fileName = Instant.now().epochSecond.toString() + "_" + fileSourceName
+//                            val mFile = File("courses/$courseId/elements/$workId/submissions/$submissionId/$fileName")
+                            bucket.upload(
+                                "courses/$courseId/elements/$workId/submissions/$submissionId/$fileName",
+                                fileBytes
+                            )
+                        }
+
+                        else -> TODO()
+                    }
+                }
+                call.respond(HttpStatusCode.Created)
+            }
         }
     }
 }

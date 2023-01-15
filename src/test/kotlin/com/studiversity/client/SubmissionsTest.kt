@@ -18,9 +18,11 @@ import com.studiversity.util.requirePresent
 import com.studiversity.util.toUUID
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.delay
@@ -28,6 +30,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.io.File
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -276,6 +279,31 @@ class SubmissionsTest : KtorTest() {
             body<SubmissionResponse>().apply {
                 assertEquals(4, grade)
                 assertEquals(teacher1Id, gradedBy)
+            }
+        }
+    }
+
+    @Test
+    fun testAddAttachment(): Unit = runBlocking {
+        enrolStudent(student1Id)
+        val submission = studentClient.getSubmissionByStudent(student1Id)
+        val file: File = File("data.txt").apply {
+            writeText("Hello, Reader!")
+        }
+        studentClient.post("/courses/${course.id}/elements/${courseWork.id}/submissions/${submission.id}/attachments") {
+            setBody(
+                MultiPartFormDataContent(
+                    formData {
+                        append("file", file.readBytes(), Headers.build {
+                            append(HttpHeaders.ContentType, ContentType.defaultForFilePath(file.path))
+                            append(HttpHeaders.ContentDisposition, "filename=${file.name}")
+                        })
+                    },
+                    boundary = "WebAppBoundary"
+                )
+            )
+            onUpload { bytesSentTotal, contentLength ->
+                println("Sent $bytesSentTotal bytes from $contentLength")
             }
         }
     }
