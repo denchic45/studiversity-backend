@@ -2,10 +2,12 @@ package com.studiversity.feature.course.submission
 
 import com.studiversity.database.table.*
 import com.studiversity.feature.course.element.CourseWorkType
+import com.studiversity.feature.course.element.model.CreateFileAttachmentRequest
 import com.studiversity.feature.course.submission.model.AssignmentSubmissionResponse
 import com.studiversity.feature.course.submission.model.SubmissionContent
 import com.studiversity.feature.course.submission.model.SubmissionResponse
 import com.studiversity.feature.course.submission.model.SubmissionState
+import io.github.jan.supabase.storage.BucketApi
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -14,7 +16,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import java.util.*
 
-class CourseSubmissionRepository {
+class CourseSubmissionRepository(private val bucket: BucketApi) {
 
     fun addNewSubmissionByStudentId(courseWorkId: UUID, studentId: UUID): SubmissionResponse {
         return addSubmissionByStudentId(courseWorkId, studentId, SubmissionState.NEW)
@@ -97,9 +99,14 @@ class CourseSubmissionRepository {
     }
 
     fun setGradeSubmission(submissionId: UUID, grade: Short, gradedBy: UUID): SubmissionResponse {
-        return SubmissionDao.findById(submissionId)!!.apply {
-            this.grade = grade
-            this.gradedBy = gradedBy
-        }.toResponse()
+        TODO("FIX IT")
+//        return SubmissionDao.findById(submissionId)!!.apply {
+//            this.grade = grade
+//            this.gradedBy = gradedBy
+//        }.toResponse()
+    }
+
+    fun addSubmissionAttachments(submissionId: UUID, attachments: List<CreateFileAttachmentRequest>) {
+
     }
 }

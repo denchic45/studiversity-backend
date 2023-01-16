@@ -1,5 +1,6 @@
 package com.studiversity.feature.course.submission
 
+import com.studiversity.feature.course.element.model.CreateFileAttachmentRequest
 import com.studiversity.feature.course.submission.model.AssignmentSubmissionResponse
 import com.studiversity.feature.course.submission.model.UpdateSubmissionRequest
 import com.studiversity.feature.course.submission.usecase.*
@@ -21,7 +22,7 @@ import org.koin.ktor.ext.inject
 import java.time.Instant
 import java.util.*
 
-fun Route.courseSubmissionRoutes() {
+fun Route.workSubmissionRoutes() {
     route("/submissions") {
         val requireCapability: RequireCapabilityUseCase by inject()
         val findSubmissionsByWork: FindSubmissionsByWorkUseCase by inject()
@@ -52,6 +53,8 @@ fun Route.submissionByIdRoute() {
         val updateSubmissionContent: UpdateSubmissionContentUseCase by inject()
         val submitSubmission: SubmitSubmissionUseCase by inject()
         val gradeSubmission: GradeSubmissionUseCase by inject()
+
+        val addFileAttachmentOfSubmission: AddFileAttachmentOfSubmissionUseCase by inject()
 
         get {
             val currentUserId = call.jwtPrincipal().payload.claimId
@@ -123,6 +126,9 @@ fun Route.submissionByIdRoute() {
             )
             call.respond(HttpStatusCode.OK, submittedSubmission)
         }
+        post {
+
+        }
         route("/attachments") {
             val bucket: BucketApi by inject()
 
@@ -144,22 +150,27 @@ fun Route.submissionByIdRoute() {
                 }
 
                 val multipartData = call.receiveMultipart()
-                multipartData.forEachPart { part ->
-                    when (part) {
-                        is PartData.FileItem -> {
+                val files = buildList {
+                    multipartData.forEachPart { part ->
+                        if (part is PartData.FileItem) {
                             val fileSourceName = part.originalFileName as String
                             val fileBytes = part.streamProvider().readBytes()
                             val fileName = Instant.now().epochSecond.toString() + "_" + fileSourceName
+                            add(CreateFileAttachmentRequest(fileSourceName, fileBytes))
                             bucket.upload(
                                 "courses/$courseId/elements/$workId/submissions/$submissionId/$fileName",
                                 fileBytes
                             )
                         }
-
-                        else -> TODO()
                     }
                 }
+                addFileAttachmentOfSubmission(submissionId, files)
                 call.respond(HttpStatusCode.Created)
+            }
+            get { }
+            route("/{attachmentId}") {
+                get { }
+                delete { }
             }
         }
     }

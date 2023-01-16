@@ -7,7 +7,7 @@ import com.studiversity.feature.course.element.model.CreateCourseElementRequest
 import com.studiversity.feature.course.element.usecase.AddCourseWorkUseCase
 import com.studiversity.feature.course.element.usecase.FindCourseElementUseCase
 import com.studiversity.feature.course.element.usecase.RemoveCourseElementUseCase
-import com.studiversity.feature.course.submission.courseSubmissionRoutes
+import com.studiversity.feature.course.submission.workSubmissionRoutes
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.ktor.claimId
@@ -16,7 +16,6 @@ import com.studiversity.util.toUUID
 import io.github.jan.supabase.storage.Storage
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -29,19 +28,18 @@ private val createCourseElementCapabilities: Map<KClass<out CourseElementDetails
     CourseMaterial::class to Capability.WriteCoursePost
 )
 
-fun Application.courseElementRoutes() {
-    routing {
-        authenticate("auth-jwt") {
-            route("/courses/{courseId}/elements") {
-                val requireCapability: RequireCapabilityUseCase by inject()
-                val addCourseWork: AddCourseWorkUseCase by inject()
-                post {
-                    val body: CreateCourseElementRequest = call.receive()
-                    val courseId = call.parameters.getOrFail("courseId").toUUID()
-                    requireCapability(
-                        userId = call.jwtPrincipal().payload.claimId,
-                        capability = createCourseElementCapabilities.getValue(body.details::class),
-                        scopeId = courseId
+fun Route.courseElementRoutes() {
+    route("/elements") {
+
+        val requireCapability: RequireCapabilityUseCase by inject()
+        val addCourseWork: AddCourseWorkUseCase by inject()
+        post {
+            val body: CreateCourseElementRequest = call.receive()
+            val courseId = call.parameters.getOrFail("courseId").toUUID()
+            requireCapability(
+                userId = call.jwtPrincipal().payload.claimId,
+                capability = createCourseElementCapabilities.getValue(body.details::class),
+                scopeId = courseId
                     )
                     addCourseWork(courseId, body).let { courseElement ->
                         call.respond(courseElement)
@@ -52,8 +50,6 @@ fun Application.courseElementRoutes() {
                 }
                 courseElementById()
             }
-        }
-    }
 }
 
 fun Route.courseElementById() {
@@ -88,6 +84,6 @@ fun Route.courseElementById() {
             removeCourseElement(call.parameters.getOrFail("elementId").toUUID())
             call.respond(HttpStatusCode.NoContent)
         }
-        courseSubmissionRoutes()
+        workSubmissionRoutes()
     }
 }

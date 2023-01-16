@@ -1,6 +1,5 @@
 package com.studiversity.feature.course
 
-import com.studiversity.feature.course.element.courseElementRoutes
 import com.studiversity.feature.course.subject.subjectRoutes
 import io.ktor.server.application.*
 import io.ktor.server.plugins.requestvalidation.*
@@ -8,7 +7,6 @@ import io.ktor.server.plugins.requestvalidation.*
 @Suppress("unused")
 fun Application.coursesModule() {
     courseRoutes()
-    courseElementRoutes()
     subjectRoutes()
 }
 

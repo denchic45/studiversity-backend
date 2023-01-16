@@ -7,9 +7,12 @@ import java.util.*
 enum class AttachmentType { File, Link }
 
 @Serializable
-data class Attachment(
+sealed class Attachment() {
     @Serializable(UUIDSerializer::class)
-    val id: UUID,
-    val type: AttachmentType,
-    val url: String
-)
+    abstract val id: UUID
+    abstract val type: AttachmentType
+    abstract val url: String
+}
+
+data class FileAttachment(override val id: UUID, override val type: AttachmentType, override val url: String) :
+    Attachment()

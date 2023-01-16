@@ -1,6 +1,7 @@
 package com.studiversity.feature.course
 
 import com.studiversity.Constants
+import com.studiversity.feature.course.element.courseElementRoutes
 import com.studiversity.feature.course.model.CreateCourseRequest
 import com.studiversity.feature.course.model.UpdateCourseRequest
 import com.studiversity.feature.course.usecase.*
@@ -117,6 +118,7 @@ fun Route.courseByIdRoutes() {
             call.respond(HttpStatusCode.NoContent)
         }
         courseStudyGroups()
+        courseElementRoutes()
     }
 }
 
