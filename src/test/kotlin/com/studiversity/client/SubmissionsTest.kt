@@ -283,31 +283,6 @@ class SubmissionsTest : KtorTest() {
         }
     }
 
-    @Test
-    fun testAddAttachment(): Unit = runBlocking {
-        enrolStudent(student1Id)
-        val submission = studentClient.getSubmissionByStudent(student1Id)
-        val file: File = File("data.txt").apply {
-            writeText("Hello, Reader!")
-        }
-        studentClient.post("/courses/${course.id}/elements/${courseWork.id}/submissions/${submission.id}/attachments") {
-            setBody(
-                MultiPartFormDataContent(
-                    formData {
-                        append("file", file.readBytes(), Headers.build {
-                            append(HttpHeaders.ContentType, ContentType.defaultForFilePath(file.path))
-                            append(HttpHeaders.ContentDisposition, "filename=${file.name}")
-                        })
-                    },
-                    boundary = "WebAppBoundary"
-                )
-            )
-            onUpload { bytesSentTotal, contentLength ->
-                println("Sent $bytesSentTotal bytes from $contentLength")
-            }
-        }
-    }
-
     private suspend fun HttpClient.getSubmissionByStudent(userId: UUID): SubmissionResponse {
         return get("/courses/${course.id}/elements/${courseWork.id}/submissionsByStudentId/${userId}")
             .apply { assertEquals(HttpStatusCode.OK, status) }.body()
@@ -331,6 +306,30 @@ class SubmissionsTest : KtorTest() {
             contentType(ContentType.Application.Json)
             setBody(UpdateSubmissionRequest(grade = OptionalProperty.Present(grade)))
         }
+    }
+
+    @Test
+    fun testAddAttachment(): Unit = runBlocking {
+        enrolStudent(student1Id)
+        val submission = studentClient.getSubmissionByStudent(student1Id)
+        val file: File = File("data.txt").apply {
+            writeText("Hello, Reader!")
+        }
+        studentClient.post("/courses/${course.id}/elements/${courseWork.id}/submissions/${submission.id}/attachments") {
+            setBody(
+                MultiPartFormDataContent(
+                    formData {
+                        append("file", file.readBytes(), Headers.build {
+                            append(HttpHeaders.ContentType, ContentType.defaultForFile(file))
+                            append(HttpHeaders.ContentDisposition, "filename=${file.name}")
+                        })
+                    }
+                )
+            )
+            onUpload { bytesSentTotal, contentLength ->
+                println("Sent $bytesSentTotal bytes from $contentLength")
+            }
+        }.apply { assertEquals(HttpStatusCode.Created, status) }
     }
 
     private fun assertAllStatesInCreated(response: SubmissionResponse) {

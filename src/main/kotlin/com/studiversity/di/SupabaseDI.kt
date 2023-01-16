@@ -3,6 +3,8 @@ package com.studiversity.di
 import com.studiversity.SupabaseConstants
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.gotrue.GoTrue
+import io.github.jan.supabase.gotrue.gotrue
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.realtime.realtime
 import io.github.jan.supabase.storage.Storage
@@ -15,12 +17,15 @@ val supabaseClientModule = module {
             supabaseUrl = SupabaseConstants.url,
             supabaseKey = SupabaseConstants.key
         ) {
-            install(Realtime) {
-                // settings
+            install(GoTrue) {
+                autoLoadFromStorage = false
+                alwaysAutoRefresh = false
             }
+            install(Realtime)
             install(Storage)
         }
     }
+    single { get<SupabaseClient>().gotrue }
     single { get<SupabaseClient>().realtime }
     single { get<SupabaseClient>().storage }
     single { get<Storage>()["main"] }
