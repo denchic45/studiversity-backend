@@ -1,5 +1,6 @@
 package com.studiversity.feature.course.submission
 
+import com.studiversity.feature.course.submission.model.AssignmentSubmissionResponse
 import com.studiversity.feature.course.submission.model.UpdateSubmissionRequest
 import com.studiversity.feature.course.submission.usecase.*
 import com.studiversity.feature.role.Capability
@@ -18,6 +19,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 import java.time.Instant
+import java.util.*
 
 fun Route.courseSubmissionRoutes() {
     route("/submissions") {
@@ -125,9 +127,21 @@ fun Route.submissionByIdRoute() {
             val bucket: BucketApi by inject()
 
             post {
+                fun attachmentsIsSupported(submissionId: UUID, currentUserId: UUID): Boolean {
+                    return when (findSubmission(submissionId, currentUserId)) {
+                        is AssignmentSubmissionResponse -> true
+                    }
+                }
+
                 val courseId = call.parameters.getUuid("courseId")
                 val workId = call.parameters.getUuid("elementId")
                 val submissionId = call.parameters.getUuid("submissionId")
+                val currentUserId = call.jwtPrincipal().payload.claimId
+
+                if (!attachmentsIsSupported(submissionId, currentUserId)) {
+                    call.respond(HttpStatusCode.BadRequest, "ATTACHMENTS_NOT_SUPPORTED")
+                    return@post
+                }
 
                 val multipartData = call.receiveMultipart()
                 multipartData.forEachPart { part ->
@@ -136,7 +150,6 @@ fun Route.submissionByIdRoute() {
                             val fileSourceName = part.originalFileName as String
                             val fileBytes = part.streamProvider().readBytes()
                             val fileName = Instant.now().epochSecond.toString() + "_" + fileSourceName
-//                            val mFile = File("courses/$courseId/elements/$workId/submissions/$submissionId/$fileName")
                             bucket.upload(
                                 "courses/$courseId/elements/$workId/submissions/$submissionId/$fileName",
                                 fileBytes
