@@ -1,16 +1,17 @@
 package com.studiversity.feature.course.work.submission
 
-import com.studiversity.feature.course.element.model.FileAttachment
-import com.studiversity.feature.course.work.submission.model.AssignmentSubmissionResponse
-import com.studiversity.feature.course.work.submission.model.UpdateSubmissionRequest
+import com.studiversity.feature.course.element.model.Attachment
+import com.studiversity.feature.course.element.model.FileRequest
+import com.studiversity.feature.course.element.usecase.RemoveCourseElementUseCase
+import com.studiversity.feature.course.work.submission.model.GradeRequest
+import com.studiversity.feature.course.work.submission.model.SubmissionErrors
+import com.studiversity.feature.course.work.submission.model.SubmissionGrade
 import com.studiversity.feature.course.work.submission.usecase.*
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.ktor.claimId
 import com.studiversity.ktor.getUuid
 import com.studiversity.ktor.jwtPrincipal
-import com.studiversity.util.presentOrElse
-import io.github.jan.supabase.storage.BucketApi
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
@@ -20,7 +21,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 import java.time.Instant
-import java.util.*
 
 fun Route.workSubmissionRoutes() {
     route("/submissions") {
@@ -35,7 +35,7 @@ fun Route.workSubmissionRoutes() {
                 scopeId = courseId
             )
 
-            val submissions = findSubmissionsByWork(courseId, call.parameters.getUuid("elementId"))
+            val submissions = findSubmissionsByWork(courseId, call.parameters.getUuid("workId"))
             call.respond(HttpStatusCode.OK, submissions)
         }
         post { }
@@ -52,9 +52,11 @@ fun Route.submissionByIdRoute() {
         val findSubmission: FindSubmissionUseCase by inject()
         val updateSubmissionContent: UpdateSubmissionContentUseCase by inject()
         val submitSubmission: SubmitSubmissionUseCase by inject()
-        val gradeSubmission: GradeSubmissionUseCase by inject()
+        val gradeSubmission: SetGradeSubmissionUseCase by inject()
+        val removeCourseElement: RemoveCourseElementUseCase by inject()
 
         val addFileAttachmentOfSubmission: AddFileAttachmentOfSubmissionUseCase by inject()
+        val addLinkAttachmentOfSubmission: AddLinkAttachmentOfSubmissionUseCase by inject()
 
         get {
             val currentUserId = call.jwtPrincipal().payload.claimId
@@ -76,76 +78,80 @@ fun Route.submissionByIdRoute() {
             }
         }
         route("/attachments") {
+            val requireSubmissionAuthor: RequireSubmissionAuthorUseCase by inject()
+            val isSubmissionAuthor: IsSubmissionAuthorUseCase by inject()
+            val findSubmissionAttachments: FindSubmissionAttachmentsUseCase by inject()
             post {
                 val courseId = call.parameters.getUuid("courseId")
-                val workId = call.parameters.getUuid("elementId")
+                val workId = call.parameters.getUuid("workId")
                 val submissionId = call.parameters.getUuid("submissionId")
                 val currentUserId = call.jwtPrincipal().payload.claimId
 
-                when (val upload = call.request.queryParameters["upload"]) {
+                requireSubmissionAuthor(submissionId, currentUserId)
+
+                val result: Attachment = when (call.request.queryParameters["upload"]) {
                     "file" -> {
-                        val files = buildList {
-                            call.receiveMultipart().forEachPart { part ->
-                                if (part is PartData.FileItem) {
-                                    val fileSourceName = part.originalFileName as String
-                                    val fileBytes = part.streamProvider().readBytes()
-                                    val fileName = Instant.now().epochSecond.toString() + "_" + fileSourceName
-                                    add(FileAttachment(fileSourceName, fileBytes))
-//                                    bucket.upload(
-//                                        "courses/$courseId/elements/$workId/submissions/$submissionId/$fileName",
-//                                        fileBytes
-//                                    )
-                                }
-                            }
-                        }
-                        addFileAttachmentOfSubmission(submissionId, files)
+                        call.receiveMultipart().readPart()?.let { part ->
+                            if (part is PartData.FileItem) {
+                                val fileSourceName = part.originalFileName as String
+                                val fileBytes = part.streamProvider().readBytes()
+                                val fileName = Instant.now().epochSecond.toString() + "_" + fileSourceName
+                                val filePath = "courses/$courseId/elements/$workId/submissions/$submissionId/$fileName"
+
+                                addFileAttachmentOfSubmission(
+                                    submissionId = submissionId,
+                                    courseId = courseId,
+                                    workId = workId,
+                                    attachment = FileRequest(fileSourceName, fileBytes, filePath)
+                                )
+                            } else throw BadRequestException(SubmissionErrors.INVALID_ATTACHMENT)
+                        } ?: throw BadRequestException(SubmissionErrors.INVALID_ATTACHMENT)
                     }
 
                     "link" -> {
+                        addLinkAttachmentOfSubmission(submissionId, call.receive())
+                    }
 
+                    else -> {
+                        throw BadRequestException(SubmissionErrors.INVALID_ATTACHMENT)
                     }
                 }
+                call.respond(HttpStatusCode.Created, result)
+            }
+            get {
+                val courseId = call.parameters.getUuid("courseId")
+                val submissionId = call.parameters.getUuid("submissionId")
+                val currentUserId = call.jwtPrincipal().payload.claimId
+
+                if (!isSubmissionAuthor(submissionId, currentUserId))
+                    requireCapability(
+                        userId = currentUserId,
+                        capability = Capability.ReadSubmissions,
+                        scopeId = courseId
+                    )
+                val attachments = findSubmissionAttachments(submissionId)
+                call.respond(HttpStatusCode.OK, attachments)
             }
         }
-        patch {
-            val currentUserId = call.jwtPrincipal().payload.claimId
-            val body = call.receive<UpdateSubmissionRequest>()
+        route("/grade") {
+            val setGradeSubmission: SetGradeSubmissionUseCase by inject()
+            put {
+                val currentUserId = call.jwtPrincipal().payload.claimId
+                val courseId = call.parameters.getUuid("courseId")
+                val workId = call.parameters.getUuid("workId")
+                val submissionId = call.parameters.getUuid("submissionId")
 
-            val courseId = call.parameters.getUuid("courseId")
-            val workId = call.parameters.getUuid("elementId")
-            val submissionId = call.parameters.getUuid("submissionId")
-
-            body.content.ifPresentSuspended {
-                requireCapability(
-                    userId = currentUserId,
-                    capability = Capability.SubmitSubmission,
-                    scopeId = courseId
-                )
-                val updatedSubmission = updateSubmissionContent(
-                    submissionId,
-                    it
-                )
-                call.respond(HttpStatusCode.OK, updatedSubmission)
-            }
-            body.grade.ifPresentSuspended {
                 requireCapability(
                     userId = currentUserId,
                     capability = Capability.GradeSubmission,
                     scopeId = courseId
                 )
-                val updatedSubmission = gradeSubmission(
-                    submissionId,
-                    workId,
-                    it,
-                    currentUserId
-                )
-                call.respond(HttpStatusCode.OK, updatedSubmission)
+                val body = call.receive<GradeRequest>()
+                setGradeSubmission(workId, SubmissionGrade(body.value, courseId, currentUserId, submissionId))
             }
         }
         post("/submit") {
             val currentUserId = call.jwtPrincipal().payload.claimId
-            val body = call.receive<UpdateSubmissionRequest>()
-            val content = body.content.presentOrElse { throw BadRequestException("CONTENT_NEEDED") }
             requireCapability(
                 userId = currentUserId,
                 capability = Capability.SubmitSubmission,
@@ -154,56 +160,14 @@ fun Route.submissionByIdRoute() {
             val submittedSubmission = submitSubmission(
                 submissionId = call.parameters.getUuid("submissionId"),
                 studentId = currentUserId,
-                content = content
             )
             call.respond(HttpStatusCode.OK, submittedSubmission)
         }
         post {
 
         }
-        route("/attachments") {
-            val bucket: BucketApi by inject()
+        delete {
 
-            post {
-                fun attachmentsIsSupported(submissionId: UUID, currentUserId: UUID): Boolean {
-                    return when (findSubmission(submissionId, currentUserId)) {
-                        is AssignmentSubmissionResponse -> true
-                    }
-                }
-
-                val courseId = call.parameters.getUuid("courseId")
-                val workId = call.parameters.getUuid("elementId")
-                val submissionId = call.parameters.getUuid("submissionId")
-                val currentUserId = call.jwtPrincipal().payload.claimId
-
-                if (!attachmentsIsSupported(submissionId, currentUserId)) {
-                    call.respond(HttpStatusCode.BadRequest, "ATTACHMENTS_NOT_SUPPORTED")
-                    return@post
-                }
-
-                val multipartData = call.receiveMultipart()
-                val files = buildList {
-                    multipartData.forEachPart { part ->
-                        if (part is PartData.FileItem) {
-                            val fileSourceName = part.originalFileName as String
-                            val fileBytes = part.streamProvider().readBytes()
-                            val fileName = Instant.now().epochSecond.toString() + "_" + fileSourceName
-                            add(FileAttachment(fileSourceName, fileBytes))
-                            bucket.upload(
-                                "courses/$courseId/elements/$workId/submissions/$submissionId/$fileName",
-                                fileBytes
-                            )
-                        }
-                    }
-                }
-                addFileAttachmentOfSubmission(submissionId, files)
-                call.respond(HttpStatusCode.Created)
-            }
-            get { }
-            route("/{attachmentId}") {
-                get { }
-                delete { }
-            }
         }
     }
 }
@@ -214,7 +178,7 @@ fun Route.submissionByStudentIdRoute() {
     get("/{studentId}") {
         val currentUserId = call.jwtPrincipal().payload.claimId
         val submission = findSubmissionByStudent(
-            call.parameters.getUuid("elementId"),
+            call.parameters.getUuid("workId"),
             call.parameters.getUuid("studentId"),
             currentUserId
         )

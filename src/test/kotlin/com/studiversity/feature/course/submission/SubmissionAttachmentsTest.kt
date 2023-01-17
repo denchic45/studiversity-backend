@@ -40,18 +40,22 @@ class SubmissionAttachmentsTest : KoinTest {
         }
     }
 
+    private val bucket = storage["main"]
+
     @Test
     fun testAttachments(): Unit = runBlocking {
-        storage["main"].list("Folders").onEach {
+        bucket.list("Folders").onEach {
             println(it.name)
         }
     }
 
     @Test
     fun testAddFile(): Unit = runBlocking {
-        storage["main"].upload(
-            "Folder/data.txt",
+        bucket.upload(
+            "Folder/Subfolder/data.txt",
             File("data.txt").readBytes()
         )
+
+        bucket.delete("Folder/Subfolder")
     }
 }

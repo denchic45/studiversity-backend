@@ -1,7 +1,7 @@
 package com.studiversity.feature.course.work.submission.usecase
 
 import com.studiversity.feature.course.element.repository.CourseElementRepository
-import com.studiversity.feature.course.work.submission.CourseSubmissionRepository
+import com.studiversity.feature.course.work.submission.SubmissionRepository
 import com.studiversity.feature.course.work.submission.model.SubmissionState
 import com.studiversity.feature.membership.repository.UserMembershipRepository
 import com.studiversity.feature.role.Role
@@ -11,7 +11,7 @@ import java.util.*
 
 class FindSubmissionByStudentUseCase(
     private val transactionWorker: TransactionWorker,
-    private val submissionRepository: CourseSubmissionRepository,
+    private val submissionRepository: SubmissionRepository,
     private val courseElementRepository: CourseElementRepository,
     private val userMembershipRepository: UserMembershipRepository
 ) {

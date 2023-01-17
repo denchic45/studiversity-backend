@@ -27,5 +27,6 @@ class SubmissionDao(id: EntityID<UUID>) : UUIDEntity(id) {
 //    var grade by Submissions.grade
 //    var gradedBy by Submissions.gradedBy
 
-    val courseWork by CourseWorkDao referencedOn Submissions.courseWorkId
+    var courseWork by CourseWorkDao referencedOn Submissions.courseWorkId
+    val grade by GradeDao optionalBackReferencedOn Grades.submissionId
 }

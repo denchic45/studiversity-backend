@@ -5,6 +5,7 @@ import com.studiversity.feature.course.element.usecase.RemoveCourseElementUseCas
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.ktor.claimId
+import com.studiversity.ktor.getUuid
 import com.studiversity.ktor.jwtPrincipal
 import com.studiversity.util.toUUID
 import io.ktor.http.*
@@ -45,15 +46,16 @@ fun Route.courseElementById() {
             call.respond(HttpStatusCode.OK, element)
         }
         delete {
-            val courseId = call.parameters.getOrFail("courseId").toUUID()
+            val currentUserId = call.jwtPrincipal().payload.claimId
+            val courseId = call.parameters.getUuid("courseId")
+            val workId = call.parameters.getUuid("elementId")
 
             requireCapability(
-                userId = call.jwtPrincipal().payload.claimId,
+                userId = currentUserId,
                 capability = Capability.DeleteCourseElements,
                 scopeId = courseId
             )
-
-            removeCourseElement(call.parameters.getOrFail("elementId").toUUID())
+            removeCourseElement(courseId, workId)
             call.respond(HttpStatusCode.NoContent)
         }
     }

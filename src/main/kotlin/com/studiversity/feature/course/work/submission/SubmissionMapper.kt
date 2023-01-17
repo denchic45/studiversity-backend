@@ -13,5 +13,7 @@ fun SubmissionDao.toResponse() = when (courseWork.type) {
         state = state,
         courseWorkId = courseWorkId,
         content = content?.let { Json.decodeFromString(it) },
+        grade = grade?.value,
+        gradedBy = grade?.gradedBy
     )
 }

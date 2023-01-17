@@ -9,11 +9,16 @@ private val useCaseModule = module {
     single { FindSubmissionByStudentUseCase(get(), get(), get(), get()) }
     single { UpdateSubmissionContentUseCase(get(), get()) }
     single { SubmitSubmissionUseCase(get(), get()) }
-    single { GradeSubmissionUseCase(get(), get(), get()) }
+    single { SetGradeSubmissionUseCase(get(), get(), get()) }
+    single { RequireSubmissionAuthorUseCase(get(), get()) }
+    single { IsSubmissionAuthorUseCase(get(), get()) }
+    single { AddFileAttachmentOfSubmissionUseCase(get(), get()) }
+    single { AddLinkAttachmentOfSubmissionUseCase(get(), get()) }
+    single { FindSubmissionAttachmentsUseCase(get(), get()) }
 }
 
 private val repositoryModule = module {
-    single { CourseSubmissionRepository(get()) }
+    single { SubmissionRepository(get()) }
 }
 
 val courseSubmissionModule = module { includes(useCaseModule, repositoryModule) }

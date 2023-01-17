@@ -10,7 +10,7 @@ import java.util.*
 
 object Attachments : UUIDTable("attachment", "attachment_id") {
     val name = varcharMax("attachment_name")
-    val url = varcharMax("url")
+    val url = varcharMax("url").nullable()
     val thumbnailUrl = varcharMax("thumbnail_url").nullable()
     var type = enumerationByName<AttachmentType>("type", 8)
     var path = varcharMax("path").nullable()

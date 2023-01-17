@@ -1,8 +1,8 @@
 package com.studiversity.feature.course.work.usecase
 
-import com.studiversity.feature.course.element.model.CreateCourseElementRequest
+import com.studiversity.feature.course.element.model.CreateCourseWorkRequest
 import com.studiversity.feature.course.element.repository.CourseElementRepository
-import com.studiversity.feature.course.work.submission.CourseSubmissionRepository
+import com.studiversity.feature.course.work.submission.SubmissionRepository
 import com.studiversity.feature.membership.repository.UserMembershipRepository
 import com.studiversity.feature.role.Role
 import com.studiversity.transaction.TransactionWorker
@@ -12,12 +12,12 @@ class AddCourseWorkUseCase(
     private val transactionWorker: TransactionWorker,
     private val courseElementRepository: CourseElementRepository,
     private val userMembershipRepository: UserMembershipRepository,
-    private val courseSubmissionRepository: CourseSubmissionRepository
+    private val submissionRepository: SubmissionRepository
 ) {
-    operator fun invoke(courseId: UUID, request: CreateCourseElementRequest) = transactionWorker {
-        val response = courseElementRepository.add(courseId, request)
+    operator fun invoke(courseId: UUID, request: CreateCourseWorkRequest) = transactionWorker {
+        val response = courseElementRepository.addWork(courseId, request)
         val studentIds = userMembershipRepository.findMemberIdsByScopeAndRole(courseId, Role.Student.id)
-        courseSubmissionRepository.addEmptySubmissionsByStudentIds(response.id, studentIds)
+        submissionRepository.addEmptySubmissionsByStudentIds(response.id, studentIds)
         response
     }
 }

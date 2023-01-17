@@ -1,28 +1,25 @@
 package com.studiversity.feature.course.element.model
 
-import com.studiversity.feature.course.element.CourseElementType
+import com.studiversity.feature.course.element.CourseWorkType
+import com.studiversity.ktor.LocalDateSerializer
+import com.studiversity.ktor.LocalTimeSerializer
 import com.studiversity.ktor.UUIDSerializer
-import kotlinx.serialization.EncodeDefault
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
+import java.time.LocalDate
+import java.time.LocalTime
 import java.util.*
 
-@Serializable(CourseElementSerializer::class)
-sealed interface CreateCourseElementRequest {
-    val name: String
-    val description: String?
-    val topicId: UUID?
-    val type: CourseElementType
-    val details: CourseElementDetails
-}
 
 @Serializable
-data class CreateCourseWorkRequest @OptIn(ExperimentalSerializationApi::class) constructor(
-    override val name: String,
-    override val description: String? = null,
+data class CreateCourseWorkRequest constructor(
+    val name: String,
+    val description: String? = null,
     @Serializable(UUIDSerializer::class)
-    override val topicId: UUID? = null,
-    override val details: CourseWork,
-    @EncodeDefault
-    override val type: CourseElementType = CourseElementType.Work
-) : CreateCourseElementRequest
+    val topicId: UUID? = null,
+    @Serializable(LocalDateSerializer::class)
+    val dueDate: LocalDate?,
+    @Serializable(LocalTimeSerializer::class)
+    val dueTime: LocalTime?,
+    val workType: CourseWorkType,
+    val maxGrade: Short
+)

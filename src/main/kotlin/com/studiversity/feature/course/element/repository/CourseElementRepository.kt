@@ -5,37 +5,32 @@ import com.studiversity.database.table.CourseElements
 import com.studiversity.database.table.CourseWorkDao
 import com.studiversity.feature.course.element.CourseElementType
 import com.studiversity.feature.course.element.model.CourseElementResponse
-import com.studiversity.feature.course.element.model.CreateCourseElementRequest
 import com.studiversity.feature.course.element.model.CreateCourseWorkRequest
 import com.studiversity.feature.course.element.toResponse
+import io.github.jan.supabase.storage.BucketApi
 import org.jetbrains.exposed.sql.max
 import org.jetbrains.exposed.sql.selectAll
 import java.util.*
 
-class CourseElementRepository {
+class CourseElementRepository(private val bucket: BucketApi) {
 
-    fun add(courseId: UUID, request: CreateCourseElementRequest): CourseElementResponse {
+    fun addWork(courseId: UUID, request: CreateCourseWorkRequest): CourseElementResponse {
         val elementId = UUID.randomUUID()
-        val type = request.type
 
         return CourseElementDao.new(elementId) {
             this.courseId = courseId
             this.topicId = request.topicId
             this.name = request.name
-            this.type = type
+            this.type = CourseElementType.Work
             this.order = CourseElements.slice(CourseElements.order.max())
                 .selectAll()
                 .single()[CourseElements.order.max()]?.let { it + 1 } ?: 1
         }.toResponse(
-            when (request) {
-                is CreateCourseWorkRequest -> {
-                    CourseWorkDao.new(elementId) {
-                        this.dueDate = request.details.dueDate
-                        this.dueTime = request.details.dueTime
-                        this.type = request.details.workType
-                        this.maxGrade = request.details.maxGrade
-                    }
-                }
+            CourseWorkDao.new(elementId) {
+                this.dueDate = request.dueDate
+                this.dueTime = request.dueTime
+                this.type = request.workType
+                this.maxGrade = request.maxGrade
             }
         )
     }
@@ -55,11 +50,12 @@ class CourseElementRepository {
         return CourseElementDao.findById(elementId)?.courseId
     }
 
-    fun remove(elementId: UUID): Boolean {
+    suspend fun remove(courseId: UUID, elementId: UUID): Boolean {
+        bucket.delete("courses/$courseId/elements/$elementId")
         return CourseElementDao.findById(elementId)?.delete() != null
     }
 
     fun findMaxGradeByWorkId(workId: UUID): Short {
-      return  CourseWorkDao.findById(workId)!!.maxGrade
+        return CourseWorkDao.findById(workId)!!.maxGrade
     }
 }

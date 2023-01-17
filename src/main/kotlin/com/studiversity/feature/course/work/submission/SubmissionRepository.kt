@@ -1,12 +1,12 @@
 package com.studiversity.feature.course.work.submission
 
+import com.studiversity.database.exists
 import com.studiversity.database.table.*
 import com.studiversity.feature.course.element.CourseWorkType
-import com.studiversity.feature.course.element.model.FileAttachment
-import com.studiversity.feature.course.work.submission.model.AssignmentSubmissionResponse
-import com.studiversity.feature.course.work.submission.model.SubmissionContent
-import com.studiversity.feature.course.work.submission.model.SubmissionResponse
-import com.studiversity.feature.course.work.submission.model.SubmissionState
+import com.studiversity.feature.course.element.model.*
+import com.studiversity.feature.course.work.submission.model.*
+import com.studiversity.feature.course.work.toFileAttachment
+import com.studiversity.feature.course.work.toLinkAttachment
 import io.github.jan.supabase.storage.BucketApi
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -16,7 +16,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import java.util.*
 
-class CourseSubmissionRepository(private val bucket: BucketApi) {
+class SubmissionRepository(private val bucket: BucketApi) {
 
     fun addNewSubmissionByStudentId(courseWorkId: UUID, studentId: UUID): SubmissionResponse {
         return addSubmissionByStudentId(courseWorkId, studentId, SubmissionState.NEW)
@@ -91,22 +91,88 @@ class CourseSubmissionRepository(private val bucket: BucketApi) {
         }?.toResponse()
     }
 
-    fun submitSubmissionContent(submissionId: UUID, content: SubmissionContent?): SubmissionResponse {
+    fun submitSubmission(submissionId: UUID): SubmissionResponse {
         return SubmissionDao.findById(submissionId)!!.apply {
-            this.content = Json.encodeToString(content)
             this.state = SubmissionState.SUBMITTED
         }.toResponse()
     }
 
-    fun setGradeSubmission(submissionId: UUID, grade: Short, gradedBy: UUID): SubmissionResponse {
-        TODO("FIX IT")
-//        return SubmissionDao.findById(submissionId)!!.apply {
-//            this.grade = grade
-//            this.gradedBy = gradedBy
-//        }.toResponse()
+    fun setGradeSubmission(grade: SubmissionGrade): SubmissionResponse {
+        GradeDao.new {
+            this.courseId = grade.courseId
+            this.studentId = SubmissionDao.findById(grade.submissionId)!!.authorId
+            this.gradedBy = grade.gradedBy
+            this.value = grade.value
+            this.submission = SubmissionDao.findById(grade.submissionId)
+        }
+        return SubmissionDao.findById(grade.submissionId)!!.toResponse()
     }
 
-    fun addSubmissionAttachments(submissionId: UUID, attachments: List<FileAttachment>) {
+    suspend fun addSubmissionFileAttachment(
+        submissionId: UUID,
+        courseId: UUID,
+        workId: UUID,
+        fileRequest: FileRequest
+    ): FileAttachment {
+        return AttachmentDao.new {
+            this.name = fileRequest.name
+            this.type = AttachmentType.File
+            this.path = fileRequest.path
+        }.also { dao ->
+            SubmissionsAttachments.insert {
+                it[SubmissionsAttachments.submissionId] = submissionId
+                it[attachmentId] = dao.id.value
+            }
+            bucket.upload(
+                "courses/$courseId/elements/$workId/submissions/$submissionId/${fileRequest.name}",
+                fileRequest.bytes
+            )
+        }.toFileAttachment()
+    }
 
+    fun addSubmissionLinkAttachment(submissionId: UUID, attachment: LinkRequest): LinkAttachment {
+        return AttachmentDao.new {
+            this.name = "Link name" // TODO ставить реальное название
+            this.type = AttachmentType.Link
+            this.url = attachment.url
+        }.also { dao ->
+            SubmissionsAttachments.insert {
+                it[SubmissionsAttachments.submissionId] = submissionId
+                it[attachmentId] = dao.id.value
+            }
+        }.toLinkAttachment()
+    }
+
+    fun isAuthorBySubmissionId(submissionId: UUID, authorId: UUID): Boolean {
+        return Submissions.exists { Submissions.id eq submissionId and (Submissions.authorId eq authorId) }
+    }
+
+    fun findAttachmentsBySubmissionId(submissionId: UUID): List<Attachment> {
+        return Attachments.innerJoin(SubmissionsAttachments, { Attachments.id }, { attachmentId })
+            .select { SubmissionsAttachments.submissionId eq submissionId }
+            .map {
+                when (it[Attachments.type]) {
+                    AttachmentType.File -> {
+                        FileAttachment(
+                            it[Attachments.id].value,
+                            FileItem(
+                                name = it[Attachments.name],
+                                thumbnailUrl = it[Attachments.thumbnailUrl]
+                            )
+                        )
+                    }
+
+                    AttachmentType.Link -> {
+                        LinkAttachment(
+                            it[Attachments.id].value,
+                            Link(
+                                url = it[Attachments.url]!!,
+                                name = it[Attachments.name],
+                                thumbnailUrl = it[Attachments.thumbnailUrl]
+                            )
+                        )
+                    }
+                }
+            }
     }
 }

@@ -6,12 +6,13 @@ import com.studiversity.feature.course.model.CourseResponse
 import com.studiversity.feature.course.model.CreateCourseRequest
 import com.studiversity.feature.course.model.UpdateCourseRequest
 import com.studiversity.feature.course.toResponse
+import io.github.jan.supabase.storage.BucketApi
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
-class CourseRepository {
+class CourseRepository(private val bucket: BucketApi) {
 
     fun add(request: CreateCourseRequest): CourseResponse {
         val dao = CourseDao.new {
@@ -96,7 +97,8 @@ class CourseRepository {
         return CourseDao.findById(courseId)!!.archived
     }
 
-    fun removeCourse(courseId: UUID) {
+    suspend fun removeCourse(courseId: UUID) {
         CourseDao.findById(courseId)!!.delete()
+        bucket.delete("courses/$courseId")
     }
 }
