@@ -8,6 +8,8 @@ import java.util.*
 
 fun Parameters.getUuid(name: String): UUID = try {
     getOrFail(name).toUUID()
+} catch (e: MissingRequestParameterException) {
+    throw e
 } catch (t: Throwable) {
     throw BadRequestException("INVALID_UUID")
 }
