@@ -1,4 +1,4 @@
-package com.studiversity.feature.course.submission.model
+package com.studiversity.feature.course.work.submission.model
 
 import io.ktor.server.plugins.*
 import kotlinx.serialization.DeserializationStrategy

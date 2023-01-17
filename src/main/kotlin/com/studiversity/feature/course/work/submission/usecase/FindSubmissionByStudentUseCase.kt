@@ -1,8 +1,8 @@
-package com.studiversity.feature.course.submission.usecase
+package com.studiversity.feature.course.work.submission.usecase
 
 import com.studiversity.feature.course.element.repository.CourseElementRepository
-import com.studiversity.feature.course.submission.CourseSubmissionRepository
-import com.studiversity.feature.course.submission.model.SubmissionState
+import com.studiversity.feature.course.work.submission.CourseSubmissionRepository
+import com.studiversity.feature.course.work.submission.model.SubmissionState
 import com.studiversity.feature.membership.repository.UserMembershipRepository
 import com.studiversity.feature.role.Role
 import com.studiversity.transaction.TransactionWorker

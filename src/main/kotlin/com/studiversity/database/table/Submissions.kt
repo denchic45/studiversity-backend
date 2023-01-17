@@ -1,6 +1,6 @@
 package com.studiversity.database.table
 
-import com.studiversity.feature.course.submission.model.SubmissionState
+import com.studiversity.feature.course.work.submission.model.SubmissionState
 import com.studiversity.util.varcharMax
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass

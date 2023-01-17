@@ -1,12 +1,12 @@
-package com.studiversity.feature.course.submission
+package com.studiversity.feature.course.work.submission
 
 import com.studiversity.database.table.*
 import com.studiversity.feature.course.element.CourseWorkType
-import com.studiversity.feature.course.element.model.CreateFileAttachmentRequest
-import com.studiversity.feature.course.submission.model.AssignmentSubmissionResponse
-import com.studiversity.feature.course.submission.model.SubmissionContent
-import com.studiversity.feature.course.submission.model.SubmissionResponse
-import com.studiversity.feature.course.submission.model.SubmissionState
+import com.studiversity.feature.course.element.model.FileAttachment
+import com.studiversity.feature.course.work.submission.model.AssignmentSubmissionResponse
+import com.studiversity.feature.course.work.submission.model.SubmissionContent
+import com.studiversity.feature.course.work.submission.model.SubmissionResponse
+import com.studiversity.feature.course.work.submission.model.SubmissionState
 import io.github.jan.supabase.storage.BucketApi
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -106,7 +106,7 @@ class CourseSubmissionRepository(private val bucket: BucketApi) {
 //        }.toResponse()
     }
 
-    fun addSubmissionAttachments(submissionId: UUID, attachments: List<CreateFileAttachmentRequest>) {
+    fun addSubmissionAttachments(submissionId: UUID, attachments: List<FileAttachment>) {
 
     }
 }

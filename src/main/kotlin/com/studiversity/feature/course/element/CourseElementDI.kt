@@ -1,7 +1,7 @@
 package com.studiversity.feature.course.element
 
 import com.studiversity.feature.course.element.repository.CourseElementRepository
-import com.studiversity.feature.course.element.usecase.AddCourseWorkUseCase
+import com.studiversity.feature.course.work.usecase.AddCourseWorkUseCase
 import com.studiversity.feature.course.element.usecase.FindCourseElementUseCase
 import com.studiversity.feature.course.element.usecase.RemoveCourseElementUseCase
 import org.koin.dsl.module

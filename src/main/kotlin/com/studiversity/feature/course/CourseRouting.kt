@@ -1,7 +1,8 @@
 package com.studiversity.feature.course
 
 import com.studiversity.Constants
-import com.studiversity.feature.course.element.courseElementRoutes
+import com.studiversity.feature.course.element.route.courseElementRoutes
+import com.studiversity.feature.course.element.route.courseWorksRoutes
 import com.studiversity.feature.course.model.CreateCourseRequest
 import com.studiversity.feature.course.model.UpdateCourseRequest
 import com.studiversity.feature.course.usecase.*
@@ -119,6 +120,7 @@ fun Route.courseByIdRoutes() {
         }
         courseStudyGroups()
         courseElementRoutes()
+        courseWorksRoutes()
     }
 }
 

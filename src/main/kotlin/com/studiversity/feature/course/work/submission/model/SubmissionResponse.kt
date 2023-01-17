@@ -1,4 +1,4 @@
-package com.studiversity.feature.course.submission.model
+package com.studiversity.feature.course.work.submission.model
 
 import com.studiversity.feature.course.element.CourseElementType
 import com.studiversity.feature.course.element.model.Attachment

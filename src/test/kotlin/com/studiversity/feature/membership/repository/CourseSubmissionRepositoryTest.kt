@@ -3,8 +3,8 @@ package com.studiversity.feature.membership.repository
 import com.studiversity.database.DatabaseFactory
 import com.studiversity.di.coroutineModule
 import com.studiversity.di.supabaseClientModule
-import com.studiversity.feature.course.submission.CourseSubmissionRepository
-import com.studiversity.feature.course.submission.courseSubmissionModule
+import com.studiversity.feature.course.work.submission.CourseSubmissionRepository
+import com.studiversity.feature.course.work.submission.courseSubmissionModule
 import com.studiversity.feature.role.Role
 import com.studiversity.util.toUUID
 import org.jetbrains.exposed.sql.transactions.transaction

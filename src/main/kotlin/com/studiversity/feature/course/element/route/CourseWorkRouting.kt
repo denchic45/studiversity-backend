@@ -1,13 +1,10 @@
-package com.studiversity.feature.course.element
+package com.studiversity.feature.course.element.route
 
-import com.studiversity.feature.course.element.model.CourseElementDetails
-import com.studiversity.feature.course.element.model.CourseMaterial
-import com.studiversity.feature.course.element.model.CourseWork
 import com.studiversity.feature.course.element.model.CreateCourseElementRequest
-import com.studiversity.feature.course.element.usecase.AddCourseWorkUseCase
 import com.studiversity.feature.course.element.usecase.FindCourseElementUseCase
 import com.studiversity.feature.course.element.usecase.RemoveCourseElementUseCase
-import com.studiversity.feature.course.submission.workSubmissionRoutes
+import com.studiversity.feature.course.work.submission.workSubmissionRoutes
+import com.studiversity.feature.course.work.usecase.AddCourseWorkUseCase
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.ktor.claimId
@@ -21,16 +18,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.util.*
 import org.koin.ktor.ext.inject
-import kotlin.reflect.KClass
 
-private val createCourseElementCapabilities: Map<KClass<out CourseElementDetails>, Capability> = mapOf(
-    CourseWork::class to Capability.WriteCourseAssignment,
-    CourseMaterial::class to Capability.WriteCoursePost
-)
-
-fun Route.courseElementRoutes() {
-    route("/elements") {
-
+fun Route.courseWorksRoutes() {
+    route("/works") {
         val requireCapability: RequireCapabilityUseCase by inject()
         val addCourseWork: AddCourseWorkUseCase by inject()
         post {
@@ -38,22 +28,19 @@ fun Route.courseElementRoutes() {
             val courseId = call.parameters.getOrFail("courseId").toUUID()
             requireCapability(
                 userId = call.jwtPrincipal().payload.claimId,
-                capability = createCourseElementCapabilities.getValue(body.details::class),
+                capability = Capability.WriteCourseWork,
                 scopeId = courseId
-                    )
-                    addCourseWork(courseId, body).let { courseElement ->
-                        call.respond(courseElement)
-                    }
-                }
-                get {
-
-                }
-                courseElementById()
+            )
+            addCourseWork(courseId, body).let { courseElement ->
+                call.respond(courseElement)
             }
+        }
+        courseWorkById()
+    }
 }
 
-fun Route.courseElementById() {
-    route("/{elementId}") {
+fun Route.courseWorkById() {
+    route("/{workId}") {
         val requireCapability: RequireCapabilityUseCase by inject()
         val findCourseElement: FindCourseElementUseCase by inject()
         val removeCourseElement: RemoveCourseElementUseCase by inject()

@@ -1,6 +1,8 @@
-package com.studiversity.feature.course.element.model
+package com.studiversity.feature.course.element.model2
 
+import com.studiversity.feature.course.element.CourseElementType
 import com.studiversity.feature.course.element.CourseWorkType
+import com.studiversity.feature.course.element.model.CourseWorkDetails
 import com.studiversity.ktor.LocalDateSerializer
 import com.studiversity.ktor.LocalTimeSerializer
 import kotlinx.serialization.EncodeDefault
@@ -10,7 +12,10 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 @Serializable
-sealed class CourseElementDetails
+sealed class CourseElement {
+    abstract val type: CourseElementType
+    abstract val details: CourseElementDetails
+}
 
 @Serializable
 data class CourseWork @OptIn(ExperimentalSerializationApi::class) constructor(
@@ -21,10 +26,13 @@ data class CourseWork @OptIn(ExperimentalSerializationApi::class) constructor(
     val workType: CourseWorkType,
     val maxGrade: Short,
     @EncodeDefault(EncodeDefault.Mode.ALWAYS)
-    val workDetails: CourseWorkDetails? = null
-) : CourseElementDetails()
+    override val details: CourseElementDetails,
+    override val type: CourseElementType
+) : CourseElement()
 
 @Serializable
 data class CourseMaterial(
-    val text: String
-) : CourseElementDetails()
+    val text: String,
+    override val details: CourseElementDetails,
+    override val type: CourseElementType
+) : CourseElement()

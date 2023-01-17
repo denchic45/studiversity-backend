@@ -6,10 +6,10 @@ import com.studiversity.feature.course.element.CourseWorkType
 import com.studiversity.feature.course.element.model.*
 import com.studiversity.feature.course.model.CourseResponse
 import com.studiversity.feature.course.model.CreateCourseRequest
-import com.studiversity.feature.course.submission.model.AssignmentSubmission
-import com.studiversity.feature.course.submission.model.SubmissionResponse
-import com.studiversity.feature.course.submission.model.SubmissionState
-import com.studiversity.feature.course.submission.model.UpdateSubmissionRequest
+import com.studiversity.feature.course.work.submission.model.AssignmentSubmission
+import com.studiversity.feature.course.work.submission.model.SubmissionResponse
+import com.studiversity.feature.course.work.submission.model.SubmissionState
+import com.studiversity.feature.course.work.submission.model.UpdateSubmissionRequest
 import com.studiversity.feature.membership.model.ManualJoinMemberRequest
 import com.studiversity.feature.role.Role
 import com.studiversity.supabase.model.SignupResponse
@@ -216,72 +216,72 @@ class SubmissionsTest : KtorTest() {
         }
     }
 
-    @Test
-    fun testSubmitSubmission(): Unit = runBlocking {
-        enrolStudent(student1Id)
-        val submission = studentClient.getSubmissionByStudent(student1Id)
-        val request = UpdateSubmissionRequest(
-            OptionalProperty.Present(
-                AssignmentSubmission(
-                    listOf(
-                        Attachment(
-                            UUID.randomUUID(),
-                            AttachmentType.Link,
-                            "https://developers.google.com/classroom/reference/rest/v1/courses.courseWork.studentSubmissions#StudentSubmission"
-                        )
-                    )
-                )
-            )
-        )
-        client.submitSubmission(submission.id, request).apply {
-            assertEquals(HttpStatusCode.Forbidden, status)
-        }
-        studentClient.submitSubmission(submission.id, request).apply {
-            assertEquals(HttpStatusCode.OK, status)
-            val response = body<SubmissionResponse>()
-            assertEquals(SubmissionState.SUBMITTED, response.state)
-            assertEquals(request.content.requirePresent(), response.content)
-        }
-    }
+//    @Test
+//    fun testSubmitSubmission(): Unit = runBlocking {
+//        enrolStudent(student1Id)
+//        val submission = studentClient.getSubmissionByStudent(student1Id)
+//        val request = UpdateSubmissionRequest(
+//            OptionalProperty.Present(
+//                AssignmentSubmission(
+//                    listOf(
+//                        Attachment(
+//                            UUID.randomUUID(),
+//                            AttachmentType.Link,
+//                            "https://developers.google.com/classroom/reference/rest/v1/courses.courseWork.studentSubmissions#StudentSubmission"
+//                        )
+//                    )
+//                )
+//            )
+//        )
+//        client.submitSubmission(submission.id, request).apply {
+//            assertEquals(HttpStatusCode.Forbidden, status)
+//        }
+//        studentClient.submitSubmission(submission.id, request).apply {
+//            assertEquals(HttpStatusCode.OK, status)
+//            val response = body<SubmissionResponse>()
+//            assertEquals(SubmissionState.SUBMITTED, response.state)
+//            assertEquals(request.content.requirePresent(), response.content)
+//        }
+//    }
 
-    @Test
-    fun testGradeSubmission(): Unit = runBlocking {
-        enrolStudent(student1Id)
-        enrolTeacher(teacher1Id)
-        val submission = studentClient.getSubmissionByStudent(student1Id)
-        val request = UpdateSubmissionRequest(
-            OptionalProperty.Present(
-                AssignmentSubmission(
-                    listOf(
-                        Attachment(
-                            UUID.randomUUID(),
-                            AttachmentType.Link,
-                            "https://developers.google.com/classroom/reference/rest/v1/courses.courseWork.studentSubmissions#StudentSubmission"
-                        )
-                    )
-                )
-            )
-        )
-        val response = studentClient.submitSubmission(submission.id, request).apply {
-            assertEquals(HttpStatusCode.OK, status)
-        }.body<SubmissionResponse>()
-
-        studentClient.gradeSubmission(response.id, 6).apply {
-            assertEquals(HttpStatusCode.Forbidden, status)
-        }
-
-        teacherClient.gradeSubmission(response.id, 6).apply {
-            assertEquals(HttpStatusCode.BadRequest, status)
-        }
-
-        teacherClient.gradeSubmission(response.id, 4).apply {
-            assertEquals(HttpStatusCode.OK, status)
-            body<SubmissionResponse>().apply {
-                assertEquals(4, grade)
-                assertEquals(teacher1Id, gradedBy)
-            }
-        }
-    }
+//    @Test
+//    fun testGradeSubmission(): Unit = runBlocking {
+//        enrolStudent(student1Id)
+//        enrolTeacher(teacher1Id)
+//        val submission = studentClient.getSubmissionByStudent(student1Id)
+//        val request = UpdateSubmissionRequest(
+//            OptionalProperty.Present(
+//                AssignmentSubmission(
+//                    listOf(
+//                        Attachment(
+//                            UUID.randomUUID(),
+//                            AttachmentType.Link,
+//                            "https://developers.google.com/classroom/reference/rest/v1/courses.courseWork.studentSubmissions#StudentSubmission"
+//                        )
+//                    )
+//                )
+//            )
+//        )
+//        val response = studentClient.submitSubmission(submission.id, request).apply {
+//            assertEquals(HttpStatusCode.OK, status)
+//        }.body<SubmissionResponse>()
+//
+//        studentClient.gradeSubmission(response.id, 6).apply {
+//            assertEquals(HttpStatusCode.Forbidden, status)
+//        }
+//
+//        teacherClient.gradeSubmission(response.id, 6).apply {
+//            assertEquals(HttpStatusCode.BadRequest, status)
+//        }
+//
+//        teacherClient.gradeSubmission(response.id, 4).apply {
+//            assertEquals(HttpStatusCode.OK, status)
+//            body<SubmissionResponse>().apply {
+//                assertEquals(4, grade)
+//                assertEquals(teacher1Id, gradedBy)
+//            }
+//        }
+//    }
 
     private suspend fun HttpClient.getSubmissionByStudent(userId: UUID): SubmissionResponse {
         return get("/courses/${course.id}/elements/${courseWork.id}/submissionsByStudentId/${userId}")

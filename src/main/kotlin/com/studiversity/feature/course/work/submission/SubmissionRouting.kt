@@ -1,9 +1,9 @@
-package com.studiversity.feature.course.submission
+package com.studiversity.feature.course.work.submission
 
-import com.studiversity.feature.course.element.model.CreateFileAttachmentRequest
-import com.studiversity.feature.course.submission.model.AssignmentSubmissionResponse
-import com.studiversity.feature.course.submission.model.UpdateSubmissionRequest
-import com.studiversity.feature.course.submission.usecase.*
+import com.studiversity.feature.course.element.model.FileAttachment
+import com.studiversity.feature.course.work.submission.model.AssignmentSubmissionResponse
+import com.studiversity.feature.course.work.submission.model.UpdateSubmissionRequest
+import com.studiversity.feature.course.work.submission.usecase.*
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.ktor.claimId
@@ -73,6 +73,38 @@ fun Route.submissionByIdRoute() {
                     scopeId = call.parameters.getUuid("courseId")
                 )
                 call.respond(HttpStatusCode.OK, submission)
+            }
+        }
+        route("/attachments") {
+            post {
+                val courseId = call.parameters.getUuid("courseId")
+                val workId = call.parameters.getUuid("elementId")
+                val submissionId = call.parameters.getUuid("submissionId")
+                val currentUserId = call.jwtPrincipal().payload.claimId
+
+                when (val upload = call.request.queryParameters["upload"]) {
+                    "file" -> {
+                        val files = buildList {
+                            call.receiveMultipart().forEachPart { part ->
+                                if (part is PartData.FileItem) {
+                                    val fileSourceName = part.originalFileName as String
+                                    val fileBytes = part.streamProvider().readBytes()
+                                    val fileName = Instant.now().epochSecond.toString() + "_" + fileSourceName
+                                    add(FileAttachment(fileSourceName, fileBytes))
+//                                    bucket.upload(
+//                                        "courses/$courseId/elements/$workId/submissions/$submissionId/$fileName",
+//                                        fileBytes
+//                                    )
+                                }
+                            }
+                        }
+                        addFileAttachmentOfSubmission(submissionId, files)
+                    }
+
+                    "link" -> {
+
+                    }
+                }
             }
         }
         patch {
@@ -156,7 +188,7 @@ fun Route.submissionByIdRoute() {
                             val fileSourceName = part.originalFileName as String
                             val fileBytes = part.streamProvider().readBytes()
                             val fileName = Instant.now().epochSecond.toString() + "_" + fileSourceName
-                            add(CreateFileAttachmentRequest(fileSourceName, fileBytes))
+                            add(FileAttachment(fileSourceName, fileBytes))
                             bucket.upload(
                                 "courses/$courseId/elements/$workId/submissions/$submissionId/$fileName",
                                 fileBytes

@@ -1,4 +1,4 @@
-package com.studiversity.feature.course.submission.model
+package com.studiversity.feature.course.work.submission.model
 
 object SubmissionErrors {
     const val TEXT_DISABLED = "TEXT_DISABLED"

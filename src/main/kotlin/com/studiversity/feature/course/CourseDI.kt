@@ -3,7 +3,7 @@ package com.studiversity.feature.course
 import com.studiversity.feature.course.element.courseElementModule
 import com.studiversity.feature.course.repository.CourseRepository
 import com.studiversity.feature.course.subject.subjectModule
-import com.studiversity.feature.course.submission.courseSubmissionModule
+import com.studiversity.feature.course.work.submission.courseSubmissionModule
 import com.studiversity.feature.course.usecase.*
 import org.koin.dsl.module
 

@@ -3,7 +3,7 @@ package com.studiversity.feature.course.element.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CreateFileAttachmentRequest(
+data class FileAttachment(
     val name: String,
     val bytes: ByteArray,
 ) {
@@ -11,7 +11,7 @@ data class CreateFileAttachmentRequest(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as CreateFileAttachmentRequest
+        other as FileAttachment
 
         if (name != other.name) return false
         if (!bytes.contentEquals(other.bytes)) return false
@@ -24,6 +24,4 @@ data class CreateFileAttachmentRequest(
         result = 31 * result + bytes.contentHashCode()
         return result
     }
-
-
 }

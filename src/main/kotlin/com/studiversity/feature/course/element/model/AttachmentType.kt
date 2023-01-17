@@ -13,6 +13,3 @@ sealed class Attachment() {
     abstract val type: AttachmentType
     abstract val url: String
 }
-
-data class FileAttachment(override val id: UUID, override val type: AttachmentType, override val url: String) :
-    Attachment()

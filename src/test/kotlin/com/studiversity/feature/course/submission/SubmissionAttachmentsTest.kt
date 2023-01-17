@@ -4,6 +4,7 @@ import com.studiversity.SupabaseConstants
 import com.studiversity.database.DatabaseFactory
 import com.studiversity.di.coroutineModule
 import com.studiversity.di.supabaseClientModule
+import com.studiversity.feature.course.work.submission.courseSubmissionModule
 import io.github.jan.supabase.gotrue.GoTrue
 import io.github.jan.supabase.storage.Storage
 import kotlinx.coroutines.runBlocking
