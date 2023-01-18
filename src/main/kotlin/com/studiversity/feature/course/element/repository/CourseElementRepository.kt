@@ -7,6 +7,7 @@ import com.studiversity.feature.course.element.CourseElementType
 import com.studiversity.feature.course.element.model.CourseElementResponse
 import com.studiversity.feature.course.element.model.CreateCourseWorkRequest
 import com.studiversity.feature.course.element.toResponse
+import com.studiversity.supabase.deleteRecursive
 import io.github.jan.supabase.storage.BucketApi
 import org.jetbrains.exposed.sql.max
 import org.jetbrains.exposed.sql.selectAll
@@ -51,7 +52,7 @@ class CourseElementRepository(private val bucket: BucketApi) {
     }
 
     suspend fun remove(courseId: UUID, elementId: UUID): Boolean {
-        bucket.delete("courses/$courseId/elements/$elementId")
+        bucket.deleteRecursive("courses/$courseId/elements/$elementId")
         return CourseElementDao.findById(elementId)?.delete() != null
     }
 

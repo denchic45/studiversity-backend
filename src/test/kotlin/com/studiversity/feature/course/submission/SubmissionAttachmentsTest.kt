@@ -5,6 +5,7 @@ import com.studiversity.database.DatabaseFactory
 import com.studiversity.di.coroutineModule
 import com.studiversity.di.supabaseClientModule
 import com.studiversity.feature.course.work.submission.courseSubmissionModule
+import com.studiversity.supabase.deleteRecursive
 import io.github.jan.supabase.gotrue.GoTrue
 import io.github.jan.supabase.storage.Storage
 import kotlinx.coroutines.runBlocking
@@ -53,9 +54,16 @@ class SubmissionAttachmentsTest : KoinTest {
     fun testAddFile(): Unit = runBlocking {
         bucket.upload(
             "Folder/Subfolder/data.txt",
-            File("data.txt").readBytes()
+            File("data.txt").apply { writeText("Hello, Reader!") }
+                .readBytes()
         )
 
-        bucket.delete("Folder/Subfolder")
+        bucket.upload(
+            "Folder/Subfolder/data.txt",
+            File("data.txt").apply { writeText("Hello, storage!") }
+                .readBytes()
+        )
+
+        bucket.deleteRecursive("Folder")
     }
 }

@@ -6,6 +6,7 @@ import com.studiversity.feature.course.model.CourseResponse
 import com.studiversity.feature.course.model.CreateCourseRequest
 import com.studiversity.feature.course.model.UpdateCourseRequest
 import com.studiversity.feature.course.toResponse
+import com.studiversity.supabase.deleteRecursive
 import io.github.jan.supabase.storage.BucketApi
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -99,6 +100,6 @@ class CourseRepository(private val bucket: BucketApi) {
 
     suspend fun removeCourse(courseId: UUID) {
         CourseDao.findById(courseId)!!.delete()
-        bucket.delete("courses/$courseId")
+        bucket.deleteRecursive("courses/$courseId")
     }
 }
