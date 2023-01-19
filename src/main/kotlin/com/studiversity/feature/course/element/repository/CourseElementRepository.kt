@@ -1,5 +1,6 @@
 package com.studiversity.feature.course.element.repository
 
+import com.studiversity.database.exists
 import com.studiversity.database.table.CourseElementDao
 import com.studiversity.database.table.CourseElements
 import com.studiversity.database.table.CourseWorkDao
@@ -7,9 +8,10 @@ import com.studiversity.feature.course.element.CourseElementType
 import com.studiversity.feature.course.element.model.CourseElementResponse
 import com.studiversity.feature.course.element.model.CreateCourseWorkRequest
 import com.studiversity.feature.course.element.toResponse
-import com.studiversity.supabase.deleteRecursive
 import io.github.jan.supabase.storage.BucketApi
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.max
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import java.util.*
 
@@ -52,11 +54,19 @@ class CourseElementRepository(private val bucket: BucketApi) {
     }
 
     suspend fun remove(courseId: UUID, elementId: UUID): Boolean {
-        bucket.deleteRecursive("courses/$courseId/elements/$elementId")
         return CourseElementDao.findById(elementId)?.delete() != null
     }
 
     fun findMaxGradeByWorkId(workId: UUID): Short {
         return CourseWorkDao.findById(workId)!!.maxGrade
+    }
+
+    fun findTypeByElementId(elementId: UUID): CourseElementType? {
+        return CourseElements.select(CourseElements.id eq elementId)
+            .singleOrNull()?.let { it[CourseElements.type] }
+    }
+
+    fun exist(elementId: UUID): Boolean {
+        return CourseElements.exists { CourseElements.id eq elementId }
     }
 }

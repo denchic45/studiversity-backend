@@ -97,6 +97,10 @@ class SubmissionRepository(private val bucket: BucketApi) {
         }.toResponse()
     }
 
+    fun isAuthorBySubmissionId(submissionId: UUID, authorId: UUID): Boolean {
+        return Submissions.exists { Submissions.id eq submissionId and (Submissions.authorId eq authorId) }
+    }
+
     fun setGradeSubmission(grade: SubmissionGrade): SubmissionResponse {
         GradeDao.new {
             this.courseId = grade.courseId
@@ -106,73 +110,5 @@ class SubmissionRepository(private val bucket: BucketApi) {
             this.submission = SubmissionDao.findById(grade.submissionId)
         }
         return SubmissionDao.findById(grade.submissionId)!!.toResponse()
-    }
-
-    suspend fun addSubmissionFileAttachment(
-        submissionId: UUID,
-        courseId: UUID,
-        workId: UUID,
-        fileRequest: FileRequest
-    ): FileAttachment {
-        return AttachmentDao.new {
-            this.name = fileRequest.name
-            this.type = AttachmentType.File
-            this.path = fileRequest.path
-        }.also { dao ->
-            SubmissionsAttachments.insert {
-                it[SubmissionsAttachments.submissionId] = submissionId
-                it[attachmentId] = dao.id.value
-            }
-            bucket.upload(
-                "courses/$courseId/elements/$workId/submissions/$submissionId/${fileRequest.name}",
-                fileRequest.bytes
-            )
-        }.toFileAttachment()
-    }
-
-    fun addSubmissionLinkAttachment(submissionId: UUID, attachment: LinkRequest): LinkAttachment {
-        return AttachmentDao.new {
-            this.name = "Link name" // TODO ставить реальное название
-            this.type = AttachmentType.Link
-            this.url = attachment.url
-        }.also { dao ->
-            SubmissionsAttachments.insert {
-                it[SubmissionsAttachments.submissionId] = submissionId
-                it[attachmentId] = dao.id.value
-            }
-        }.toLinkAttachment()
-    }
-
-    fun isAuthorBySubmissionId(submissionId: UUID, authorId: UUID): Boolean {
-        return Submissions.exists { Submissions.id eq submissionId and (Submissions.authorId eq authorId) }
-    }
-
-    fun findAttachmentsBySubmissionId(submissionId: UUID): List<Attachment> {
-        return Attachments.innerJoin(SubmissionsAttachments, { Attachments.id }, { attachmentId })
-            .select { SubmissionsAttachments.submissionId eq submissionId }
-            .map {
-                when (it[Attachments.type]) {
-                    AttachmentType.File -> {
-                        FileAttachment(
-                            it[Attachments.id].value,
-                            FileItem(
-                                name = it[Attachments.name],
-                                thumbnailUrl = it[Attachments.thumbnailUrl]
-                            )
-                        )
-                    }
-
-                    AttachmentType.Link -> {
-                        LinkAttachment(
-                            it[Attachments.id].value,
-                            Link(
-                                url = it[Attachments.url]!!,
-                                name = it[Attachments.name],
-                                thumbnailUrl = it[Attachments.thumbnailUrl]
-                            )
-                        )
-                    }
-                }
-            }
     }
 }

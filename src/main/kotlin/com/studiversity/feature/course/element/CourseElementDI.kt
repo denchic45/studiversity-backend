@@ -9,7 +9,7 @@ import org.koin.dsl.module
 private val useCaseModule = module {
     single { AddCourseWorkUseCase(get(), get(), get(), get()) }
     single { FindCourseElementUseCase(get(), get()) }
-    single { RemoveCourseElementUseCase(get(), get()) }
+    single { RemoveCourseElementUseCase(get(), get(), get()) }
 }
 
 private val repositoryModule = module {

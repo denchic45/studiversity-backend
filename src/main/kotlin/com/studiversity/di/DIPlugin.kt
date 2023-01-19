@@ -1,5 +1,6 @@
 package com.studiversity.di
 
+import com.studiversity.feature.attachment.attachmentModule
 import com.studiversity.feature.auth.authModule
 import com.studiversity.feature.course.courseModule
 import com.studiversity.feature.membership.membershipModule
@@ -36,6 +37,7 @@ fun Application.configureDI() {
             roleModule,
             membershipModule,
             studyGroupModule,
+            attachmentModule,
             courseModule,
         )
     }
