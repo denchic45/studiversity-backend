@@ -6,7 +6,9 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import java.util.*
 
-enum class AttachmentType { File, Link }
+enum class AttachmentType { FILE, LINK }
+
+enum class AttachmentOwner { SUBMISSION, COURSE_ELEMENT }
 
 @Serializable(AttachmentSerializer::class)
 sealed class Attachment {
@@ -22,7 +24,7 @@ data class FileAttachment(
 ) : Attachment() {
     @OptIn(ExperimentalSerializationApi::class)
     @EncodeDefault
-    override val type: AttachmentType = AttachmentType.File
+    override val type: AttachmentType = AttachmentType.FILE
 }
 
 @Serializable
@@ -33,5 +35,5 @@ data class LinkAttachment(
 ) : Attachment() {
     @OptIn(ExperimentalSerializationApi::class)
     @EncodeDefault
-    override val type: AttachmentType = AttachmentType.Link
+    override val type: AttachmentType = AttachmentType.LINK
 }

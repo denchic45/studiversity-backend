@@ -1,5 +1,6 @@
 package com.studiversity.database.table
 
+import com.studiversity.feature.course.element.model.AttachmentOwner
 import com.studiversity.feature.course.element.model.AttachmentType
 import com.studiversity.util.varcharMax
 import org.jetbrains.exposed.dao.UUIDEntity
@@ -12,8 +13,10 @@ object Attachments : UUIDTable("attachment", "attachment_id") {
     val name = varcharMax("attachment_name")
     val url = varcharMax("url").nullable()
     val thumbnailUrl = varcharMax("thumbnail_url").nullable()
-    var type = enumerationByName<AttachmentType>("type", 8)
-    var path = varcharMax("path").nullable()
+    val type = enumerationByName<AttachmentType>("type", 8)
+    val path = varcharMax("path").nullable()
+    val ownerId = uuid("owner_id")
+    val ownerType = enumerationByName<AttachmentOwner>("owner_type", 22)
 }
 
 class AttachmentDao(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -24,4 +27,6 @@ class AttachmentDao(id: EntityID<UUID>) : UUIDEntity(id) {
     var thumbnailUrl by Attachments.thumbnailUrl
     var type by Attachments.type
     var path by Attachments.path
+    var ownerId by Attachments.ownerId
+    var ownerType by Attachments.ownerType
 }

@@ -1,11 +1,11 @@
-package com.studiversity.feature.course.work
+package com.studiversity.feature.attachment
 
 import com.studiversity.database.table.AttachmentDao
 import com.studiversity.feature.course.element.model.*
 
 fun AttachmentDao.toResponse() = when (type) {
-    AttachmentType.File -> toFileAttachment()
-    AttachmentType.Link -> toLinkAttachment()
+    AttachmentType.FILE -> toFileAttachment()
+    AttachmentType.LINK -> toLinkAttachment()
 }
 
 fun AttachmentDao.toLinkAttachment() =
