@@ -17,7 +17,7 @@ private val useCaseModule = module {
     single { DetachStudyGroupToCourseUseCase(get(), get()) }
     single { ArchiveCourseUseCase(get(), get()) }
     single { UnarchiveCourseUseCase(get(), get()) }
-    single { RemoveCourseUseCase(get(), get(), get()) }
+    single { RemoveCourseUseCase(get(), get(), get(), get()) }
 }
 
 private val repositoryModule = module { single { CourseRepository(get()) } }

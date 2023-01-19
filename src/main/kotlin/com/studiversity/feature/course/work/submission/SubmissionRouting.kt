@@ -2,7 +2,6 @@ package com.studiversity.feature.course.work.submission
 
 import com.studiversity.feature.course.element.model.Attachment
 import com.studiversity.feature.course.element.model.FileRequest
-import com.studiversity.feature.course.element.usecase.RemoveCourseElementUseCase
 import com.studiversity.feature.course.work.submission.model.GradeRequest
 import com.studiversity.feature.course.work.submission.model.SubmissionErrors
 import com.studiversity.feature.course.work.submission.model.SubmissionGrade
@@ -50,10 +49,7 @@ fun Route.submissionByIdRoute() {
     route("/{submissionId}") {
         val requireCapability: RequireCapabilityUseCase by inject()
         val findSubmission: FindSubmissionUseCase by inject()
-        val updateSubmissionContent: UpdateSubmissionContentUseCase by inject()
         val submitSubmission: SubmitSubmissionUseCase by inject()
-        val gradeSubmission: SetGradeSubmissionUseCase by inject()
-        val removeCourseElement: RemoveCourseElementUseCase by inject()
 
         val addFileAttachmentOfSubmission: AddFileAttachmentOfSubmissionUseCase by inject()
         val addLinkAttachmentOfSubmission: AddLinkAttachmentOfSubmissionUseCase by inject()
@@ -81,6 +77,8 @@ fun Route.submissionByIdRoute() {
             val requireSubmissionAuthor: RequireSubmissionAuthorUseCase by inject()
             val isSubmissionAuthor: IsSubmissionAuthorUseCase by inject()
             val findSubmissionAttachments: FindSubmissionAttachmentsUseCase by inject()
+            val removeAttachmentOfSubmission: RemoveAttachmentOfSubmissionUseCase by inject()
+
             post {
                 val courseId = call.parameters.getUuid("courseId")
                 val workId = call.parameters.getUuid("workId")
@@ -131,6 +129,23 @@ fun Route.submissionByIdRoute() {
                     )
                 val attachments = findSubmissionAttachments(submissionId)
                 call.respond(HttpStatusCode.OK, attachments)
+            }
+            delete("/{attachmentId}") {
+                val courseId = call.parameters.getUuid("courseId")
+                val workId = call.parameters.getUuid("workId")
+                val submissionId = call.parameters.getUuid("submissionId")
+                val attachmentId = call.parameters.getUuid("attachmentId")
+                val currentUserId = call.jwtPrincipal().payload.claimId
+
+                requireSubmissionAuthor(submissionId, currentUserId)
+
+                removeAttachmentOfSubmission(
+                    courseId = courseId,
+                    elementId = workId,
+                    submissionId = submissionId,
+                    attachmentId = attachmentId
+                )
+                call.respond(HttpStatusCode.NoContent)
             }
         }
         route("/grade") {

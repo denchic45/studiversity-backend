@@ -3,11 +3,7 @@ package com.studiversity.feature.course.work.submission
 import com.studiversity.database.exists
 import com.studiversity.database.table.*
 import com.studiversity.feature.course.element.CourseWorkType
-import com.studiversity.feature.course.element.model.*
 import com.studiversity.feature.course.work.submission.model.*
-import com.studiversity.feature.course.work.toFileAttachment
-import com.studiversity.feature.course.work.toLinkAttachment
-import io.github.jan.supabase.storage.BucketApi
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -16,7 +12,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import java.util.*
 
-class SubmissionRepository(private val bucket: BucketApi) {
+class SubmissionRepository {
 
     fun addNewSubmissionByStudentId(courseWorkId: UUID, studentId: UUID): SubmissionResponse {
         return addSubmissionByStudentId(courseWorkId, studentId, SubmissionState.NEW)

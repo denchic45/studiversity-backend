@@ -15,10 +15,11 @@ private val useCaseModule = module {
     single { AddFileAttachmentOfSubmissionUseCase(get(), get()) }
     single { AddLinkAttachmentOfSubmissionUseCase(get(), get()) }
     single { FindSubmissionAttachmentsUseCase(get(), get()) }
+    single { RemoveAttachmentOfSubmissionUseCase(get(), get()) }
 }
 
 private val repositoryModule = module {
-    single { SubmissionRepository(get()) }
+    single { SubmissionRepository() }
 }
 
 val courseSubmissionModule = module { includes(useCaseModule, repositoryModule) }

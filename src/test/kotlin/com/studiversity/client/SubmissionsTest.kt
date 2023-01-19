@@ -293,6 +293,14 @@ class SubmissionsTest : KtorTest() {
         }
     }.apply { assertEquals(HttpStatusCode.Created, status, bodyAsText()) }
 
+    private suspend fun HttpClient.deleteAttachmentOfSubmission(
+        submissionId: UUID,
+        attachmentId: UUID
+    ): HttpResponse {
+        return delete("/courses/${course.id}/works/${courseWork.id}/submissions/${submissionId}/attachments/$attachmentId")
+            .apply { assertEquals(HttpStatusCode.NoContent, status, bodyAsText()) }
+    }
+
     private suspend fun HttpClient.addLinkToSubmission(
         submissionId: UUID,
         link: LinkRequest
@@ -325,19 +333,27 @@ class SubmissionsTest : KtorTest() {
     }
 
     @Test
-    fun testAddAttachment(): Unit = runBlocking {
+    fun testAddRemoveAttachment(): Unit = runBlocking {
         enrolStudent(student1Id)
         val submission = studentClient.getSubmissionByStudent(student1Id)
         val file: File = File("data.txt").apply {
             writeText("Hello, Reader!")
         }
         studentClient.uploadFileToSubmission(submission.id, file).apply {
-            studentClient.getAttachments(submission.id).apply {
-                val body = body<List<Attachment>>()
-                assertEquals(1, body.size)
-            }
+            assertEquals(HttpStatusCode.Created, status)
         }
 
+        val attachments = studentClient.getAttachments(submission.id).body<List<Attachment>>().apply {
+            assertEquals(1, size)
+        }
+
+        studentClient.deleteAttachmentOfSubmission(submission.id, attachments[0].id).apply {
+            assertEquals(HttpStatusCode.NoContent, status, bodyAsText())
+        }
+
+        studentClient.getAttachments(submission.id).body<List<Attachment>>().apply {
+            assertTrue { isEmpty() }
+        }
     }
 
     private fun assertAllStatesInCreated(response: SubmissionResponse) {

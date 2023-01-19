@@ -1,5 +1,6 @@
 package com.studiversity.feature.course.usecase
 
+import com.studiversity.feature.attachment.AttachmentRepository
 import com.studiversity.feature.course.CourseErrors
 import com.studiversity.feature.course.repository.CourseRepository
 import com.studiversity.feature.role.repository.ScopeRepository
@@ -10,6 +11,7 @@ import java.util.*
 
 class RemoveCourseUseCase(
     private val transactionWorker: SuspendTransactionWorker,
+    private val attachmentRepository: AttachmentRepository,
     private val courseRepository: CourseRepository,
     private val scopeRepository: ScopeRepository
 ) {
@@ -18,6 +20,7 @@ class RemoveCourseUseCase(
             throw NotFoundException()
         if (!courseRepository.isArchivedCourse(courseId))
             throw ConflictException(CourseErrors.COURSE_IS_NOT_ARCHIVED)
+        attachmentRepository.removeByCourseId(courseId)
         courseRepository.removeCourse(courseId)
         scopeRepository.remove(courseId)
     }
