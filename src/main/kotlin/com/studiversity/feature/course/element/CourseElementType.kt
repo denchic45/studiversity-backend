@@ -1,5 +1,5 @@
 package com.studiversity.feature.course.element
 
-enum class CourseElementType { Work, Material }
+enum class CourseElementType { WORK, MATERIAL }
 
-enum class CourseWorkType { Assignment }
+enum class CourseWorkType { ASSIGNMENT }

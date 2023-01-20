@@ -7,7 +7,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 fun SubmissionDao.toResponse() = when (courseWork.type) {
-    CourseWorkType.Assignment -> AssignmentSubmissionResponse(
+    CourseWorkType.ASSIGNMENT -> AssignmentSubmissionResponse(
         id = id.value,
         authorId = authorId,
         state = state,

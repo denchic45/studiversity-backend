@@ -69,7 +69,7 @@ class SubmissionRepository {
                         state = SubmissionState.NEW,
                         courseWorkId = courseWorkId,
                         content = when (CourseWorkDao.findById(courseWorkId)!!.type) {
-                            CourseWorkType.Assignment -> it[Submissions.content]
+                            CourseWorkType.ASSIGNMENT -> it[Submissions.content]
                                 ?.let { content -> Json.decodeFromString(content) }
                         }
                     )

@@ -24,7 +24,7 @@ class CourseElementRepository(private val bucket: BucketApi) {
             this.courseId = courseId
             this.topicId = request.topicId
             this.name = request.name
-            this.type = CourseElementType.Work
+            this.type = CourseElementType.WORK
             this.order = CourseElements.slice(CourseElements.order.max())
                 .selectAll()
                 .single()[CourseElements.order.max()]?.let { it + 1 } ?: 1
@@ -42,8 +42,8 @@ class CourseElementRepository(private val bucket: BucketApi) {
         return CourseElementDao.findById(elementId)?.run {
             toResponse(
                 when (type) {
-                    CourseElementType.Work -> CourseWorkDao.findById(elementId)!!
-                    CourseElementType.Material -> TODO()
+                    CourseElementType.WORK -> CourseWorkDao.findById(elementId)!!
+                    CourseElementType.MATERIAL -> TODO()
                 }
             )
         }

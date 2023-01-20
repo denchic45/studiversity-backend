@@ -14,8 +14,8 @@ sealed class SubmissionResponse {
     abstract val courseWorkId: UUID
     abstract val type: CourseElementType
     abstract val content: SubmissionContent?
-    abstract val grade:Short?
-            abstract val gradedBy:UUID?
+    abstract val grade: Short?
+    abstract val gradedBy: UUID?
 }
 
 @Serializable
@@ -32,7 +32,7 @@ data class AssignmentSubmissionResponse(
     @Serializable(UUIDSerializer::class)
     override val gradedBy: UUID? = null
 ) : SubmissionResponse() {
-    override val type: CourseElementType = CourseElementType.Work
+    override val type: CourseElementType = CourseElementType.WORK
 }
 
 @Serializable(SubmissionContentSerializer::class)
