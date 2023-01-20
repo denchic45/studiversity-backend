@@ -3,19 +3,15 @@ package com.studiversity.client
 import com.studiversity.KtorTest
 import com.studiversity.feature.auth.model.LoginRequest
 import com.studiversity.feature.course.element.CourseWorkType
-import com.studiversity.feature.course.element.model.Attachment
-import com.studiversity.feature.course.element.model.CourseElementResponse
-import com.studiversity.feature.course.element.model.CreateCourseWorkRequest
-import com.studiversity.feature.course.element.model.LinkRequest
+import com.studiversity.feature.course.element.model.*
 import com.studiversity.feature.course.model.CourseResponse
 import com.studiversity.feature.course.model.CreateCourseRequest
+import com.studiversity.feature.course.work.submission.model.GradeRequest
 import com.studiversity.feature.course.work.submission.model.SubmissionResponse
 import com.studiversity.feature.course.work.submission.model.SubmissionState
-import com.studiversity.feature.course.work.submission.model.UpdateSubmissionRequest
 import com.studiversity.feature.membership.model.ManualJoinMemberRequest
 import com.studiversity.feature.role.Role
 import com.studiversity.supabase.model.SignupResponse
-import com.studiversity.util.OptionalProperty
 import com.studiversity.util.toUUID
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -88,7 +84,7 @@ class SubmissionsTest : KtorTest() {
                     topicId = null,
                     dueDate = null,
                     dueTime = null,
-                    workType = CourseWorkType.Assignment,
+                    workType = CourseWorkType.ASSIGNMENT,
                     maxGrade = 5
                 )
             )
@@ -149,21 +145,21 @@ class SubmissionsTest : KtorTest() {
         val ownSubmission = submissions.first { it.authorId == student1Id }
 
         // get submission by another user (maybe teacher)
-        client.get("/courses/${course.id}/works/${courseWork.id}/submissions/${ownSubmission.id}")
+        client.getSubmissionById(ownSubmission.id)
             .apply { assertEquals(HttpStatusCode.OK, status) }
             .body<SubmissionResponse>().also { response ->
                 assertEquals(SubmissionState.NEW, response.state)
             }
 
         // get submission by owner student
-        studentClient.get("/courses/${course.id}/work/${courseWork.id}/submissions/${ownSubmission.id}")
+        studentClient.getSubmissionById(ownSubmission.id)
             .apply { assertEquals(HttpStatusCode.OK, status) }
             .body<SubmissionResponse>().also { response ->
                 assertAllStatesInCreated(response)
             }
 
         // get submission by another user again
-        client.get("/courses/${course.id}/works/${courseWork.id}/submissions/${ownSubmission.id}")
+        client.getSubmissionById(ownSubmission.id)
             .apply { assertEquals(HttpStatusCode.OK, status) }
             .body<SubmissionResponse>().also { response ->
                 assertAllStatesInCreated(response)
@@ -184,7 +180,7 @@ class SubmissionsTest : KtorTest() {
         }
         val ownSubmission = submissions.first { it.authorId == student1Id }
         // get submission by owner student
-        studentClient.get("/courses/${course.id}/works/${courseWork.id}/submissions/${ownSubmission.id}")
+        studentClient.getSubmissionById(ownSubmission.id)
             .apply { assertEquals(HttpStatusCode.OK, status) }
             .body<SubmissionResponse>().also { response ->
                 assertAllStatesInCreated(response)
@@ -244,27 +240,32 @@ class SubmissionsTest : KtorTest() {
         enrolTeacher(teacher1Id)
         val submission = studentClient.getSubmissionByStudent(student1Id)
 
-        val response = studentClient.addLinkToSubmission(
+        studentClient.addLinkToSubmission(
             submission.id,
             LinkRequest("https://developers.google.com/classroom/reference/rest/v1/courses.courseWork.studentSubmissions#StudentSubmission")
-        ).apply { assertEquals(HttpStatusCode.OK, status) }
-            .body<SubmissionResponse>()
+        ).apply { assertEquals(HttpStatusCode.Created, status) }
+            .body<LinkAttachment>()
 
-        studentClient.gradeSubmission(response.id, 6).apply {
+        studentClient.gradeSubmission(submission.id, 6).apply {
             assertEquals(HttpStatusCode.Forbidden, status)
         }
 
-        teacherClient.gradeSubmission(response.id, 6).apply {
+        teacherClient.gradeSubmission(submission.id, 6).apply {
             assertEquals(HttpStatusCode.BadRequest, status)
         }
 
-        teacherClient.gradeSubmission(response.id, 4).apply {
+        teacherClient.gradeSubmission(submission.id, 4).apply {
             assertEquals(HttpStatusCode.OK, status)
             body<SubmissionResponse>().apply {
                 assertEquals(4, grade)
                 assertEquals(teacher1Id, gradedBy)
             }
         }
+    }
+
+    private suspend fun HttpClient.getSubmissionById(submissionId: UUID): HttpResponse {
+        return get("/courses/${course.id}/works/${courseWork.id}/submissions/$submissionId")
+            .apply { assertEquals(HttpStatusCode.OK, status) }
     }
 
     private suspend fun HttpClient.getSubmissionByStudent(userId: UUID): SubmissionResponse {
@@ -320,9 +321,9 @@ class SubmissionsTest : KtorTest() {
         submissionId: UUID,
         grade: Short,
     ): HttpResponse {
-        return patch("/courses/${course.id}/works/${courseWork.id}/submissions/${submissionId}") {
+        return put("/courses/${course.id}/works/${courseWork.id}/submissions/${submissionId}/grade") {
             contentType(ContentType.Application.Json)
-            setBody(UpdateSubmissionRequest(grade = OptionalProperty.Present(grade)))
+            setBody(GradeRequest(grade))
         }
     }
 
@@ -341,7 +342,7 @@ class SubmissionsTest : KtorTest() {
         }
         studentClient.uploadFileToSubmission(submission.id, file).apply {
             assertEquals(HttpStatusCode.Created, status)
-        }
+        }.body<FileAttachment>()
 
         val attachments = studentClient.getAttachments(submission.id).body<List<Attachment>>().apply {
             assertEquals(1, size)
