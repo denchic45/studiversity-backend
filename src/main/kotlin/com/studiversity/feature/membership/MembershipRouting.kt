@@ -4,6 +4,7 @@ import com.studiversity.Constants
 import com.studiversity.feature.membership.model.ManualJoinMemberRequest
 import com.studiversity.feature.membership.usecase.FindMembershipByScopeUseCase
 import com.studiversity.feature.membership.usecase.RemoveMemberFromScopeUseCase
+import com.studiversity.feature.membership.usecase.RemoveSelfMemberFromScopeUseCase
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.RoleErrors
 import com.studiversity.feature.role.model.UpdateUserRolesRequest
@@ -11,6 +12,7 @@ import com.studiversity.feature.role.usecase.FindMembersInScopeUseCase
 import com.studiversity.feature.role.usecase.RequireAvailableRolesInScopeUseCase
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.feature.role.usecase.RequirePermissionToAssignRolesUseCase
+import com.studiversity.ktor.ForbiddenException
 import com.studiversity.ktor.claimId
 import com.studiversity.ktor.jwtPrincipal
 import com.studiversity.util.hasNotDuplicates
@@ -95,12 +97,9 @@ fun Route.membersRoute() {
                     requireAvailableRolesInScope(assignableRoles, scopeId)
                     requirePermissionToAssignRoles(currentUserId, assignableRoles, scopeId)
 
-                    membershipService
-                        .getMembershipByTypeAndScopeId<ManualMembership>("manual", scopeId)
+                    membershipService.getMembershipByTypeAndScopeId<ManualMembership>("manual", scopeId)
                         .joinMember(body)
                 }
-
-//                "selfJoin" -> {}
                 else -> throw BadRequestException("UNKNOWN_MEMBERSHIP_ACTION")
             }
             call.respond(HttpStatusCode.Created, result)
@@ -122,15 +121,26 @@ private fun Route.memberByIdRoute() {
 
         val requireCapability: RequireCapabilityUseCase by inject()
         val removeMemberFromScope: RemoveMemberFromScopeUseCase by inject()
+        val removeSelfMemberFromScope: RemoveSelfMemberFromScopeUseCase by inject()
 
         delete {
             val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
             val scopeId = call.parameters["scopeId"]!!.toUUID()
             val memberId = call.parameters["memberId"]!!.toUUID()
+            when (call.request.queryParameters["action"]!!) {
+                "manual" -> {
+                    requireCapability(currentUserId, Capability.WriteMembers, scopeId)
+                    removeMemberFromScope(memberId, scopeId)
+                }
 
-            requireCapability(currentUserId, Capability.WriteMembers, scopeId)
+                "self" -> {
+                    if (currentUserId != memberId)
+                        removeSelfMemberFromScope(memberId, scopeId)
+                    else throw ForbiddenException()
+                }
 
-            removeMemberFromScope(memberId, scopeId)
+                else -> throw BadRequestException("UNKNOWN_MEMBERSHIP_ACTION")
+            }
             call.respond(HttpStatusCode.NoContent)
         }
     }
