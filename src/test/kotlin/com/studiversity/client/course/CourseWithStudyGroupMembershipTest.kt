@@ -1,4 +1,4 @@
-package com.studiversity.client
+package com.studiversity.client.course
 
 import com.studiversity.KtorTest
 import com.studiversity.feature.course.model.CourseResponse
