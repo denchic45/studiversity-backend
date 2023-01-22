@@ -1,8 +1,8 @@
 package com.studiversity.feature.course.work.usecase
 
 import com.studiversity.feature.attachment.AttachmentRepository
+import com.studiversity.feature.course.element.model.CreateLinkRequest
 import com.studiversity.feature.course.element.model.LinkAttachment
-import com.studiversity.feature.course.element.model.LinkRequest
 import com.studiversity.transaction.SuspendTransactionWorker
 import java.util.*
 
@@ -12,7 +12,7 @@ class AddLinkAttachmentOfCourseElementUseCase(
 ) {
     suspend operator fun invoke(
         elementId: UUID,
-        attachment: LinkRequest
+        attachment: CreateLinkRequest
     ): LinkAttachment {
         return transactionWorker.suspendInvoke {
             attachmentRepository.addCourseElementLinkAttachment(

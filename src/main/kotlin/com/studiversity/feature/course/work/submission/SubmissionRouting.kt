@@ -1,9 +1,10 @@
 package com.studiversity.feature.course.work.submission
 
+import com.studiversity.feature.attachment.receiveAttachment
 import com.studiversity.feature.course.element.model.Attachment
-import com.studiversity.feature.course.element.model.FileRequest
+import com.studiversity.feature.course.element.model.CreateFileRequest
+import com.studiversity.feature.course.element.model.CreateLinkRequest
 import com.studiversity.feature.course.work.submission.model.GradeRequest
-import com.studiversity.feature.course.work.submission.model.SubmissionErrors
 import com.studiversity.feature.course.work.submission.model.SubmissionGrade
 import com.studiversity.feature.course.work.submission.usecase.*
 import com.studiversity.feature.role.Capability
@@ -12,14 +13,11 @@ import com.studiversity.ktor.claimId
 import com.studiversity.ktor.getUuid
 import com.studiversity.ktor.jwtPrincipal
 import io.ktor.http.*
-import io.ktor.http.content.*
 import io.ktor.server.application.*
-import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
-import java.time.Instant
 
 fun Route.workSubmissionRoutes() {
     route("/submissions") {
@@ -76,7 +74,7 @@ fun Route.submissionByIdRoute() {
         route("/attachments") {
             val requireSubmissionAuthor: RequireSubmissionAuthorUseCase by inject()
             val isSubmissionAuthor: IsSubmissionAuthorUseCase by inject()
-            val findSubmissionAttachments: FindSubmissionAttachmentsUseCase by inject()
+            val findAttachmentsOfSubmission: FindAttachmentsOfSubmissionUseCase by inject()
             val removeAttachmentOfSubmission: RemoveAttachmentOfSubmissionUseCase by inject()
 
             post {
@@ -87,32 +85,15 @@ fun Route.submissionByIdRoute() {
 
                 requireSubmissionAuthor(submissionId, currentUserId)
 
-                val result: Attachment = when (call.request.queryParameters["upload"]) {
-                    "file" -> {
-                        call.receiveMultipart().readPart()?.let { part ->
-                            if (part is PartData.FileItem) {
-                                val fileSourceName = part.originalFileName as String
-                                val fileBytes = part.streamProvider().readBytes()
-                                val fileName = Instant.now().epochSecond.toString() + "_" + fileSourceName
-                                val filePath = "courses/$courseId/elements/$workId/submissions/$submissionId/$fileName"
+                val result: Attachment = when (val attachment = receiveAttachment()) {
+                    is CreateFileRequest -> addFileAttachmentOfSubmission(
+                        submissionId = submissionId,
+                        courseId = courseId,
+                        workId = workId,
+                        attachment = attachment
+                    )
 
-                                addFileAttachmentOfSubmission(
-                                    submissionId = submissionId,
-                                    courseId = courseId,
-                                    workId = workId,
-                                    attachment = FileRequest(fileSourceName, fileBytes, filePath)
-                                )
-                            } else throw BadRequestException(SubmissionErrors.INVALID_ATTACHMENT)
-                        } ?: throw BadRequestException(SubmissionErrors.INVALID_ATTACHMENT)
-                    }
-
-                    "link" -> {
-                        addLinkAttachmentOfSubmission(submissionId, call.receive())
-                    }
-
-                    else -> {
-                        throw BadRequestException(SubmissionErrors.INVALID_ATTACHMENT)
-                    }
+                    is CreateLinkRequest -> addLinkAttachmentOfSubmission(submissionId, attachment)
                 }
                 call.respond(HttpStatusCode.Created, result)
             }
@@ -127,7 +108,7 @@ fun Route.submissionByIdRoute() {
                         capability = Capability.ReadSubmissions,
                         scopeId = courseId
                     )
-                val attachments = findSubmissionAttachments(submissionId)
+                val attachments = findAttachmentsOfSubmission(submissionId)
                 call.respond(HttpStatusCode.OK, attachments)
             }
             delete("/{attachmentId}") {
