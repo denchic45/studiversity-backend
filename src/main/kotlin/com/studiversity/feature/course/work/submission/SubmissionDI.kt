@@ -14,7 +14,7 @@ private val useCaseModule = module {
     single { IsSubmissionAuthorUseCase(get(), get()) }
     single { AddFileAttachmentOfSubmissionUseCase(get(), get()) }
     single { AddLinkAttachmentOfSubmissionUseCase(get(), get()) }
-    single { FindSubmissionAttachmentsUseCase(get(), get()) }
+    single { FindAttachmentsOfSubmissionUseCase(get(), get()) }
     single { RemoveAttachmentOfSubmissionUseCase(get(), get()) }
 }
 

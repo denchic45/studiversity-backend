@@ -4,7 +4,7 @@ import com.studiversity.feature.attachment.AttachmentRepository
 import com.studiversity.transaction.TransactionWorker
 import java.util.*
 
-class FindSubmissionAttachmentsUseCase(
+class FindAttachmentsOfSubmissionUseCase(
     private val transactionWorker: TransactionWorker,
     private val attachmentRepository: AttachmentRepository
 ) {
