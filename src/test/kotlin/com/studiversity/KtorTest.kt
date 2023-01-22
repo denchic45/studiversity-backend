@@ -1,20 +1,22 @@
 package com.studiversity
 
 import com.studiversity.client.di.apiModule
-import com.studiversity.client.di.installContentNegotiation
 import com.studiversity.feature.auth.model.LoginRequest
 import com.studiversity.supabase.model.SignupResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.engine.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.koin.core.context.loadKoinModules
 import org.koin.test.KoinTest
@@ -62,10 +64,14 @@ abstract class KtorTest : KoinTest {
             }
         }
     }
+}
 
-    @BeforeEach
-    fun beforeEach() {
-//        loadKoinModules(apiModule)
+private fun HttpClientConfig<out HttpClientEngineConfig>.installContentNegotiation() {
+    install(ContentNegotiation) {
+        json(Json {
+            prettyPrint = true
+            isLenient = true
+            ignoreUnknownKeys = true
+        })
     }
-
 }
