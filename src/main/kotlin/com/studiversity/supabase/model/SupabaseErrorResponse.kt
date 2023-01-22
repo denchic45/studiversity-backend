@@ -2,7 +2,7 @@ package com.studiversity.supabase.model
 
 import com.studiversity.feature.auth.AuthErrors
 import com.studiversity.model.ErrorInfo
-import com.studiversity.model.SingleErrorResponse
+import com.studiversity.model.ErrorResponse
 import com.studiversity.model.respondWithError
 import com.studiversity.util.bodyOrNull
 import io.ktor.client.statement.*
@@ -26,14 +26,14 @@ private const val SUPABASE_ERROR = "SUPABASE_ERROR"
 suspend fun ApplicationCall.respondWithSupabaseError(response: HttpResponse) = response.apply {
     val error = bodyOrNull<SupabaseErrorResponse>()?.mapResponse()
         ?: bodyOrNull<SupabaseError2Response>()?.mapResponse()
-        ?: SingleErrorResponse(
+        ?: ErrorResponse(
             HttpStatusCode.InternalServerError.value,
             ErrorInfo(SUPABASE_ERROR)
         )
     respondWithError(error)
 }
 
-fun SupabaseErrorResponse.mapResponse(): SingleErrorResponse = SingleErrorResponse(
+fun SupabaseErrorResponse.mapResponse(): ErrorResponse = ErrorResponse(
     code = code,
     error = msgToErrorInfo.getOrDefault(
         msg,
@@ -41,7 +41,7 @@ fun SupabaseErrorResponse.mapResponse(): SingleErrorResponse = SingleErrorRespon
     )
 )
 
-fun SupabaseError2Response.mapResponse(): SingleErrorResponse = SingleErrorResponse(
+fun SupabaseError2Response.mapResponse(): ErrorResponse = ErrorResponse(
     code = HttpStatusCode.BadRequest.value,
     error = errorToErrorInfo.getOrDefault(
         error,

@@ -7,7 +7,7 @@ import io.ktor.server.response.*
 import kotlinx.serialization.Serializable
 
 @Serializable
-class SingleErrorResponse(val code: Int, val error: ErrorInfo)
+class ErrorResponse(val code: Int, val error: ErrorInfo)
 
 @Serializable
 class ErrorsResponse(val code: Int, val errors: List<ErrorInfo>)
@@ -28,7 +28,7 @@ data class ErrorInfo(val reason: String)
 //    data class Errors(val errors: List<SingleError>) : ErrorWrapper()
 //}
 
-suspend fun ApplicationCall.respondWithError(errorResponse: SingleErrorResponse) {
+suspend fun ApplicationCall.respondWithError(errorResponse: ErrorResponse) {
     respond(
         HttpStatusCode.fromValue(errorResponse.code),
         errorResponse
@@ -36,7 +36,7 @@ suspend fun ApplicationCall.respondWithError(errorResponse: SingleErrorResponse)
 }
 
 suspend fun ApplicationCall.respondWithError(statusCode: HttpStatusCode, error: ErrorInfo) {
-    respond(statusCode, SingleErrorResponse(statusCode.value, error))
+    respond(statusCode, ErrorResponse(statusCode.value, error))
 }
 
 suspend fun ApplicationCall.respondWithErrors(statusCode: HttpStatusCode, errors: List<ErrorInfo>) {
@@ -46,6 +46,6 @@ suspend fun ApplicationCall.respondWithErrors(statusCode: HttpStatusCode, errors
 suspend fun ApplicationCall.respondWithError(supabaseErrorResponse: SupabaseErrorResponse) {
     respond(
         HttpStatusCode.fromValue(supabaseErrorResponse.code),
-        SingleErrorResponse(supabaseErrorResponse.code, ErrorInfo(supabaseErrorResponse.msg))
+        ErrorResponse(supabaseErrorResponse.code, ErrorInfo(supabaseErrorResponse.msg))
     )
 }
