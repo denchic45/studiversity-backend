@@ -20,7 +20,7 @@ class RemoveCourseUseCase(
             throw NotFoundException()
         if (!courseRepository.isArchivedCourse(courseId))
             throw ConflictException(CourseErrors.COURSE_IS_NOT_ARCHIVED)
-        attachmentRepository.removeByCourseId(courseId)
+        attachmentRepository.removeAllByCourseId(courseId)
         courseRepository.removeCourse(courseId)
         scopeRepository.remove(courseId)
     }
