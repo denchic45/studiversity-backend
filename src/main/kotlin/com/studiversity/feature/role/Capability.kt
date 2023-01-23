@@ -23,6 +23,7 @@ data class Capability(val resource: String) {
         val ReadCourse: Capability = Capability("course:read")
         val WriteCourse: Capability = Capability("course:write")
         val DeleteCourse: Capability = Capability("course:delete")
+        val WriteCourseTopics: Capability = Capability("course/topics:write")
         val WriteCourseStudyGroups: Capability = Capability("course/study_group:write")
 
         val ReadCourseElements: Capability = Capability("course/elements:read")
