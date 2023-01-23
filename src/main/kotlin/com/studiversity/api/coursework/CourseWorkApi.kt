@@ -2,10 +2,10 @@ package com.studiversity.api.coursework
 
 import com.studiversity.api.util.EmptyResponseResult
 import com.studiversity.api.util.ResponseResult
+import com.studiversity.api.util.toAttachmentResult
 import com.studiversity.api.util.toResult
 import com.studiversity.feature.course.element.model.*
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
@@ -72,18 +72,7 @@ class CourseWorkApiImpl(private val client: HttpClient) : CourseWorkApi {
         courseWorkId: UUID,
         attachmentId: UUID
     ): ResponseResult<Attachment> {
-        return client.get("/courses/$courseId/works/$courseWorkId/attachments/$attachmentId").toResult { response ->
-            if (response.headers.contains(HttpHeaders.ContentDisposition)) {
-                FileAttachment(
-                    response.body(),
-                    ContentDisposition.parse(response.headers[HttpHeaders.ContentDisposition]!!)
-                        .parameter(ContentDisposition.Parameters.FileName)!!
-
-                )
-            } else {
-                response.body<Link>()
-            }
-        }
+        return client.get("/courses/$courseId/works/$courseWorkId/attachments/$attachmentId").toAttachmentResult()
     }
 
     override suspend fun uploadFileToSubmission(
