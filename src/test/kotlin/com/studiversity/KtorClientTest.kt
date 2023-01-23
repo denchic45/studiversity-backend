@@ -22,7 +22,7 @@ import org.koin.core.context.loadKoinModules
 import org.koin.test.KoinTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-abstract class KtorTest : KoinTest {
+abstract class KtorClientTest : KoinTest {
 
     private lateinit var testApp: TestApplication
     lateinit var client: HttpClient

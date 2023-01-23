@@ -1,6 +1,6 @@
 package com.studiversity.client.course
 
-import com.studiversity.KtorTest
+import com.studiversity.KtorClientTest
 import com.studiversity.feature.course.model.CourseResponse
 import com.studiversity.feature.course.model.CreateCourseRequest
 import com.studiversity.feature.membership.model.ManualJoinMemberRequest
@@ -24,7 +24,7 @@ import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class CourseWithStudyGroupMembershipTest : KtorTest() {
+class CourseWithStudyGroupMembershipTest : KtorClientTest() {
     private lateinit var studyGroup1: StudyGroupResponse
     private lateinit var studyGroup2: StudyGroupResponse
     private lateinit var course: CourseResponse

@@ -23,7 +23,7 @@ import java.io.File
 import java.util.*
 import kotlin.test.assertTrue
 
-class CourseElementsTest : KtorTest() {
+class CourseElementsTest : KtorClientTest() {
 
     private val student1Id = "7a98cdcf-d404-4556-96bd-4ce9137c8cbe".toUUID()
     private val student2Id = "77129e28-bf01-4dca-b19f-9fbcf576345e".toUUID()
