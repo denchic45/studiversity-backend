@@ -6,31 +6,34 @@ import com.studiversity.feature.course.element.model.*
 import org.jetbrains.exposed.sql.ResultRow
 
 fun AttachmentDao.toResponse() = when (type) {
-    AttachmentType.FILE -> toFileAttachment()
-    AttachmentType.LINK -> toLinkAttachment()
+    AttachmentType.FILE -> toFileAttachmentHeader()
+    AttachmentType.LINK -> toLinkAttachmentHeader()
 }
 
-fun AttachmentDao.toLinkAttachment() =
-    LinkAttachment(id.value, Link(url!!, name, thumbnailUrl))
+fun AttachmentDao.toLinkAttachmentHeader() =
+    LinkAttachmentHeader(id.value, Link(url!!, name, thumbnailUrl))
 
-fun AttachmentDao.toFileAttachment() =
-    FileAttachment(id.value, FileItem(name, thumbnailUrl))
+fun AttachmentDao.toFileAttachmentHeader() =
+    FileAttachmentHeader(id.value, FileItem(name, thumbnailUrl))
 
 fun ResultRow.toAttachment() = when (this[Attachments.type]) {
-    AttachmentType.FILE -> toFileAttachment()
-    AttachmentType.LINK -> toLinkAttachment()
+    AttachmentType.FILE -> toFileAttachmentHeader()
+    AttachmentType.LINK -> toLinkAttachmentHeader()
 }
 
-private fun ResultRow.toLinkAttachment() = LinkAttachment(
+fun ResultRow.toLinkAttachmentHeader() = LinkAttachmentHeader(
     this[Attachments.id].value,
-    Link(
-        url = this[Attachments.url]!!,
-        name = this[Attachments.name],
-        thumbnailUrl = this[Attachments.thumbnailUrl]
-    )
+    toLink()
 )
 
-private fun ResultRow.toFileAttachment() = FileAttachment(
+fun ResultRow.toLink() = Link(
+    url = this[Attachments.url]!!,
+    name = this[Attachments.name],
+    thumbnailUrl = this[Attachments.thumbnailUrl]
+)
+
+
+fun ResultRow.toFileAttachmentHeader() = FileAttachmentHeader(
     this[Attachments.id].value,
     FileItem(
         name = this[Attachments.name],

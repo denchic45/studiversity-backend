@@ -3,11 +3,11 @@ package com.studiversity.feature.course.element.model
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.json.*
 
-object AttachmentSerializer : JsonContentPolymorphicSerializer<Attachment>(Attachment::class) {
-    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<out Attachment> {
+object AttachmentSerializer : JsonContentPolymorphicSerializer<AttachmentHeader>(AttachmentHeader::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<out AttachmentHeader> {
         return when (Json.decodeFromJsonElement<AttachmentType>(element.jsonObject.getValue("type"))) {
-            AttachmentType.FILE -> FileAttachment.serializer()
-            AttachmentType.LINK -> LinkAttachment.serializer()
+            AttachmentType.FILE -> FileAttachmentHeader.serializer()
+            AttachmentType.LINK -> LinkAttachmentHeader.serializer()
         }
     }
 }

@@ -15,7 +15,7 @@ class AttachmentRepository(private val bucket: BucketApi) {
         elementId: UUID,
         courseId: UUID,
         file: CreateFileRequest
-    ): FileAttachment = addFileAttachment(
+    ): FileAttachmentHeader = addFileAttachment(
         file = file,
         path = "courses/$courseId/elements/$elementId/${file.name}",
         ownerId = elementId,
@@ -23,7 +23,7 @@ class AttachmentRepository(private val bucket: BucketApi) {
         insertReferences = { addAttachmentCourseElementReference(it, elementId) }
     )
 
-    fun addCourseElementLinkAttachment(elementId: UUID, link: CreateLinkRequest): LinkAttachment {
+    fun addCourseElementLinkAttachment(elementId: UUID, link: CreateLinkRequest): LinkAttachmentHeader {
         return addLinkAttachment(
             link = link,
             ownerId = elementId,
@@ -37,14 +37,14 @@ class AttachmentRepository(private val bucket: BucketApi) {
         courseId: UUID,
         workId: UUID,
         createFileRequest: CreateFileRequest
-    ): FileAttachment = addFileAttachment(
+    ): FileAttachmentHeader = addFileAttachment(
         file = createFileRequest,
         path = "courses/$courseId/elements/$workId/submissions/$submissionId/${createFileRequest.name}",
         ownerId = submissionId,
         ownerType = AttachmentOwner.SUBMISSION,
         insertReferences = { addAttachmentSubmissionReference(it, submissionId) })
 
-    fun addSubmissionLinkAttachment(submissionId: UUID, attachment: CreateLinkRequest): LinkAttachment {
+    fun addSubmissionLinkAttachment(submissionId: UUID, attachment: CreateLinkRequest): LinkAttachmentHeader {
         return addLinkAttachment(
             link = attachment,
             ownerId = submissionId,
@@ -59,7 +59,7 @@ class AttachmentRepository(private val bucket: BucketApi) {
         ownerId: UUID,
         ownerType: AttachmentOwner,
         insertReferences: (dao: AttachmentDao) -> Unit
-    ): FileAttachment = AttachmentDao.new {
+    ): FileAttachmentHeader = AttachmentDao.new {
         this.name = file.name
         this.type = AttachmentType.FILE
         this.path = path
@@ -68,21 +68,21 @@ class AttachmentRepository(private val bucket: BucketApi) {
     }.also { dao ->
         insertReferences(dao)
         bucket.upload(path, file.bytes)
-    }.toFileAttachment()
+    }.toFileAttachmentHeader()
 
     private fun addLinkAttachment(
         link: CreateLinkRequest,
         ownerId: UUID,
         ownerType: AttachmentOwner,
         insertReferences: (dao: AttachmentDao) -> Unit
-    ): LinkAttachment {
+    ): LinkAttachmentHeader {
         return AttachmentDao.new {
             this.name = "Link name" // TODO ставить реальное название
             this.type = AttachmentType.LINK
             this.url = link.url
             this.ownerId = ownerId
             this.ownerType = ownerType
-        }.also(insertReferences).toLinkAttachment()
+        }.also(insertReferences).toLinkAttachmentHeader()
     }
 
 
@@ -100,15 +100,15 @@ class AttachmentRepository(private val bucket: BucketApi) {
         }
     }
 
-    fun findAttachmentsBySubmissionId(submissionId: UUID): List<Attachment> {
+    fun findAttachmentsBySubmissionId(submissionId: UUID): List<AttachmentHeader> {
         return Attachments.innerJoin(AttachmentsSubmissions, { Attachments.id }, { attachmentId })
             .select { AttachmentsSubmissions.submissionId eq submissionId }
             .map(ResultRow::toAttachment)
     }
 
-    fun findAttachmentsByCourseElementId(submissionId: UUID): List<Attachment> {
+    fun findAttachmentsByCourseElementId(elementId: UUID): List<AttachmentHeader> {
         return Attachments.innerJoin(AttachmentsCourseElements, { Attachments.id }, { attachmentId })
-            .select { AttachmentsCourseElements.courseElementId eq submissionId }
+            .select { AttachmentsCourseElements.courseElementId eq elementId }
             .map(ResultRow::toAttachment)
     }
 
@@ -193,5 +193,28 @@ class AttachmentRepository(private val bucket: BucketApi) {
 
     private fun removeByOwnerIds(ownerIds: List<UUID>) {
         Attachments.deleteWhere { ownerId inList ownerIds }
+    }
+
+    suspend fun findAttachmentByIdAndCourseElementId(courseId: UUID, workId: UUID, attachmentId: UUID): Attachment? {
+        val attachment = Attachments.innerJoin(AttachmentsCourseElements,
+            { Attachments.id },
+            { AttachmentsCourseElements.attachmentId })
+            .innerJoin(CourseElements, { AttachmentsCourseElements.courseElementId }, { CourseElements.id })
+            .select(
+                AttachmentsCourseElements.attachmentId eq attachmentId
+                        and (AttachmentsCourseElements.courseElementId eq workId)
+            ).singleOrNull()
+        return if (CourseElementDao.existByCourseId(workId, courseId)) {
+            attachment?.let {
+                when (attachment[Attachments.type]) {
+                    AttachmentType.FILE -> FileAttachment(
+                        bucket.downloadPublic(attachment[Attachments.path]!!),
+                        attachment[Attachments.name]
+                    )
+
+                    AttachmentType.LINK -> attachment.toLink()
+                }
+            }
+        } else null
     }
 }

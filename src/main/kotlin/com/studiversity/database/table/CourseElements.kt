@@ -1,5 +1,6 @@
 package com.studiversity.database.table
 
+import com.studiversity.database.exists
 import com.studiversity.database.type.timestampWithTimeZone
 import com.studiversity.feature.course.element.CourseElementType
 import com.studiversity.util.varcharMax
@@ -7,6 +8,7 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.javatime.CurrentTimestamp
 import java.util.*
 
@@ -22,7 +24,11 @@ object CourseElements : UUIDTable("course_element", "course_element_id") {
 }
 
 class CourseElementDao(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<CourseElementDao>(CourseElements)
+    companion object : UUIDEntityClass<CourseElementDao>(CourseElements) {
+        fun existByCourseId(elementId: UUID, courseId: UUID): Boolean {
+            return CourseElements.exists { CourseElements.id eq elementId and (CourseElements.courseId eq courseId) }
+        }
+    }
 
     var courseId by CourseElements.courseId
     var topicId by CourseElements.topicId

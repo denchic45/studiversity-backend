@@ -1,7 +1,7 @@
 package com.studiversity.feature.course.work.submission
 
 import com.studiversity.feature.attachment.receiveAttachment
-import com.studiversity.feature.course.element.model.Attachment
+import com.studiversity.feature.course.element.model.AttachmentHeader
 import com.studiversity.feature.course.element.model.CreateFileRequest
 import com.studiversity.feature.course.element.model.CreateLinkRequest
 import com.studiversity.feature.course.work.submission.model.GradeRequest
@@ -85,7 +85,7 @@ fun Route.submissionByIdRoute() {
 
                 requireSubmissionAuthor(submissionId, currentUserId)
 
-                val result: Attachment = when (val attachment = receiveAttachment()) {
+                val result: AttachmentHeader = when (val attachment = receiveAttachment()) {
                     is CreateFileRequest -> addFileAttachmentOfSubmission(
                         submissionId = submissionId,
                         courseId = courseId,

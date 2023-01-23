@@ -18,6 +18,14 @@ suspend inline fun <reified T> HttpResponse.toResult(): ResponseResult<T> {
     }
 }
 
+suspend inline fun <reified T> HttpResponse.toResult(result: (HttpResponse) -> T): ResponseResult<T> {
+    return if (status.isSuccess()) {
+        Ok(result(this))
+    } else {
+        Err(body())
+    }
+}
+
 typealias EmptyResponseResult = Result<Unit, ErrorResponse>
 
 //suspend inline fun HttpResponse.toEmptyResult(): EmptyResponseResult {

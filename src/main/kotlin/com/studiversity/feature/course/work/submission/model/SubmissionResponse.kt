@@ -1,7 +1,7 @@
 package com.studiversity.feature.course.work.submission.model
 
 import com.studiversity.feature.course.element.CourseElementType
-import com.studiversity.feature.course.element.model.Attachment
+import com.studiversity.feature.course.element.model.AttachmentHeader
 import com.studiversity.ktor.UUIDSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
@@ -40,7 +40,7 @@ sealed interface SubmissionContent
 
 @Serializable
 data class AssignmentSubmission(
-    val attachments: List<Attachment>
+    val attachmentHeaders: List<AttachmentHeader>
 ) : SubmissionContent
 
 enum class SubmissionState { NEW, CREATED, SUBMITTED, RETURNED, CANCELED_BY_AUTHOR }

@@ -3,10 +3,10 @@ package com.studiversity.api.submission
 import com.studiversity.api.util.EmptyResponseResult
 import com.studiversity.api.util.ResponseResult
 import com.studiversity.api.util.toResult
-import com.studiversity.feature.course.element.model.Attachment
+import com.studiversity.feature.course.element.model.AttachmentHeader
 import com.studiversity.feature.course.element.model.CreateLinkRequest
-import com.studiversity.feature.course.element.model.FileAttachment
-import com.studiversity.feature.course.element.model.LinkAttachment
+import com.studiversity.feature.course.element.model.FileAttachmentHeader
+import com.studiversity.feature.course.element.model.LinkAttachmentHeader
 import com.studiversity.feature.course.work.submission.model.GradeRequest
 import com.studiversity.feature.course.work.submission.model.SubmissionResponse
 import io.ktor.client.*
@@ -44,21 +44,21 @@ interface SubmissionsApi {
         courseId: UUID,
         courseWorkId: UUID,
         submissionId: UUID
-    ): ResponseResult<List<Attachment>>
+    ): ResponseResult<List<AttachmentHeader>>
 
     suspend fun uploadFileToSubmission(
         courseId: UUID,
         courseWorkId: UUID,
         submissionId: UUID,
         file: File
-    ): ResponseResult<FileAttachment>
+    ): ResponseResult<FileAttachmentHeader>
 
     suspend fun addLinkToSubmission(
         courseId: UUID,
         courseWorkId: UUID,
         submissionId: UUID,
         link: CreateLinkRequest
-    ): ResponseResult<LinkAttachment>
+    ): ResponseResult<LinkAttachmentHeader>
 
     suspend fun deleteAttachmentOfSubmission(
         courseId: UUID,
@@ -115,7 +115,7 @@ class SubmissionsApiImpl(private val client: HttpClient) : SubmissionsApi {
         courseId: UUID,
         courseWorkId: UUID,
         submissionId: UUID
-    ): ResponseResult<List<Attachment>> {
+    ): ResponseResult<List<AttachmentHeader>> {
         return client.get("/courses/${courseId}/works/${courseWorkId}/submissions/${submissionId}/attachments")
             .toResult()
     }
@@ -125,7 +125,7 @@ class SubmissionsApiImpl(private val client: HttpClient) : SubmissionsApi {
         courseWorkId: UUID,
         submissionId: UUID,
         file: File
-    ): ResponseResult<FileAttachment> =
+    ): ResponseResult<FileAttachmentHeader> =
         client.post("/courses/$courseId/works/$courseWorkId/submissions/${submissionId}/attachments") {
             parameter("upload", "file")
             contentType(ContentType.MultiPart.FormData)
@@ -146,7 +146,7 @@ class SubmissionsApiImpl(private val client: HttpClient) : SubmissionsApi {
         courseWorkId: UUID,
         submissionId: UUID,
         link: CreateLinkRequest
-    ): ResponseResult<LinkAttachment> =
+    ): ResponseResult<LinkAttachmentHeader> =
         client.post("/courses/$courseId/works/$courseWorkId/submissions/${submissionId}/attachments") {
             parameter("upload", "link")
             contentType(ContentType.Application.Json)

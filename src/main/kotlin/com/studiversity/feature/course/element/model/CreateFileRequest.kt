@@ -26,9 +26,3 @@ data class CreateFileRequest(
     }
 
 }
-
-@Serializable
-data class FileItem(
-    val name: String,
-    val thumbnailUrl: String?
-)

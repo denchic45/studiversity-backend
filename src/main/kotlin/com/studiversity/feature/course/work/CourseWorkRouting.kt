@@ -1,13 +1,14 @@
 package com.studiversity.feature.course.work
 
 import com.studiversity.feature.attachment.receiveAttachment
-import com.studiversity.feature.course.element.model.Attachment
+import com.studiversity.feature.attachment.respondAttachment
+import com.studiversity.feature.course.element.model.AttachmentHeader
 import com.studiversity.feature.course.element.model.CreateCourseWorkRequest
 import com.studiversity.feature.course.element.model.CreateFileRequest
 import com.studiversity.feature.course.element.model.CreateLinkRequest
-import com.studiversity.feature.course.element.usecase.FindCourseElementUseCase
+import com.studiversity.feature.course.element.usecase.*
 import com.studiversity.feature.course.work.submission.workSubmissionRoutes
-import com.studiversity.feature.course.work.usecase.*
+import com.studiversity.feature.course.work.usecase.AddCourseWorkUseCase
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.ktor.claimId
@@ -63,7 +64,7 @@ fun Route.courseWorkById() {
 
             val addFileAttachmentOfCourseElement: AddFileAttachmentOfCourseElementUseCase by inject()
             val addLinkAttachmentOfCourseElement: AddLinkAttachmentOfCourseElementUseCase by inject()
-            val findCourseElementAttachments: FindCourseElementAttachmentsUseCase by inject()
+            val findCourseElementAttachments: FindAttachmentsOfCourseElementUseCase by inject()
             val removeAttachmentOfCourseElement: RemoveAttachmentOfCourseElementUseCase by inject()
 
             get {
@@ -90,7 +91,7 @@ fun Route.courseWorkById() {
                     scopeId = courseId
                 )
 
-                val result: Attachment = when (val attachment = receiveAttachment()) {
+                val result: AttachmentHeader = when (val attachment = receiveAttachment()) {
                     is CreateFileRequest -> addFileAttachmentOfCourseElement(
                         elementId = workId,
                         courseId = courseId,
@@ -101,24 +102,42 @@ fun Route.courseWorkById() {
                 }
                 call.respond(HttpStatusCode.Created, result)
             }
-            delete("/{attachmentId}") {
-                val courseId = call.parameters.getUuid("courseId")
-                val workId = call.parameters.getUuid("workId")
-                val attachmentId = call.parameters.getUuid("attachmentId")
-                val currentUserId = call.jwtPrincipal().payload.claimId
+            route("/{attachmentId}") {
+                val findAttachmentOfCourseElement: FindAttachmentOfCourseElementUseCase by inject()
 
-                requireCapability(
-                    userId = currentUserId,
-                    capability = Capability.WriteCourseWork,
-                    scopeId = courseId
-                )
+                get {
+                    val courseId = call.parameters.getUuid("courseId")
+                    val workId = call.parameters.getUuid("workId")
+                    val attachmentId = call.parameters.getUuid("attachmentId")
 
-                removeAttachmentOfCourseElement(
-                    courseId = courseId,
-                    elementId = workId,
-                    attachmentId = attachmentId
-                )
-                call.respond(HttpStatusCode.NoContent)
+                    requireCapability(
+                        userId = call.jwtPrincipal().payload.claimId,
+                        capability = Capability.ReadCourseElements,
+                        courseId
+                    )
+
+                    val attachment = findAttachmentOfCourseElement(courseId, workId, attachmentId)
+                    call.respondAttachment(attachment)
+                }
+                delete {
+                    val courseId = call.parameters.getUuid("courseId")
+                    val workId = call.parameters.getUuid("workId")
+                    val attachmentId = call.parameters.getUuid("attachmentId")
+                    val currentUserId = call.jwtPrincipal().payload.claimId
+
+                    requireCapability(
+                        userId = currentUserId,
+                        capability = Capability.WriteCourseWork,
+                        scopeId = courseId
+                    )
+
+                    removeAttachmentOfCourseElement(
+                        courseId = courseId,
+                        elementId = workId,
+                        attachmentId = attachmentId
+                    )
+                    call.respond(HttpStatusCode.NoContent)
+                }
             }
         }
         workSubmissionRoutes()

@@ -32,6 +32,10 @@ class CourseElementsTest : KtorTest() {
     private val linkUrl =
         "https://developers.google.com/classroom/reference/rest/v1/courses.courseWork.studentSubmissions#StudentSubmission"
 
+    private val file: File = File("data.txt").apply {
+        writeText("Hello, Reader!")
+    }
+
     private val teacherClient by lazy { createAuthenticatedClient("denchic150@gmail.com", "OBDIhi76534g33") }
 
     private val coursesApi: CoursesApi by inject { org.koin.core.parameter.parametersOf(client) }
@@ -102,9 +106,7 @@ class CourseElementsTest : KtorTest() {
 
     @Test
     fun testAddRemoveAttachment(): Unit = runBlocking {
-        val file: File = File("data.txt").apply {
-            writeText("Hello, Reader!")
-        }
+
         courseWorkApi.uploadFileToSubmission(course.id, courseWork.id, file).apply {
             assertNotNull(get(), getError().toString())
             assertEquals("data.txt", unwrap().fileItem.name)
@@ -128,14 +130,36 @@ class CourseElementsTest : KtorTest() {
 
         val attachments = courseWorkApi.getAttachments(course.id, courseWork.id).unwrap().apply {
             assertEquals(2, size)
-            assertTrue(any { it is FileAttachment && it.fileItem.name == "data.txt" })
-            assertTrue(any { it is LinkAttachment && it.link.url == linkUrl })
+            assertTrue(any { it is FileAttachmentHeader && it.fileItem.name == "data.txt" })
+            assertTrue(any { it is LinkAttachmentHeader && it.link.url == linkUrl })
         }
 
         deleteAttachment(attachments[0].id)
 
         courseWorkApi.getAttachments(course.id, courseWork.id).unwrap().apply {
             assertEquals(1, size)
+        }
+    }
+
+    @Test
+    fun testDownloadAttachments(): Unit = runBlocking {
+        val fileAttachmentId = courseWorkApi.uploadFileToSubmission(course.id, courseWork.id, file).apply {
+            assertNotNull(get(), getError().toString())
+            assertEquals("data.txt", unwrap().fileItem.name)
+        }.unwrap().id
+
+        courseWorkApi.getAttachment(course.id, courseWork.id, fileAttachmentId).apply {
+            assertEquals("data.txt", (unwrap() as FileAttachment).name)
+        }
+
+        val linkAttachmentId = courseWorkApi.addLinkToSubmission(
+            course.id,
+            courseWork.id,
+            CreateLinkRequest(linkUrl)
+        ).unwrap().id
+
+        courseWorkApi.getAttachment(course.id, courseWork.id, linkAttachmentId).apply {
+            assertEquals(linkUrl, (unwrap() as Link).url)
         }
     }
 

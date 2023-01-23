@@ -284,8 +284,8 @@ class SubmissionsTest : KtorTest() {
         val attachments = submissionsApiOfStudent.getAttachments(course.id, courseWork.id, submission.id)
             .unwrap().apply {
                 assertEquals(2, size)
-                kotlin.test.assertTrue(any { it is FileAttachment && it.fileItem.name == "data.txt" })
-                kotlin.test.assertTrue(any { it is LinkAttachment && it.link.url == linkUrl })
+                kotlin.test.assertTrue(any { it is FileAttachmentHeader && it.fileItem.name == "data.txt" })
+                kotlin.test.assertTrue(any { it is LinkAttachmentHeader && it.link.url == linkUrl })
             }
 
         submissionsApiOfStudent.deleteAttachmentOfSubmission(course.id, courseWork.id, submission.id, attachments[0].id)

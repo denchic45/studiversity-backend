@@ -2,7 +2,7 @@ package com.studiversity.feature.course.work.submission.usecase
 
 import com.studiversity.feature.attachment.AttachmentRepository
 import com.studiversity.feature.course.element.model.CreateFileRequest
-import com.studiversity.feature.course.element.model.FileAttachment
+import com.studiversity.feature.course.element.model.FileAttachmentHeader
 import com.studiversity.transaction.SuspendTransactionWorker
 import java.util.*
 
@@ -15,7 +15,7 @@ class AddFileAttachmentOfSubmissionUseCase(
         courseId: UUID,
         workId: UUID,
         attachment: CreateFileRequest
-    ): FileAttachment {
+    ): FileAttachmentHeader {
         return transactionWorker.suspendInvoke {
             attachmentRepository.addSubmissionFileAttachment(
                 submissionId = submissionId,

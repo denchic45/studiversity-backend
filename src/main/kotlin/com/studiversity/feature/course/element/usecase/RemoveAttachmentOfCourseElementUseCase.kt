@@ -1,4 +1,4 @@
-package com.studiversity.feature.course.work.usecase
+package com.studiversity.feature.course.element.usecase
 
 import com.studiversity.feature.attachment.AttachmentRepository
 import com.studiversity.transaction.SuspendTransactionWorker
