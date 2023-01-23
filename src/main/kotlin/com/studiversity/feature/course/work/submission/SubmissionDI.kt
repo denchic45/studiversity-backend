@@ -16,6 +16,7 @@ private val useCaseModule = module {
     single { AddLinkAttachmentOfSubmissionUseCase(get(), get()) }
     single { FindAttachmentsOfSubmissionUseCase(get(), get()) }
     single { RemoveAttachmentOfSubmissionUseCase(get(), get()) }
+    single { FindAttachmentOfSubmissionUseCase(get(), get()) }
 }
 
 private val repositoryModule = module {

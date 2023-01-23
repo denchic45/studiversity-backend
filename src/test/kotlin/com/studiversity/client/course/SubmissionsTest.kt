@@ -1,9 +1,9 @@
 package com.studiversity.client.course
 
 import com.github.michaelbull.result.*
-import com.studiversity.KtorTest
+import com.studiversity.KtorClientTest
 import com.studiversity.api.course.CoursesApi
-import com.studiversity.api.courseelement.CourseElementApi
+import com.studiversity.api.course.element.CourseElementApi
 import com.studiversity.api.coursework.CourseWorkApi
 import com.studiversity.api.membership.MembershipsApi
 import com.studiversity.api.submission.SubmissionsApi
@@ -35,6 +35,10 @@ class SubmissionsTest : KtorClientTest() {
 
     private val linkUrl =
         "https://developers.google.com/classroom/reference/rest/v1/courses.courseWork.studentSubmissions#StudentSubmission"
+
+    private val file: File = File("data.txt").apply {
+        writeText("Hello, Reader!")
+    }
 
     private lateinit var course: CourseResponse
     private lateinit var courseWork: CourseElementResponse
@@ -207,11 +211,20 @@ class SubmissionsTest : KtorClientTest() {
         enrolStudent(student1Id)
         enrolTeacher(teacher1Id)
         val submission = submissionsApiOfStudent.getByStudent(course.id, courseWork.id, student1Id).unwrap()
+
+        submissionsApiOfTeacher.uploadFileToSubmission(
+            course.id,
+            courseWork.id,
+            submission.id,
+            file
+        ).apply { assertNotNull(getError()) { unwrap().toString() } }
+
         submissionsApiOfStudent.uploadFileToSubmission(
             course.id,
             courseWork.id,
             submission.id,
-            File("data.txt").apply { writeText("Hello, Reader!") })
+            file
+        )
 
         submissionsApiOfTeacher.submitSubmission(course.id, courseWork.id, submission.id).apply {
             assertEquals(HttpStatusCode.Forbidden.value, unwrapError().code)
@@ -257,14 +270,15 @@ class SubmissionsTest : KtorClientTest() {
     fun testAddRemoveAttachment(): Unit = runBlocking {
         enrolStudent(student1Id)
         val submission = submissionsApiOfStudent.getByStudent(course.id, courseWork.id, student1Id).unwrap()
-        val file: File = File("data.txt").apply {
-            writeText("Hello, Reader!")
-        }
         submissionsApiOfStudent.uploadFileToSubmission(course.id, courseWork.id, submission.id, file).apply {
             assertNotNull(get(), getError().toString())
         }
 
-        submissionsApiOfStudent.getAttachments(course.id, courseWork.id, submission.id).unwrap().apply {
+        submissionsApiOfStudent.getAttachments(
+            courseId = course.id,
+            courseWorkId = courseWork.id,
+            submissionId = submission.id
+        ).unwrap().apply {
             assertEquals(1, size)
         }
 
@@ -281,7 +295,11 @@ class SubmissionsTest : KtorClientTest() {
             )
         }
 
-        val attachments = submissionsApiOfStudent.getAttachments(course.id, courseWork.id, submission.id)
+        val attachments = submissionsApiOfStudent.getAttachments(
+            courseId = course.id,
+            courseWorkId = courseWork.id,
+            submissionId = submission.id
+        )
             .unwrap().apply {
                 assertEquals(2, size)
                 kotlin.test.assertTrue(any { it is FileAttachmentHeader && it.fileItem.name == "data.txt" })
@@ -291,14 +309,63 @@ class SubmissionsTest : KtorClientTest() {
         submissionsApiOfStudent.deleteAttachmentOfSubmission(course.id, courseWork.id, submission.id, attachments[0].id)
             .apply { assertNotNull(get()) { unwrapError().toString() } }
 
-        submissionsApiOfStudent.getAttachments(course.id, courseWork.id, submission.id).unwrap().apply {
+        submissionsApiOfStudent.getAttachments(
+            courseId = course.id,
+            courseWorkId = courseWork.id,
+            submissionId = submission.id
+        ).unwrap().apply {
             assertEquals(1, size)
         }
         submissionsApiOfStudent.deleteAttachmentOfSubmission(course.id, courseWork.id, submission.id, attachments[1].id)
             .apply { assertNotNull(get()) { unwrapError().toString() } }
 
-        submissionsApiOfStudent.getAttachments(course.id, courseWork.id, submission.id).unwrap().apply {
+        submissionsApiOfStudent.getAttachments(
+            courseId = course.id,
+            courseWorkId = courseWork.id,
+            submissionId = submission.id
+        ).unwrap().apply {
             assertTrue { isEmpty() }
+        }
+    }
+
+    @Test
+    fun testDownloadAttachments(): Unit = runBlocking {
+        enrolStudent(student1Id)
+        val submission = submissionsApiOfStudent.getByStudent(course.id, courseWork.id, student1Id).unwrap()
+        val submissionId = submission.id
+
+        val fileAttachment =
+            submissionsApiOfStudent.uploadFileToSubmission(course.id, courseWork.id, submissionId, file).apply {
+                assertNotNull(get(), getError().toString())
+                assertEquals("data.txt", unwrap().fileItem.name)
+            }.unwrap()
+
+        submissionsApiOfStudent.getAttachment(
+            courseId = course.id,
+            courseWorkId = courseWork.id,
+            submissionId = submissionId,
+            attachmentId = fileAttachment.id
+        ).apply {
+            assertNotNull(get()) { unwrapError().error.toString() }
+            val downloadedFile = unwrap() as FileAttachment
+            assertEquals("data.txt", downloadedFile.name)
+            assertEquals(file.readText(), downloadedFile.bytes.decodeToString())
+        }
+
+        val linkAttachment = submissionsApiOfStudent.addLinkToSubmission(
+            course.id,
+            courseWork.id,
+            submissionId,
+            CreateLinkRequest(linkUrl)
+        ).unwrap()
+
+        submissionsApiOfStudent.getAttachment(
+            courseId = course.id,
+            courseWorkId = courseWork.id,
+            submissionId = submissionId,
+            attachmentId = linkAttachment.id
+        ).apply {
+            assertEquals(linkUrl, (unwrap() as Link).url)
         }
     }
 

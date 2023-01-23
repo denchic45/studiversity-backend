@@ -1,5 +1,6 @@
 package com.studiversity.feature.attachment
 
+import com.studiversity.database.exists
 import com.studiversity.database.table.*
 import com.studiversity.feature.course.element.model.*
 import com.studiversity.supabase.deleteRecursive
@@ -196,25 +197,51 @@ class AttachmentRepository(private val bucket: BucketApi) {
     }
 
     suspend fun findAttachmentByIdAndCourseElementId(courseId: UUID, workId: UUID, attachmentId: UUID): Attachment? {
-        val attachment = Attachments.innerJoin(AttachmentsCourseElements,
-            { Attachments.id },
-            { AttachmentsCourseElements.attachmentId })
-            .innerJoin(CourseElements, { AttachmentsCourseElements.courseElementId }, { CourseElements.id })
-            .select(
-                AttachmentsCourseElements.attachmentId eq attachmentId
-                        and (AttachmentsCourseElements.courseElementId eq workId)
-            ).singleOrNull()
         return if (CourseElementDao.existByCourseId(workId, courseId)) {
-            attachment?.let {
-                when (attachment[Attachments.type]) {
-                    AttachmentType.FILE -> FileAttachment(
-                        bucket.downloadPublic(attachment[Attachments.path]!!),
-                        attachment[Attachments.name]
-                    )
-
-                    AttachmentType.LINK -> attachment.toLink()
-                }
-            }
+            val attachment = Attachments.innerJoin(AttachmentsCourseElements,
+                { Attachments.id },
+                { AttachmentsCourseElements.attachmentId })
+                .innerJoin(CourseElements, { AttachmentsCourseElements.courseElementId }, { CourseElements.id })
+                .select(
+                    AttachmentsCourseElements.attachmentId eq attachmentId
+                            and (AttachmentsCourseElements.courseElementId eq workId)
+                ).singleOrNull()
+            toAttachment(attachment)
         } else null
+    }
+
+    suspend fun findAttachmentByIdAndSubmissionId(
+        courseId: UUID,
+        workId: UUID,
+        submissionId: UUID,
+        attachmentId: UUID
+    ): Attachment? {
+        val existSubmissionByElementId = Submissions.exists {
+            Submissions.id eq submissionId and (Submissions.courseWorkId eq workId)
+        }
+        return if (existSubmissionByElementId && CourseElementDao.existByCourseId(workId, courseId)) {
+            val attachment = Attachments.innerJoin(AttachmentsSubmissions,
+                { Attachments.id },
+                { AttachmentsSubmissions.attachmentId })
+                .innerJoin(Submissions, { AttachmentsSubmissions.submissionId }, { Submissions.id })
+                .select(
+                    AttachmentsSubmissions.attachmentId eq attachmentId
+                            and (AttachmentsSubmissions.submissionId eq submissionId)
+                ).singleOrNull()
+            toAttachment(attachment)
+        } else null
+    }
+
+    private suspend fun toAttachment(attachment: ResultRow?): Attachment? {
+        return attachment?.let {
+            when (attachment[Attachments.type]) {
+                AttachmentType.FILE -> FileAttachment(
+                    bucket.downloadPublic(attachment[Attachments.path]!!),
+                    attachment[Attachments.name]
+                )
+
+                AttachmentType.LINK -> attachment.toLink()
+            }
+        }
     }
 }

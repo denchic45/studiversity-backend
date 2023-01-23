@@ -15,14 +15,12 @@ class AddFileAttachmentOfSubmissionUseCase(
         courseId: UUID,
         workId: UUID,
         attachment: CreateFileRequest
-    ): FileAttachmentHeader {
-        return transactionWorker.suspendInvoke {
-            attachmentRepository.addSubmissionFileAttachment(
-                submissionId = submissionId,
-                courseId = courseId,
-                workId = workId,
-                createFileRequest = attachment
-            )
-        }
+    ): FileAttachmentHeader = transactionWorker.suspendInvoke {
+        attachmentRepository.addSubmissionFileAttachment(
+            submissionId = submissionId,
+            courseId = courseId,
+            workId = workId,
+            createFileRequest = attachment
+        )
     }
 }
