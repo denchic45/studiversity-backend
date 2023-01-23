@@ -1,9 +1,9 @@
 package com.studiversity.client.course
 
 import com.github.michaelbull.result.*
-import com.studiversity.KtorTest
+import com.studiversity.KtorClientTest
 import com.studiversity.api.course.CoursesApi
-import com.studiversity.api.courseelement.CourseElementApi
+import com.studiversity.api.course.element.CourseElementApi
 import com.studiversity.api.coursework.CourseWorkApi
 import com.studiversity.api.membership.MembershipsApi
 import com.studiversity.feature.course.element.CourseWorkType
@@ -106,7 +106,6 @@ class CourseElementsTest : KtorClientTest() {
 
     @Test
     fun testAddRemoveAttachment(): Unit = runBlocking {
-
         courseWorkApi.uploadFileToSubmission(course.id, courseWork.id, file).apply {
             assertNotNull(get(), getError().toString())
             assertEquals("data.txt", unwrap().fileItem.name)
@@ -143,22 +142,24 @@ class CourseElementsTest : KtorClientTest() {
 
     @Test
     fun testDownloadAttachments(): Unit = runBlocking {
-        val fileAttachmentId = courseWorkApi.uploadFileToSubmission(course.id, courseWork.id, file).apply {
+        val fileAttachment = courseWorkApi.uploadFileToSubmission(course.id, courseWork.id, file).apply {
             assertNotNull(get(), getError().toString())
             assertEquals("data.txt", unwrap().fileItem.name)
-        }.unwrap().id
+        }.unwrap()
 
-        courseWorkApi.getAttachment(course.id, courseWork.id, fileAttachmentId).apply {
-            assertEquals("data.txt", (unwrap() as FileAttachment).name)
+        courseWorkApi.getAttachment(course.id, courseWork.id, fileAttachment.id).apply {
+            val downloadedFile = unwrap() as FileAttachment
+            assertEquals("data.txt", downloadedFile.name)
+            assertEquals(file.readText(), downloadedFile.bytes.decodeToString())
         }
 
-        val linkAttachmentId = courseWorkApi.addLinkToSubmission(
+        val linkAttachment = courseWorkApi.addLinkToSubmission(
             course.id,
             courseWork.id,
             CreateLinkRequest(linkUrl)
-        ).unwrap().id
+        ).unwrap()
 
-        courseWorkApi.getAttachment(course.id, courseWork.id, linkAttachmentId).apply {
+        courseWorkApi.getAttachment(course.id, courseWork.id, linkAttachment.id).apply {
             assertEquals(linkUrl, (unwrap() as Link).url)
         }
     }
