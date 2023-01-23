@@ -2,11 +2,9 @@ package com.studiversity.api.submission
 
 import com.studiversity.api.util.EmptyResponseResult
 import com.studiversity.api.util.ResponseResult
+import com.studiversity.api.util.toAttachmentResult
 import com.studiversity.api.util.toResult
-import com.studiversity.feature.course.element.model.AttachmentHeader
-import com.studiversity.feature.course.element.model.CreateLinkRequest
-import com.studiversity.feature.course.element.model.FileAttachmentHeader
-import com.studiversity.feature.course.element.model.LinkAttachmentHeader
+import com.studiversity.feature.course.element.model.*
 import com.studiversity.feature.course.work.submission.model.GradeRequest
 import com.studiversity.feature.course.work.submission.model.SubmissionResponse
 import io.ktor.client.*
@@ -45,6 +43,13 @@ interface SubmissionsApi {
         courseWorkId: UUID,
         submissionId: UUID
     ): ResponseResult<List<AttachmentHeader>>
+
+    suspend fun getAttachment(
+        courseId: UUID,
+        courseWorkId: UUID,
+        submissionId: UUID,
+        attachmentId: UUID
+    ): ResponseResult<Attachment>
 
     suspend fun uploadFileToSubmission(
         courseId: UUID,
@@ -118,6 +123,16 @@ class SubmissionsApiImpl(private val client: HttpClient) : SubmissionsApi {
     ): ResponseResult<List<AttachmentHeader>> {
         return client.get("/courses/${courseId}/works/${courseWorkId}/submissions/${submissionId}/attachments")
             .toResult()
+    }
+
+    override suspend fun getAttachment(
+        courseId: UUID,
+        courseWorkId: UUID,
+        submissionId: UUID,
+        attachmentId: UUID
+    ): ResponseResult<Attachment> {
+        return client.get("/courses/$courseId/works/$courseWorkId/submissions/$submissionId/attachments/$attachmentId")
+            .toAttachmentResult()
     }
 
     override suspend fun uploadFileToSubmission(
