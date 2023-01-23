@@ -3,6 +3,7 @@ package com.studiversity.feature.course
 import com.studiversity.feature.course.element.courseElementModule
 import com.studiversity.feature.course.repository.CourseRepository
 import com.studiversity.feature.course.subject.subjectModule
+import com.studiversity.feature.course.topic.courseTopicModule
 import com.studiversity.feature.course.usecase.*
 import com.studiversity.feature.course.work.submission.courseSubmissionModule
 import org.koin.dsl.module
@@ -23,5 +24,12 @@ private val useCaseModule = module {
 private val repositoryModule = module { single { CourseRepository(get()) } }
 
 val courseModule = module {
-    includes(useCaseModule, repositoryModule, courseElementModule, courseSubmissionModule, subjectModule)
+    includes(
+        useCaseModule,
+        repositoryModule,
+        courseElementModule,
+        courseSubmissionModule,
+        courseTopicModule,
+        subjectModule
+    )
 }
