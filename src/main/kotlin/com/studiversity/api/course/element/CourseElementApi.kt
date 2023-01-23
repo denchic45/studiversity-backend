@@ -1,4 +1,4 @@
-package com.studiversity.api.courseelement
+package com.studiversity.api.course.element
 
 import com.studiversity.api.util.EmptyResponseResult
 import com.studiversity.api.util.toResult

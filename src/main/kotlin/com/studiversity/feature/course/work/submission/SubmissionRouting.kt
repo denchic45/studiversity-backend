@@ -1,6 +1,7 @@
 package com.studiversity.feature.course.work.submission
 
 import com.studiversity.feature.attachment.receiveAttachment
+import com.studiversity.feature.attachment.respondAttachment
 import com.studiversity.feature.course.element.model.AttachmentHeader
 import com.studiversity.feature.course.element.model.CreateFileRequest
 import com.studiversity.feature.course.element.model.CreateLinkRequest
@@ -111,22 +112,42 @@ fun Route.submissionByIdRoute() {
                 val attachments = findAttachmentsOfSubmission(submissionId)
                 call.respond(HttpStatusCode.OK, attachments)
             }
-            delete("/{attachmentId}") {
-                val courseId = call.parameters.getUuid("courseId")
-                val workId = call.parameters.getUuid("workId")
-                val submissionId = call.parameters.getUuid("submissionId")
-                val attachmentId = call.parameters.getUuid("attachmentId")
-                val currentUserId = call.jwtPrincipal().payload.claimId
+            route("/{attachmentId}") {
 
-                requireSubmissionAuthor(submissionId, currentUserId)
+                val findAttachmentOfSubmission: FindAttachmentOfSubmissionUseCase by inject()
 
-                removeAttachmentOfSubmission(
-                    courseId = courseId,
-                    elementId = workId,
-                    submissionId = submissionId,
-                    attachmentId = attachmentId
-                )
-                call.respond(HttpStatusCode.NoContent)
+                get {
+                    val courseId = call.parameters.getUuid("courseId")
+                    val workId = call.parameters.getUuid("workId")
+                    val submissionId = call.parameters.getUuid("submissionId")
+                    val attachmentId = call.parameters.getUuid("attachmentId")
+
+                    requireCapability(
+                        userId = call.jwtPrincipal().payload.claimId,
+                        capability = Capability.ReadCourseElements,
+                        courseId
+                    )
+
+                    val attachment = findAttachmentOfSubmission(courseId, workId, submissionId, attachmentId)
+                    call.respondAttachment(attachment)
+                }
+                delete {
+                    val courseId = call.parameters.getUuid("courseId")
+                    val workId = call.parameters.getUuid("workId")
+                    val submissionId = call.parameters.getUuid("submissionId")
+                    val attachmentId = call.parameters.getUuid("attachmentId")
+                    val currentUserId = call.jwtPrincipal().payload.claimId
+
+                    requireSubmissionAuthor(submissionId, currentUserId)
+
+                    removeAttachmentOfSubmission(
+                        courseId = courseId,
+                        elementId = workId,
+                        submissionId = submissionId,
+                        attachmentId = attachmentId
+                    )
+                    call.respond(HttpStatusCode.NoContent)
+                }
             }
         }
         route("/grade") {
