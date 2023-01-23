@@ -43,7 +43,7 @@ fun Route.courseWorksRoutes() {
     }
 }
 
-fun Route.courseWorkById() {
+private fun Route.courseWorkById() {
     route("/{workId}") {
         val requireCapability: RequireCapabilityUseCase by inject()
         val findCourseElement: FindCourseElementUseCase by inject()
