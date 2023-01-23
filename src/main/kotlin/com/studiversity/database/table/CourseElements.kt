@@ -17,7 +17,7 @@ object CourseElements : UUIDTable("course_element", "course_element_id") {
     val topicId = uuid("topic_id").references(CourseTopics.id).nullable()
     val name = varcharMax("element_name")
     val description = text("description").nullable()
-    val order = integer("order")
+    val order = integer("element_order")
     val createdAt = timestampWithTimeZone("created_at").defaultExpression(CurrentTimestamp())
     val updatedAt = timestampWithTimeZone("updated_at").nullable()
     val type = enumerationByName<CourseElementType>("element_type", 10)
