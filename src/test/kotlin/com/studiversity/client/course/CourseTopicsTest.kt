@@ -1,8 +1,6 @@
 package com.studiversity.client.course
 
-import com.github.michaelbull.result.get
-import com.github.michaelbull.result.unwrap
-import com.github.michaelbull.result.unwrapError
+import com.github.michaelbull.result.*
 import com.studiversity.KtorClientTest
 import com.studiversity.api.course.CoursesApi
 import com.studiversity.api.course.element.CourseElementApi
@@ -11,15 +9,19 @@ import com.studiversity.api.course.topic.RelatedTopicElements
 import com.studiversity.api.course.topic.model.CreateTopicRequest
 import com.studiversity.api.course.topic.model.UpdateTopicRequest
 import com.studiversity.api.course.work.CourseWorkApi
+import com.studiversity.api.membership.MembershipsApi
 import com.studiversity.feature.course.element.CourseWorkType
 import com.studiversity.feature.course.element.model.UpdateCourseElementRequest
 import com.studiversity.feature.course.model.CourseResponse
 import com.studiversity.feature.course.model.CreateCourseRequest
 import com.studiversity.feature.course.work.model.CreateCourseWorkRequest
+import com.studiversity.feature.role.Role
 import com.studiversity.util.OptionalProperty
 import com.studiversity.util.toUUID
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.core.parameter.parametersOf
 import org.koin.test.inject
@@ -36,14 +38,48 @@ class CourseTopicsTest : KtorClientTest() {
     private val teacherClient by lazy { createAuthenticatedClient("stefan@gmail.com", "FSg54g45dg") }
 
     private val coursesApi: CoursesApi by inject { parametersOf(client) }
-    private val courseTopicApi: CourseTopicApi by inject { parametersOf(client) }
+    private val courseTopicApi: CourseTopicApi by inject { parametersOf(teacherClient) }
     private val courseWorkApi: CourseWorkApi by inject { parametersOf(teacherClient) }
     private val courseElementApi: CourseElementApi by inject { parametersOf(teacherClient) }
+    private val membershipsApi: MembershipsApi by inject { parametersOf(client) }
 
     override fun setup(): Unit = runBlocking {
+
+    }
+
+    override fun cleanup(): Unit = runBlocking {
+
+    }
+
+    @BeforeEach
+    fun init(): Unit = runBlocking {
         course = coursesApi.create(CreateCourseRequest("Test course for submissions")).apply {
             assertNotNull(get()) { unwrapError().error.toString() }
         }.unwrap()
+        enrolTeacher(teacher1Id)
+    }
+
+    @AfterEach
+    fun tearDown(): Unit = runBlocking {
+//        unrollUser(teacher1Id)
+        coursesApi.setArchive(course.id)
+        coursesApi.delete(course.id)
+    }
+
+    private suspend fun enrolTeacher(userId: UUID) {
+        enrolUser(userId, Role.Teacher.id)
+    }
+
+    private suspend fun enrolUser(userId: UUID, roleId: Long) {
+        membershipsApi.joinToScopeManually(userId, course.id, listOf(roleId)).apply {
+            assertNotNull(get()) { unwrapError().error.toString() }
+        }
+    }
+
+    private suspend fun unrollUser(userId: UUID) {
+        membershipsApi.leaveFromScope(userId, course.id, "manual")
+            .onSuccess { println("Success unroll user: $userId") }
+            .onFailure { println("Failed unroll user: $userId. Status: ${it.code}. Body: ${it.error}") }
     }
 
     @Test
@@ -104,7 +140,7 @@ class CourseTopicsTest : KtorClientTest() {
                 workType = CourseWorkType.ASSIGNMENT,
                 maxGrade = 5
             )
-        ).apply { assertEquals(1, get()?.order) { unwrapError().error.toString() } }.unwrap()
+        ).apply { assertEquals(1, get()?.order) }.unwrap()
         val elemWithoutTopic2 = courseWorkApi.create(
             course.id, CreateCourseWorkRequest(
                 name = "Some Assignment 2",
@@ -147,7 +183,7 @@ class CourseTopicsTest : KtorClientTest() {
                 course.id,
                 element.id,
                 UpdateCourseElementRequest(topicId = OptionalProperty.Present(topic.id))
-            ).apply { assertEquals(get()?.topicId, topic.id) { unwrapError().error.toString() } }
+            ).apply { assertEquals(topic.id, get()?.topicId) { unwrapError().error.toString() } }
         }.unwrap()
 
         removeTopic(topic.id, RelatedTopicElements.CLEAR_TOPIC)
@@ -162,18 +198,72 @@ class CourseTopicsTest : KtorClientTest() {
         }
     }
 
+    @Test
+    fun testUpdateCourseElementTopic(): Unit = runBlocking {
+        val element = courseWorkApi.create(
+            course.id, CreateCourseWorkRequest(
+                name = "Assignment",
+                description = null,
+                topicId = null,
+                workType = CourseWorkType.ASSIGNMENT,
+                maxGrade = 5
+            )
+        ).unwrap()
+        val topic = createTopic()
+        courseElementApi.update(
+            course.id, element.id,
+            UpdateCourseElementRequest(OptionalProperty.Present(topic.id))
+        ).unwrap().apply {
+            assertEquals(topic.id, topicId)
+            assertEquals(1, order)
+        }
+
+        courseElementApi.update(
+            course.id, element.id, UpdateCourseElementRequest(OptionalProperty.Present(null))
+        ).unwrap().apply {
+            assertNull(topicId)
+            assertEquals(1, order)
+        }
+    }
+
+    //TODO finish the test
+//    @Test
+//    fun testUpdateOrderOnMoveBetweenTopics(): Unit = runBlocking {
+//        val topic1 = createTopic("Topic 1")
+//        val topic2 = createTopic("Topic 2")
+//
+//        val firstElements = List(5) {
+//            courseWorkApi.create(
+//                course.id, CreateCourseWorkRequest(
+//                    name = "Assignment $it in topic 1",
+//                    description = null,
+//                    topicId = topic1.id,
+//                    workType = CourseWorkType.ASSIGNMENT,
+//                    maxGrade = 5
+//                )
+//            )
+//        }
+//        val secondElements = List(5) {
+//            courseWorkApi.create(
+//                course.id, CreateCourseWorkRequest(
+//                    name = "Assignment $it in topic 2",
+//                    description = null,
+//                    topicId = topic2.id,
+//                    workType = CourseWorkType.ASSIGNMENT,
+//                    maxGrade = 5
+//                )
+//            )
+//        }
+//    }
+
     private suspend fun removeTopic(topicId: UUID, relatedTopicElements: RelatedTopicElements) {
         courseTopicApi.delete(course.id, topicId, relatedTopicElements).apply {
             assertNotNull(get()) { unwrapError().error.toString() }
         }
     }
 
-    private suspend fun createTopic() = courseTopicApi.create(course.id, CreateTopicRequest("My Topic")).apply {
-        assertNotNull(get()) { unwrapError().error.toString() }
-    }.unwrap()
-
-    override fun cleanup(): Unit = runBlocking {
-        coursesApi.setArchive(course.id)
-        coursesApi.delete(course.id)
-    }
+    private suspend fun createTopic(name: String = "My Topic") =
+        courseTopicApi.create(course.id, CreateTopicRequest(name)).apply {
+            assertNotNull(get()) { unwrapError().error.toString() }
+        }.unwrap()
 }
