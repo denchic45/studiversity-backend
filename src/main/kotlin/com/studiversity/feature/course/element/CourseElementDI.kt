@@ -13,6 +13,7 @@ private val useCaseModule = module {
     single { AddLinkAttachmentOfCourseElementUseCase(get(), get()) }
     single { FindAttachmentsOfCourseElementUseCase(get(), get()) }
     single { FindAttachmentOfCourseElementUseCase(get(), get()) }
+    single { UpdateCourseElementUseCase(get(), get()) }
     single { RemoveAttachmentOfCourseElementUseCase(get(), get()) }
 }
 

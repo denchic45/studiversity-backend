@@ -1,4 +1,4 @@
-package com.studiversity.feature.course.element.model
+package com.studiversity.feature.course.work.model
 
 import com.studiversity.feature.course.element.CourseWorkType
 import com.studiversity.ktor.LocalDateSerializer
@@ -17,9 +17,9 @@ data class CreateCourseWorkRequest constructor(
     @Serializable(UUIDSerializer::class)
     val topicId: UUID? = null,
     @Serializable(LocalDateSerializer::class)
-    val dueDate: LocalDate?,
+    val dueDate: LocalDate? = null,
     @Serializable(LocalTimeSerializer::class)
-    val dueTime: LocalTime?,
+    val dueTime: LocalTime? = null,
     val workType: CourseWorkType,
     val maxGrade: Short
 )

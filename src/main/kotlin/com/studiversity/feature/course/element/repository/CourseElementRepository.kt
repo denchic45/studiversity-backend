@@ -1,15 +1,16 @@
 package com.studiversity.feature.course.element.repository
 
+import com.studiversity.database.exists
 import com.studiversity.database.table.CourseElementDao
 import com.studiversity.database.table.CourseElements
 import com.studiversity.database.table.CourseWorkDao
 import com.studiversity.feature.course.element.CourseElementType
 import com.studiversity.feature.course.element.model.CourseElementResponse
-import com.studiversity.feature.course.element.model.CreateCourseWorkRequest
+import com.studiversity.feature.course.element.model.UpdateCourseElementRequest
 import com.studiversity.feature.course.element.toResponse
+import com.studiversity.feature.course.work.model.CreateCourseWorkRequest
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.max
 import org.jetbrains.exposed.sql.select
 import java.util.*
@@ -23,7 +24,7 @@ class CourseElementRepository {
             this.topicId = request.topicId
             this.name = request.name
             this.type = CourseElementType.WORK
-            this.order = generateOrderByCourseAndTopicId(courseId)
+            this.order = generateOrderByCourseAndTopicId(courseId, request.topicId)
         }.toResponse(
             CourseWorkDao.new(elementId) {
                 this.dueDate = request.dueDate
@@ -34,12 +35,16 @@ class CourseElementRepository {
         )
     }
 
-    private fun generateOrderByCourseAndTopicId(courseId: UUID) = findMaxOrderByCourseIdAndTopicId(courseId) + 1
+    private fun generateOrderByCourseAndTopicId(courseId: UUID, topicId: UUID?) =
+        findMaxOrderByCourseIdAndTopicId(courseId, topicId) + 1
 
-    private fun findMaxOrderByCourseIdAndTopicId(courseId: UUID, topicId: UUID? = null): Int {
-        val query = CourseElements.slice(CourseElements.order.max()).select(CourseElements.courseId eq courseId)
-        if (topicId != null) query.andWhere { CourseElements.topicId eq topicId }
-        return query.single().let { it[CourseElements.order.max()] ?: 0 }
+    private fun findMaxOrderByCourseIdAndTopicId(courseId: UUID, topicId: UUID?): Int {
+        return CourseElements.slice(CourseElements.order.max())
+            .select(
+                CourseElements.courseId eq courseId
+                        and (CourseElements.topicId eq topicId)
+            )
+            .single().let { it[CourseElements.order.max()] ?: 0 }
     }
 
     fun findById(elementId: UUID): CourseElementResponse? {
@@ -70,5 +75,31 @@ class CourseElementRepository {
     fun findTypeByElementId(elementId: UUID): CourseElementType? {
         return CourseElements.select(CourseElements.id eq elementId)
             .singleOrNull()?.let { it[CourseElements.type] }
+    }
+
+    fun exist(courseId: UUID, elementId: UUID) = CourseElements.exists {
+        CourseElements.id eq elementId and (CourseElements.courseId eq courseId)
+    }
+
+    fun update(
+        courseId: UUID,
+        elementId: UUID,
+        updateCourseElementRequest: UpdateCourseElementRequest
+    ): CourseElementResponse {
+        val dao = CourseElementDao.findById(elementId)!!
+        updateCourseElementRequest.topicId.ifPresent { topicId ->
+            dao.topicId = topicId
+            dao.order = generateOrderByCourseAndTopicId(courseId, topicId)
+        }
+
+        return dao.toResponse(getElementDetails(dao.type, elementId))
+    }
+
+    private fun getElementDetails(
+        type: CourseElementType,
+        elementId: UUID
+    ) = when (type) {
+        CourseElementType.WORK -> CourseWorkDao.findById(elementId)!!
+        CourseElementType.MATERIAL -> TODO()
     }
 }

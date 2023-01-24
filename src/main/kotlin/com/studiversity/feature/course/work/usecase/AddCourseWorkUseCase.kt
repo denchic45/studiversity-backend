@@ -1,6 +1,6 @@
 package com.studiversity.feature.course.work.usecase
 
-import com.studiversity.feature.course.element.model.CreateCourseWorkRequest
+import com.studiversity.feature.course.work.model.CreateCourseWorkRequest
 import com.studiversity.feature.course.element.repository.CourseElementRepository
 import com.studiversity.feature.course.work.submission.SubmissionRepository
 import com.studiversity.feature.membership.repository.UserMembershipRepository
