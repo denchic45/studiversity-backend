@@ -10,9 +10,10 @@ import com.studiversity.feature.course.element.model.UpdateCourseElementRequest
 import com.studiversity.feature.course.element.toResponse
 import com.studiversity.feature.course.work.model.CreateCourseWorkRequest
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.max
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.update
 import java.util.*
 
 class CourseElementRepository {
@@ -36,16 +37,8 @@ class CourseElementRepository {
     }
 
     private fun generateOrderByCourseAndTopicId(courseId: UUID, topicId: UUID?) =
-        findMaxOrderByCourseIdAndTopicId(courseId, topicId) + 1
+        CourseElementDao.getMaxOrderByCourseIdAndTopicId(courseId, topicId) + 1
 
-    private fun findMaxOrderByCourseIdAndTopicId(courseId: UUID, topicId: UUID?): Int {
-        return CourseElements.slice(CourseElements.order.max())
-            .select(
-                CourseElements.courseId eq courseId
-                        and (CourseElements.topicId eq topicId)
-            )
-            .single().let { it[CourseElements.order.max()] ?: 0 }
-    }
 
     fun findById(elementId: UUID): CourseElementResponse? {
         return CourseElementDao.findById(elementId)?.run {
@@ -64,7 +57,11 @@ class CourseElementRepository {
 
     fun remove(courseId: UUID, elementId: UUID): Boolean {
         return CourseElementDao.find(CourseElements.courseId eq courseId and (CourseElements.id eq elementId))
-            .singleOrNull()
+            .singleOrNull()?.apply {
+                CourseElements.update(where = { CourseElements.order greater this@apply.order }) {
+                    it[order] = order - 1
+                }
+            }
             ?.delete() != null
     }
 
@@ -87,9 +84,14 @@ class CourseElementRepository {
         updateCourseElementRequest: UpdateCourseElementRequest
     ): CourseElementResponse {
         val dao = CourseElementDao.findById(elementId)!!
+
+        CourseElements.update(where = { CourseElements.order greater dao.order }) {
+            it[order] = order - 1
+        }
+
         updateCourseElementRequest.topicId.ifPresent { topicId ->
-            dao.topicId = topicId
             dao.order = generateOrderByCourseAndTopicId(courseId, topicId)
+            dao.topicId = topicId
         }
 
         return dao.toResponse(getElementDetails(dao.type, elementId))
