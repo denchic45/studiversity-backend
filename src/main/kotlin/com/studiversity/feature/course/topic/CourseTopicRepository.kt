@@ -43,10 +43,9 @@ class CourseTopicRepository {
         when (relatedTopicElements) {
             RelatedTopicElements.DELETE -> {}
             RelatedTopicElements.CLEAR_TOPIC -> {
-                val maxOrderWithoutTopic = getMaxOrderByCourseId(courseId)
                 CourseElements.update(where = { CourseElements.topicId eq topicId }) {
                     it[CourseElements.topicId] = null
-                    it[order] = order + maxOrderWithoutTopic
+                    it[order] = order + getMaxOrderByCourseId(courseId)
                 }
             }
         }
