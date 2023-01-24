@@ -4,14 +4,13 @@ import com.studiversity.api.course.topic.RelatedTopicElements
 import com.studiversity.api.course.topic.model.CreateTopicRequest
 import com.studiversity.api.course.topic.model.TopicResponse
 import com.studiversity.api.course.topic.model.UpdateTopicRequest
+import com.studiversity.database.table.CourseElementDao
 import com.studiversity.database.table.CourseElements
 import com.studiversity.database.table.CourseTopicDao
 import com.studiversity.database.table.CourseTopics
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.max
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.update
 import java.util.*
 
@@ -24,6 +23,8 @@ class CourseTopicRepository {
             this.order = generateOrderByCourseId(courseId)
         }.toResponse()
     }
+
+    private fun generateOrderByCourseId(courseId: UUID) = CourseTopicDao.getMaxOrderByCourseId(courseId) + 1
 
     fun update(courseId: UUID, topicId: UUID, updateTopicRequest: UpdateTopicRequest): TopicResponse? {
         return getById(topicId, courseId)?.apply {
@@ -45,19 +46,11 @@ class CourseTopicRepository {
             RelatedTopicElements.CLEAR_TOPIC -> {
                 CourseElements.update(where = { CourseElements.topicId eq topicId }) {
                     it[CourseElements.topicId] = null
-                    it[order] = order + getMaxOrderByCourseId(courseId)
+                    it[order] = order + CourseElementDao.getMaxOrderByCourseIdAndTopicId(courseId, null)
                 }
             }
         }
         return getById(topicId, courseId)?.delete()
-    }
-
-    private fun generateOrderByCourseId(courseId: UUID) = getMaxOrderByCourseId(courseId) + 1
-
-    private fun getMaxOrderByCourseId(courseId: UUID): Int {
-        return CourseTopics.slice(CourseTopics.order.max())
-            .select(CourseTopics.courseId eq courseId)
-            .single().let { it[CourseTopics.order.max()] ?: 0 }
     }
 
     fun findById(topicId: UUID, courseId: UUID): TopicResponse? {

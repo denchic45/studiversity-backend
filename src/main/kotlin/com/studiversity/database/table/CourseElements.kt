@@ -8,8 +8,11 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.javatime.CurrentTimestamp
+import org.jetbrains.exposed.sql.max
+import org.jetbrains.exposed.sql.select
 import java.util.*
 
 object CourseElements : UUIDTable("course_element", "course_element_id") {
@@ -27,6 +30,15 @@ class CourseElementDao(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<CourseElementDao>(CourseElements) {
         fun existByCourseId(elementId: UUID, courseId: UUID): Boolean {
             return CourseElements.exists { CourseElements.id eq elementId and (CourseElements.courseId eq courseId) }
+        }
+
+        fun getMaxOrderByCourseIdAndTopicId(courseId: UUID, topicId: UUID?): Int {
+            return CourseElements.slice(CourseElements.order.max())
+                .select(
+                    CourseElements.courseId eq courseId
+                            and (CourseElements.topicId eq topicId)
+                )
+                .single().let { it[CourseElements.order.max()] ?: 0 }
         }
     }
 
