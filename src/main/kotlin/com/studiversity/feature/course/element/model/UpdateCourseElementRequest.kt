@@ -9,5 +9,5 @@ import java.util.*
 @Serializable
 data class UpdateCourseElementRequest(
     @Serializable(OptionalPropertySerializer::class)
-    val topicId: OptionalProperty<@Serializable(UUIDSerializer::class) UUID> = OptionalProperty.NotPresent
+    val topicId: OptionalProperty<@Serializable(UUIDSerializer::class) UUID?> = OptionalProperty.NotPresent
 )
