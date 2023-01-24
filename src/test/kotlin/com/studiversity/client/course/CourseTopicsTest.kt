@@ -5,20 +5,25 @@ import com.github.michaelbull.result.unwrap
 import com.github.michaelbull.result.unwrapError
 import com.studiversity.KtorClientTest
 import com.studiversity.api.course.CoursesApi
+import com.studiversity.api.course.element.CourseElementApi
 import com.studiversity.api.course.topic.CourseTopicApi
 import com.studiversity.api.course.topic.RelatedTopicElements
 import com.studiversity.api.course.topic.model.CreateTopicRequest
 import com.studiversity.api.course.topic.model.UpdateTopicRequest
+import com.studiversity.api.course.work.CourseWorkApi
+import com.studiversity.feature.course.element.CourseWorkType
+import com.studiversity.feature.course.element.model.UpdateCourseElementRequest
 import com.studiversity.feature.course.model.CourseResponse
 import com.studiversity.feature.course.model.CreateCourseRequest
+import com.studiversity.feature.course.work.model.CreateCourseWorkRequest
 import com.studiversity.util.OptionalProperty
 import com.studiversity.util.toUUID
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.koin.core.parameter.parametersOf
 import org.koin.test.inject
+import java.util.*
 
 class CourseTopicsTest : KtorClientTest() {
 
@@ -32,6 +37,8 @@ class CourseTopicsTest : KtorClientTest() {
 
     private val coursesApi: CoursesApi by inject { parametersOf(client) }
     private val courseTopicApi: CourseTopicApi by inject { parametersOf(client) }
+    private val courseWorkApi: CourseWorkApi by inject { parametersOf(teacherClient) }
+    private val courseElementApi: CourseElementApi by inject { parametersOf(teacherClient) }
 
     override fun setup(): Unit = runBlocking {
         course = coursesApi.create(CreateCourseRequest("Test course for submissions")).apply {
@@ -41,9 +48,7 @@ class CourseTopicsTest : KtorClientTest() {
 
     @Test
     fun testAddUpdateRemoveTopic(): Unit = runBlocking {
-        val topic = courseTopicApi.create(course.id, CreateTopicRequest("My Topic")).apply {
-            assertNotNull(get()) { unwrapError().error.toString() }
-        }.unwrap()
+        val topic = createTopic()
 
         assertEquals("My Topic", topic.name)
 
@@ -61,10 +66,111 @@ class CourseTopicsTest : KtorClientTest() {
 
         assertEquals("Updated Topic", updatedTopic.name)
 
-        courseTopicApi.delete(course.id, topic.id, RelatedTopicElements.DELETE).apply {
+        removeTopic(topic.id, RelatedTopicElements.DELETE)
+    }
+
+    @Test
+    fun testClearRemovedTopicOfCourseElements(): Unit = runBlocking {
+        val topic = createTopic()
+
+        val courseWork = courseWorkApi.create(
+            course.id, CreateCourseWorkRequest(
+                name = "Some Assignment",
+                description = null,
+                topicId = topic.id,
+                workType = CourseWorkType.ASSIGNMENT,
+                maxGrade = 5
+            )
+        ).apply {
+            assertNotNull(get()) { unwrapError().error.toString() }
+            assertEquals(topic.id, unwrap().topicId)
+        }.unwrap()
+
+        removeTopic(topic.id, RelatedTopicElements.CLEAR_TOPIC)
+
+        courseWorkApi.getById(course.id, courseWork.id).apply {
+            assertNotNull(get()) { unwrapError().error.toString() }
+            assertNull(unwrap().topicId) { unwrap().toString() }
+        }
+    }
+
+    @Test
+    fun updatedElementOrdersAfterClearRemovedTopic(): Unit = runBlocking {
+        val elemWithoutTopic1 = courseWorkApi.create(
+            course.id, CreateCourseWorkRequest(
+                name = "Some Assignment 1",
+                description = null,
+                topicId = null,
+                workType = CourseWorkType.ASSIGNMENT,
+                maxGrade = 5
+            )
+        ).apply { assertEquals(1, get()?.order) { unwrapError().error.toString() } }.unwrap()
+        val elemWithoutTopic2 = courseWorkApi.create(
+            course.id, CreateCourseWorkRequest(
+                name = "Some Assignment 2",
+                description = null,
+                topicId = null,
+                workType = CourseWorkType.ASSIGNMENT,
+                maxGrade = 5
+            )
+        ).apply { assertEquals(2, get()?.order) { unwrapError().error.toString() } }.unwrap()
+
+        val topic = createTopic()
+
+        // creating element immediately with a topic
+        val elemWithTopic1 = courseWorkApi.create(
+            course.id, CreateCourseWorkRequest(
+                name = "Assignment in topic 1",
+                description = null,
+                topicId = topic.id,
+                workType = CourseWorkType.ASSIGNMENT,
+                maxGrade = 5
+            )
+        ).apply {
+            assertEquals(topic.id, get()?.topicId) { unwrapError().error.toString() }
+            assertEquals(1, get()?.order) { unwrapError().error.toString() }
+        }.unwrap()
+
+        // attach element to topic later
+        val elemWithTopic2 = courseWorkApi.create(
+            course.id, CreateCourseWorkRequest(
+                name = "Assignment in topic 2",
+                description = null,
+                topicId = null,
+                workType = CourseWorkType.ASSIGNMENT,
+                maxGrade = 5
+            )
+        ).apply {
+            assertEquals(null, get()?.topicId) { unwrapError().error.toString() }
+        }.unwrap().let { element ->
+            courseElementApi.update(
+                course.id,
+                element.id,
+                UpdateCourseElementRequest(topicId = OptionalProperty.Present(topic.id))
+            ).apply { assertEquals(get()?.topicId, topic.id) { unwrapError().error.toString() } }
+        }.unwrap()
+
+        removeTopic(topic.id, RelatedTopicElements.CLEAR_TOPIC)
+
+        // Check updated order in two elements
+        courseWorkApi.getById(course.id, elemWithTopic1.id).apply {
+            assertEquals(3, get()?.order)
+        }
+
+        courseWorkApi.getById(course.id, elemWithTopic2.id).apply {
+            assertEquals(4, get()?.order)
+        }
+    }
+
+    private suspend fun removeTopic(topicId: UUID, relatedTopicElements: RelatedTopicElements) {
+        courseTopicApi.delete(course.id, topicId, relatedTopicElements).apply {
             assertNotNull(get()) { unwrapError().error.toString() }
         }
     }
+
+    private suspend fun createTopic() = courseTopicApi.create(course.id, CreateTopicRequest("My Topic")).apply {
+        assertNotNull(get()) { unwrapError().error.toString() }
+    }.unwrap()
 
     override fun cleanup(): Unit = runBlocking {
         coursesApi.setArchive(course.id)

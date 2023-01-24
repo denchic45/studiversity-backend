@@ -4,13 +4,14 @@ import com.github.michaelbull.result.*
 import com.studiversity.KtorClientTest
 import com.studiversity.api.course.CoursesApi
 import com.studiversity.api.course.element.CourseElementApi
-import com.studiversity.api.coursework.CourseWorkApi
+import com.studiversity.api.course.work.CourseWorkApi
 import com.studiversity.api.membership.MembershipsApi
 import com.studiversity.api.submission.SubmissionsApi
 import com.studiversity.feature.course.element.CourseWorkType
 import com.studiversity.feature.course.element.model.*
 import com.studiversity.feature.course.model.CourseResponse
 import com.studiversity.feature.course.model.CreateCourseRequest
+import com.studiversity.feature.course.work.model.CreateCourseWorkRequest
 import com.studiversity.feature.course.work.submission.model.SubmissionResponse
 import com.studiversity.feature.course.work.submission.model.SubmissionState
 import com.studiversity.feature.role.Role
