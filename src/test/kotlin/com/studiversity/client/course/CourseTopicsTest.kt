@@ -28,12 +28,12 @@ import java.util.*
 class CourseTopicsTest : KtorClientTest() {
 
     private val student1Id = "7a98cdcf-d404-4556-96bd-4ce9137c8cbe".toUUID()
-    private val teacher1Id = "4c73fa98-2146-4688-ad05-22887c8d921d".toUUID()
+    private val teacher1Id = "02f00b3e-3a78-4431-87d4-34128ebbb04c".toUUID()
 
     private lateinit var course: CourseResponse
 
     private val studentClient by lazy { createAuthenticatedClient("slavik@gmail.com", "GHBO043g54gh") }
-    private val teacherClient by lazy { createAuthenticatedClient("denchic150@gmail.com", "OBDIhi76534g33") }
+    private val teacherClient by lazy { createAuthenticatedClient("stefan@gmail.com", "FSg54g45dg") }
 
     private val coursesApi: CoursesApi by inject { parametersOf(client) }
     private val courseTopicApi: CourseTopicApi by inject { parametersOf(client) }
