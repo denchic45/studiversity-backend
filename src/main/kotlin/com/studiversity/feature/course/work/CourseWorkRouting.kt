@@ -3,7 +3,7 @@ package com.studiversity.feature.course.work
 import com.studiversity.feature.attachment.receiveAttachment
 import com.studiversity.feature.attachment.respondAttachment
 import com.studiversity.feature.course.element.model.AttachmentHeader
-import com.studiversity.feature.course.element.model.CreateCourseWorkRequest
+import com.studiversity.feature.course.work.model.CreateCourseWorkRequest
 import com.studiversity.feature.course.element.model.CreateFileRequest
 import com.studiversity.feature.course.element.model.CreateLinkRequest
 import com.studiversity.feature.course.element.usecase.*
@@ -57,8 +57,8 @@ private fun Route.courseWorkById() {
                 scopeId = courseId
             )
 
-            val element = findCourseElement(call.parameters.getOrFail("elementId").toUUID())
-            call.respond(HttpStatusCode.OK, element)
+            val workId = findCourseElement(call.parameters.getOrFail("workId").toUUID())
+            call.respond(HttpStatusCode.OK, workId)
         }
         route("/attachments") {
 

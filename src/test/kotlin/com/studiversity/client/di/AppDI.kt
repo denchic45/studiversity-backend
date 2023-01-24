@@ -6,8 +6,8 @@ import com.studiversity.api.course.element.CourseElementApi
 import com.studiversity.api.course.element.CourseElementApiImpl
 import com.studiversity.api.course.topic.CourseTopicApi
 import com.studiversity.api.course.topic.CourseTopicApiImpl
-import com.studiversity.api.coursework.CourseWorkApi
-import com.studiversity.api.coursework.CourseWorkApiImpl
+import com.studiversity.api.course.work.CourseWorkApi
+import com.studiversity.api.course.work.CourseWorkApiImpl
 import com.studiversity.api.membership.MembershipsApi
 import com.studiversity.api.membership.MembershipsApiImpl
 import com.studiversity.api.submission.SubmissionsApi

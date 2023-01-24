@@ -1,10 +1,11 @@
-package com.studiversity.api.coursework
+package com.studiversity.api.course.work
 
 import com.studiversity.api.util.EmptyResponseResult
 import com.studiversity.api.util.ResponseResult
 import com.studiversity.api.util.toAttachmentResult
 import com.studiversity.api.util.toResult
 import com.studiversity.feature.course.element.model.*
+import com.studiversity.feature.course.work.model.CreateCourseWorkRequest
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
@@ -17,6 +18,8 @@ interface CourseWorkApi {
         courseId: UUID,
         createCourseWorkRequest: CreateCourseWorkRequest
     ): ResponseResult<CourseElementResponse>
+
+    suspend fun getById(courseId: UUID, workId: UUID): ResponseResult<CourseElementResponse>
 
     suspend fun getAttachments(
         courseId: UUID,
@@ -57,6 +60,10 @@ class CourseWorkApiImpl(private val client: HttpClient) : CourseWorkApi {
             contentType(ContentType.Application.Json)
             setBody(createCourseWorkRequest)
         }.toResult()
+    }
+
+    override suspend fun getById(courseId: UUID, workId: UUID): ResponseResult<CourseElementResponse> {
+        return client.get("/courses/$courseId/works/$workId").toResult()
     }
 
     override suspend fun getAttachments(
