@@ -5,6 +5,7 @@ import com.studiversity.api.util.ResponseResult
 import com.studiversity.api.util.toResult
 import com.studiversity.feature.course.element.model.CourseElementResponse
 import com.studiversity.feature.course.element.model.UpdateCourseElementRequest
+import com.studiversity.feature.course.element.usecase.SortingCourseElements
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -18,6 +19,11 @@ interface CourseElementApi {
         updateCourseElementRequest: UpdateCourseElementRequest
     ): ResponseResult<CourseElementResponse>
 
+    suspend fun getByCourseId(
+        courseId: UUID,
+        vararg sorting: SortingCourseElements
+    ): ResponseResult<List<CourseElementResponse>>
+
     suspend fun delete(courseId: UUID, elementId: UUID): EmptyResponseResult
 }
 
@@ -30,6 +36,17 @@ class CourseElementApiImpl(private val client: HttpClient) : CourseElementApi {
         return client.patch("/courses/$courseId/elements/$elementId") {
             contentType(ContentType.Application.Json)
             setBody(updateCourseElementRequest)
+        }.toResult()
+    }
+
+    override suspend fun getByCourseId(
+        courseId: UUID,
+        vararg sorting: SortingCourseElements
+    ): ResponseResult<List<CourseElementResponse>> {
+        return client.get("/courses/$courseId/elements") {
+            sorting.forEach {
+                parameter("sort_by", it.toString())
+            }
         }.toResult()
     }
 
