@@ -1,10 +1,7 @@
 package com.studiversity.feature.course.element.repository
 
 import com.studiversity.database.exists
-import com.studiversity.database.table.CourseElementDao
-import com.studiversity.database.table.CourseElementDetailsDao
-import com.studiversity.database.table.CourseElements
-import com.studiversity.database.table.CourseWorkDao
+import com.studiversity.database.table.*
 import com.studiversity.feature.course.element.CourseElementType
 import com.studiversity.feature.course.element.model.CourseElementResponse
 import com.studiversity.feature.course.element.model.UpdateCourseElementRequest
@@ -16,6 +13,7 @@ import com.studiversity.util.toSqlSortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.innerJoin
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.update
 import java.util.*
@@ -109,8 +107,8 @@ class CourseElementRepository {
         sorting?.forEach {
             when (it) {
                 is SortingCourseElements.TopicId -> {
-                    // TODO: add inner join topic table and sort by topic_order
-                    query.orderBy(CourseElements.topicId, it.order.toSqlSortOrder())
+                    query.adjustColumnSet { innerJoin(CourseTopics, { CourseElements.topicId }, { CourseTopics.id }) }
+                        .orderBy(CourseTopics.order, it.order.toSqlSortOrder())
                 }
             }
         }
