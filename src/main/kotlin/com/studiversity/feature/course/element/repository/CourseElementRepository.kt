@@ -2,13 +2,17 @@ package com.studiversity.feature.course.element.repository
 
 import com.studiversity.database.exists
 import com.studiversity.database.table.CourseElementDao
+import com.studiversity.database.table.CourseElementDetailsDao
 import com.studiversity.database.table.CourseElements
 import com.studiversity.database.table.CourseWorkDao
 import com.studiversity.feature.course.element.CourseElementType
 import com.studiversity.feature.course.element.model.CourseElementResponse
 import com.studiversity.feature.course.element.model.UpdateCourseElementRequest
+import com.studiversity.feature.course.element.toCourseElementResponse
 import com.studiversity.feature.course.element.toResponse
+import com.studiversity.feature.course.element.usecase.SortingCourseElements
 import com.studiversity.feature.course.work.model.CreateCourseWorkRequest
+import com.studiversity.util.toSqlSortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
 import org.jetbrains.exposed.sql.and
@@ -42,28 +46,20 @@ class CourseElementRepository {
 
     fun findById(elementId: UUID): CourseElementResponse? {
         return CourseElementDao.findById(elementId)?.run {
-            toResponse(
-                when (type) {
-                    CourseElementType.WORK -> CourseWorkDao.findById(elementId)!!
-                    CourseElementType.MATERIAL -> TODO()
-                }
-            )
+            toResponse(getElementDetailsByIdAndType(elementId, type))
         }
     }
+
 
     fun findCourseIdByElementId(elementId: UUID): UUID? {
         return CourseElementDao.findById(elementId)?.courseId
     }
 
-    fun remove(courseId: UUID, elementId: UUID): Boolean {
-        return CourseElementDao.find(CourseElements.courseId eq courseId and (CourseElements.id eq elementId))
-            .singleOrNull()?.apply {
-                CourseElements.update(where = { CourseElements.order greater this@apply.order }) {
-                    it[order] = order - 1
-                }
-            }
-            ?.delete() != null
-    }
+    fun remove(courseId: UUID, elementId: UUID): Boolean = CourseElementDao
+        .find(CourseElements.courseId eq courseId and (CourseElements.id eq elementId))
+        .singleOrNull()?.apply {
+            decreaseElementOrdersByTopicIdAndGreaterElementOrder(topicId, order)
+        }?.delete() != null
 
     fun findMaxGradeByWorkId(workId: UUID): Short {
         return CourseWorkDao.findById(workId)!!.maxGrade
@@ -85,23 +81,44 @@ class CourseElementRepository {
     ): CourseElementResponse {
         val dao = CourseElementDao.findById(elementId)!!
 
-        CourseElements.update(where = { CourseElements.order greater dao.order }) {
-            it[order] = order - 1
-        }
+        decreaseElementOrdersByTopicIdAndGreaterElementOrder(dao.topicId, dao.order)
 
         updateCourseElementRequest.topicId.ifPresent { topicId ->
             dao.order = generateOrderByCourseAndTopicId(courseId, topicId)
             dao.topicId = topicId
         }
 
-        return dao.toResponse(getElementDetails(dao.type, elementId))
+        return dao.toResponse(getElementDetailsByIdAndType(elementId, dao.type))
     }
 
-    private fun getElementDetails(
-        type: CourseElementType,
-        elementId: UUID
-    ) = when (type) {
-        CourseElementType.WORK -> CourseWorkDao.findById(elementId)!!
-        CourseElementType.MATERIAL -> TODO()
+    private fun decreaseElementOrdersByTopicIdAndGreaterElementOrder(topicId: UUID?, order: Int) {
+        CourseElements.update(where = { CourseElements.topicId eq topicId and (CourseElements.order greater order) }) {
+            it[CourseElements.order] = CourseElements.order - 1
+        }
+    }
+
+    private fun getElementDetailsByIdAndType(elementId: UUID, type: CourseElementType): CourseElementDetailsDao {
+        return when (type) {
+            CourseElementType.WORK -> CourseWorkDao.findById(elementId)!!
+            CourseElementType.MATERIAL -> TODO()
+        }
+    }
+
+    fun findElementsByCourseId(courseId: UUID, sorting: List<SortingCourseElements>?): List<CourseElementResponse> {
+        val query = CourseElements.select(CourseElements.courseId eq courseId)
+        sorting?.forEach {
+            when (it) {
+                is SortingCourseElements.TopicId -> {
+                    // TODO: add inner join topic table and sort by topic_order
+                    query.orderBy(CourseElements.topicId, it.order.toSqlSortOrder())
+                }
+            }
+        }
+        query.orderBy(CourseElements.order)
+        return query.map {
+            it.toCourseElementResponse(
+                getElementDetailsByIdAndType(it[CourseElements.id].value, it[CourseElements.type])
+            )
+        }
     }
 }
