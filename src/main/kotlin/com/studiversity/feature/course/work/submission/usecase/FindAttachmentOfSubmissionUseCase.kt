@@ -1,7 +1,7 @@
 package com.studiversity.feature.course.work.submission.usecase
 
 import com.studiversity.feature.attachment.AttachmentRepository
-import com.studiversity.feature.course.element.model.Attachment
+import com.stuiversity.api.course.element.model.Attachment
 import com.studiversity.transaction.SuspendTransactionWorker
 import io.ktor.server.plugins.*
 import java.util.*

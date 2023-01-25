@@ -1,6 +1,6 @@
 package com.studiversity.feature.membership.usecase
 
-import com.studiversity.feature.membership.model.Member
+import com.stuiversity.api.membership.model.Member
 import com.studiversity.feature.membership.repository.UserMembershipRepository
 import com.studiversity.feature.role.repository.RoleRepository
 import java.util.*

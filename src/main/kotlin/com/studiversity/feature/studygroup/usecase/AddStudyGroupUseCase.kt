@@ -1,7 +1,7 @@
 package com.studiversity.feature.studygroup.usecase
 
 import com.studiversity.Constants
-import com.studiversity.feature.membership.model.CreateMembershipRequest
+import com.stuiversity.api.membership.model.CreateMembershipRequest
 import com.studiversity.feature.membership.repository.MembershipRepository
 import com.studiversity.feature.role.ScopeType
 import com.studiversity.feature.role.repository.ScopeRepository

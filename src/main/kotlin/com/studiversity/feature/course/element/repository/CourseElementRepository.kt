@@ -2,14 +2,14 @@ package com.studiversity.feature.course.element.repository
 
 import com.studiversity.database.exists
 import com.studiversity.database.table.*
-import com.studiversity.feature.course.element.CourseElementType
-import com.studiversity.feature.course.element.model.CourseElementResponse
-import com.studiversity.feature.course.element.model.UpdateCourseElementRequest
 import com.studiversity.feature.course.element.toCourseElementResponse
 import com.studiversity.feature.course.element.toResponse
-import com.studiversity.feature.course.element.usecase.SortingCourseElements
-import com.studiversity.feature.course.work.model.CreateCourseWorkRequest
 import com.studiversity.util.toSqlSortOrder
+import com.stuiversity.api.course.element.model.CourseElementResponse
+import com.stuiversity.api.course.element.model.CourseElementType
+import com.stuiversity.api.course.element.model.SortingCourseElements
+import com.stuiversity.api.course.element.model.UpdateCourseElementRequest
+import com.stuiversity.api.course.work.model.CreateCourseWorkRequest
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
 import org.jetbrains.exposed.sql.and

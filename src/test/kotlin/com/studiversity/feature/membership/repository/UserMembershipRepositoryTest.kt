@@ -3,7 +3,7 @@ package com.studiversity.feature.membership.repository
 import com.studiversity.database.DatabaseFactory
 import com.studiversity.di.coroutineModule
 import com.studiversity.di.supabaseClientModule
-import com.studiversity.feature.role.Role
+import com.stuiversity.api.role.Role
 import com.studiversity.util.toUUID
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.flatMapLatest

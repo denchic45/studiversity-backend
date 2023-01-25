@@ -1,13 +1,13 @@
 package com.studiversity.feature.course.topic
 
-import com.studiversity.api.course.topic.RelatedTopicElements
-import com.studiversity.api.course.topic.model.CreateTopicRequest
-import com.studiversity.api.course.topic.model.TopicResponse
-import com.studiversity.api.course.topic.model.UpdateTopicRequest
 import com.studiversity.database.table.CourseElementDao
 import com.studiversity.database.table.CourseElements
 import com.studiversity.database.table.CourseTopicDao
 import com.studiversity.database.table.CourseTopics
+import com.stuiversity.api.course.topic.RelatedTopicElements
+import com.stuiversity.api.course.topic.model.CreateTopicRequest
+import com.stuiversity.api.course.topic.model.TopicResponse
+import com.stuiversity.api.course.topic.model.UpdateTopicRequest
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.and

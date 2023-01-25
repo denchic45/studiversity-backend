@@ -2,20 +2,21 @@ package com.studiversity.client.course
 
 import com.github.michaelbull.result.*
 import com.studiversity.KtorClientTest
-import com.studiversity.api.course.CoursesApi
-import com.studiversity.api.course.element.CourseElementApi
-import com.studiversity.api.course.work.CourseWorkApi
-import com.studiversity.api.membership.MembershipsApi
-import com.studiversity.api.submission.SubmissionsApi
-import com.studiversity.feature.course.element.CourseWorkType
-import com.studiversity.feature.course.element.model.*
-import com.studiversity.feature.course.model.CourseResponse
-import com.studiversity.feature.course.model.CreateCourseRequest
-import com.studiversity.feature.course.work.model.CreateCourseWorkRequest
-import com.studiversity.feature.course.work.submission.model.SubmissionResponse
-import com.studiversity.feature.course.work.submission.model.SubmissionState
-import com.studiversity.feature.role.Role
+import com.studiversity.util.assertResultSuccess
 import com.studiversity.util.toUUID
+import com.stuiversity.api.course.CoursesApi
+import com.stuiversity.api.course.element.CourseElementApi
+import com.stuiversity.api.course.element.model.*
+import com.stuiversity.api.course.model.CourseResponse
+import com.stuiversity.api.course.model.CreateCourseRequest
+import com.stuiversity.api.course.work.CourseWorkApi
+import com.stuiversity.api.course.work.model.CourseWorkType
+import com.stuiversity.api.course.work.model.CreateCourseWorkRequest
+import com.stuiversity.api.course.work.submission.model.SubmissionResponse
+import com.stuiversity.api.course.work.submission.model.SubmissionState
+import com.stuiversity.api.membership.MembershipsApi
+import com.stuiversity.api.role.Role
+import com.stuiversity.api.submission.SubmissionsApi
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -59,6 +60,7 @@ class SubmissionsTest : KtorClientTest() {
         course = coursesApi.create(CreateCourseRequest("Test course for submissions")).apply {
             assertNotNull(get()) { unwrapError().error.toString() }
         }.unwrap()
+        enrolTeacher(teacher1Id)
     }
 
     override fun cleanup(): Unit = runBlocking {
@@ -89,7 +91,6 @@ class SubmissionsTest : KtorClientTest() {
         // unroll users
         unrollUser(student1Id)
         unrollUser(student2Id)
-        unrollUser(teacher1Id)
     }
 
     private suspend fun enrolStudentsToCourse() {
@@ -106,9 +107,7 @@ class SubmissionsTest : KtorClientTest() {
     }
 
     private suspend fun enrolUser(userId: UUID, roleId: Long) {
-        membershipsApi.joinToScopeManually(userId, course.id, listOf(roleId)).apply {
-            assertNotNull(get()) { unwrapError().error.toString() }
-        }
+        membershipsApi.joinToScopeManually(userId, course.id, listOf(roleId)).also(::assertResultSuccess)
     }
 
     private suspend fun unrollUser(userId: UUID) {
@@ -130,7 +129,7 @@ class SubmissionsTest : KtorClientTest() {
     fun testUpdateStatusToCreatedAfterGettingSubmissionByStudent(): Unit = runBlocking {
         enrolStudentsToCourse()
         val submissions = submissionsApiOfTeacher.getAllByCourseWorkId(course.id, courseWork.id)
-            .onFailure { throw AssertionError("getAllByCourseWorkId should be getting. Status: ${it.code}. Message: ${it.error}") }
+            .also(::assertResultSuccess)
             .unwrap()
             .also { response ->
                 assertEquals(2, response.size)
@@ -166,6 +165,7 @@ class SubmissionsTest : KtorClientTest() {
     fun testGetSubmissionsAfterAddNewStudentToCourse(): Unit = runBlocking {
         enrolStudent(student2Id)
         submissionsApiOfTeacher.getAllByCourseWorkId(course.id, courseWork.id)
+            .also(::assertResultSuccess)
             .unwrap().also { response ->
                 assertEquals(1, response.size)
             }
@@ -198,6 +198,7 @@ class SubmissionsTest : KtorClientTest() {
         enrolStudent(student1Id)
         // get submission by another user (maybe teacher)
         val submission = submissionsApiOfTeacher.getByStudent(course.id, courseWork.id, student1Id)
+            .also(::assertResultSuccess)
             .unwrap().also { response ->
                 assertEquals(SubmissionState.NEW, response.state)
             }
@@ -210,7 +211,6 @@ class SubmissionsTest : KtorClientTest() {
     @Test
     fun testSubmitSubmission(): Unit = runBlocking {
         enrolStudent(student1Id)
-        enrolTeacher(teacher1Id)
         val submission = submissionsApiOfStudent.getByStudent(course.id, courseWork.id, student1Id).unwrap()
 
         submissionsApiOfTeacher.uploadFileToSubmission(
@@ -239,7 +239,6 @@ class SubmissionsTest : KtorClientTest() {
     @Test
     fun testGradeSubmission(): Unit = runBlocking {
         enrolStudent(student1Id)
-        enrolTeacher(teacher1Id)
         val submission = submissionsApiOfStudent.getByStudent(course.id, courseWork.id, student1Id).unwrap()
 
         submissionsApiOfStudent.addLinkToSubmission(

@@ -2,8 +2,8 @@ package com.studiversity.feature.course.work.submission
 
 import com.studiversity.database.exists
 import com.studiversity.database.table.*
-import com.studiversity.feature.course.element.CourseWorkType
-import com.studiversity.feature.course.work.submission.model.*
+import com.stuiversity.api.course.work.model.CourseWorkType
+import com.stuiversity.api.course.work.submission.model.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

@@ -1,6 +1,6 @@
 package com.studiversity.supabase.model
 
-import com.studiversity.ktor.UUIDSerializer
+import com.stuiversity.util.UUIDSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.*

@@ -3,8 +3,8 @@ package com.studiversity.feature.course.subject
 import com.studiversity.database.table.CourseDao
 import com.studiversity.database.table.Courses
 import com.studiversity.database.table.SubjectDao
-import com.studiversity.feature.course.subject.model.CreateSubjectRequest
-import com.studiversity.feature.course.subject.model.UpdateSubjectRequest
+import com.stuiversity.api.course.subject.model.CreateSubjectRequest
+import com.stuiversity.api.course.subject.model.UpdateSubjectRequest
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*

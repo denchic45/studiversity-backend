@@ -4,7 +4,7 @@ import com.studiversity.database.exists
 import com.studiversity.database.table.*
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.Permission
-import com.studiversity.feature.role.Role
+import com.stuiversity.api.role.Role
 import com.studiversity.feature.role.combinedPermission
 import com.studiversity.feature.role.mapper.toUserRolesResponse
 import com.studiversity.feature.role.mapper.toUsersWithRoles

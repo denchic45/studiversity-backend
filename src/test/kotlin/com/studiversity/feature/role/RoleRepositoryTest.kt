@@ -2,6 +2,7 @@ package com.studiversity.feature.role
 
 import com.studiversity.database.DatabaseFactory
 import com.studiversity.feature.role.repository.RoleRepository
+import com.stuiversity.api.role.Role
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.koin.core.context.GlobalContext.startKoin

@@ -1,7 +1,7 @@
 package com.studiversity.feature.membership
 
 import com.studiversity.Constants
-import com.studiversity.feature.membership.model.ManualJoinMemberRequest
+import com.stuiversity.api.membership.model.ManualJoinMemberRequest
 import com.studiversity.feature.membership.usecase.FindMembershipByScopeUseCase
 import com.studiversity.feature.membership.usecase.RemoveMemberFromScopeUseCase
 import com.studiversity.feature.membership.usecase.RemoveSelfMemberFromScopeUseCase

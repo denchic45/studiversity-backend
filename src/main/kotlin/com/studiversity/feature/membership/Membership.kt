@@ -1,11 +1,11 @@
 package com.studiversity.feature.membership
 
-import com.studiversity.feature.membership.model.ManualJoinMemberRequest
-import com.studiversity.feature.membership.model.Member
-import com.studiversity.feature.membership.model.ScopeMember
+import com.stuiversity.api.membership.model.ManualJoinMemberRequest
+import com.stuiversity.api.membership.model.Member
+import com.stuiversity.api.membership.model.ScopeMember
 import com.studiversity.feature.membership.repository.MembershipRepository
 import com.studiversity.feature.membership.repository.UserMembershipRepository
-import com.studiversity.feature.role.Role
+import com.stuiversity.api.role.Role
 import com.studiversity.feature.role.repository.RoleRepository
 import com.studiversity.logger.logger
 import com.studiversity.transaction.TransactionWorker

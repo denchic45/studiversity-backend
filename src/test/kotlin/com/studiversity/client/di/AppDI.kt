@@ -1,17 +1,17 @@
 package com.studiversity.client.di
 
-import com.studiversity.api.course.CoursesApi
-import com.studiversity.api.course.CoursesApiImpl
-import com.studiversity.api.course.element.CourseElementApi
-import com.studiversity.api.course.element.CourseElementApiImpl
-import com.studiversity.api.course.topic.CourseTopicApi
-import com.studiversity.api.course.topic.CourseTopicApiImpl
-import com.studiversity.api.course.work.CourseWorkApi
-import com.studiversity.api.course.work.CourseWorkApiImpl
-import com.studiversity.api.membership.MembershipsApi
-import com.studiversity.api.membership.MembershipsApiImpl
-import com.studiversity.api.submission.SubmissionsApi
-import com.studiversity.api.submission.SubmissionsApiImpl
+import com.stuiversity.api.course.CoursesApi
+import com.stuiversity.api.course.CoursesApiImpl
+import com.stuiversity.api.course.element.CourseElementApi
+import com.stuiversity.api.course.element.CourseElementApiImpl
+import com.stuiversity.api.course.topic.CourseTopicApi
+import com.stuiversity.api.course.topic.CourseTopicApiImpl
+import com.stuiversity.api.course.work.CourseWorkApi
+import com.stuiversity.api.course.work.CourseWorkApiImpl
+import com.stuiversity.api.membership.MembershipsApi
+import com.stuiversity.api.membership.MembershipsApiImpl
+import com.stuiversity.api.submission.SubmissionsApi
+import com.stuiversity.api.submission.SubmissionsApiImpl
 import org.koin.dsl.module
 
 val apiModule = module {

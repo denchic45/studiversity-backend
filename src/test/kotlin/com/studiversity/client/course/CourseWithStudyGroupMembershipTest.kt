@@ -1,15 +1,15 @@
 package com.studiversity.client.course
 
 import com.studiversity.KtorClientTest
-import com.studiversity.feature.course.model.CourseResponse
-import com.studiversity.feature.course.model.CreateCourseRequest
-import com.studiversity.feature.membership.model.ManualJoinMemberRequest
-import com.studiversity.feature.membership.model.ScopeMember
-import com.studiversity.feature.role.Role
 import com.studiversity.feature.studygroup.model.AcademicYear
 import com.studiversity.feature.studygroup.model.CreateStudyGroupRequest
 import com.studiversity.feature.studygroup.model.StudyGroupResponse
 import com.studiversity.util.toUUID
+import com.stuiversity.api.course.model.CourseResponse
+import com.stuiversity.api.course.model.CreateCourseRequest
+import com.stuiversity.api.membership.model.ManualJoinMemberRequest
+import com.stuiversity.api.membership.model.ScopeMember
+import com.stuiversity.api.role.Role
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -98,7 +98,7 @@ class CourseWithStudyGroupMembershipTest : KtorClientTest() {
         client.delete("/courses/${course.id}/studygroups/${studyGroup1.id}")
 
         syncMembership(course.id)
-        delay(10000)
+        delay(12000)
 
         client.get("/scopes/${course.id}/members").body<List<ScopeMember>>().apply {
             assertEquals(listOf(user1Id), map(ScopeMember::userId))
@@ -108,7 +108,7 @@ class CourseWithStudyGroupMembershipTest : KtorClientTest() {
         client.delete("/courses/${course.id}/studygroups/${studyGroup2.id}")
 
         syncMembership(course.id)
-        delay(10000)
+        delay(12000)
 
         client.get("/scopes/${course.id}/members").body<List<ScopeMember>>().apply {
             assertEquals(emptyList(), map(ScopeMember::userId))
@@ -135,7 +135,7 @@ class CourseWithStudyGroupMembershipTest : KtorClientTest() {
         }
 
         // delete first user from first group
-        client.delete("/scopes/${studyGroup1.id}/members/$user1Id")
+        client.delete("/scopes/${studyGroup1.id}/members/$user1Id") { parameter("action", "manual") }
 
         syncMembership(course.id)
         delay(12000)
@@ -150,7 +150,7 @@ class CourseWithStudyGroupMembershipTest : KtorClientTest() {
         }
 
         // delete second user from first group
-        client.delete("/scopes/${studyGroup1.id}/members/$user2Id")
+        client.delete("/scopes/${studyGroup1.id}/members/$user2Id") { parameter("action", "manual") }
 
         syncMembership(course.id)
         delay(10000)
@@ -165,7 +165,7 @@ class CourseWithStudyGroupMembershipTest : KtorClientTest() {
         }
 
         // delete first user from second group
-        client.delete("/scopes/${studyGroup2.id}/members/$user1Id")
+        client.delete("/scopes/${studyGroup2.id}/members/$user1Id")  { parameter("action", "manual") }
         syncMembership(course.id)
         delay(10000)
 

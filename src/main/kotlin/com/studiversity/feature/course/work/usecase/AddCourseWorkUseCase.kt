@@ -1,11 +1,11 @@
 package com.studiversity.feature.course.work.usecase
 
-import com.studiversity.feature.course.work.model.CreateCourseWorkRequest
 import com.studiversity.feature.course.element.repository.CourseElementRepository
 import com.studiversity.feature.course.work.submission.SubmissionRepository
 import com.studiversity.feature.membership.repository.UserMembershipRepository
-import com.studiversity.feature.role.Role
 import com.studiversity.transaction.TransactionWorker
+import com.stuiversity.api.course.work.model.CreateCourseWorkRequest
+import com.stuiversity.api.role.Role
 import java.util.*
 
 class AddCourseWorkUseCase(

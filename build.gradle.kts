@@ -78,7 +78,6 @@ dependencies {
     // Ktor server
     implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
@@ -91,6 +90,8 @@ dependencies {
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-client-auth:$ktorVersion")
+
+    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktorVersion")
 
     // Exposed
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
@@ -114,7 +115,9 @@ dependencies {
     // kotlin-logging
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.4")
 
+    // kotlin-result
     implementation("com.michael-bull.kotlin-result:kotlin-result:1.1.16")
+    implementation(project(mapOf("path" to ":api")))
 
     testImplementation("io.insert-koin", "koin-test-junit5", koinVersion) {
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-test-junit")
@@ -125,5 +128,6 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
+//    testImplementation(project(mapOf("path" to ":api")))
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
 }

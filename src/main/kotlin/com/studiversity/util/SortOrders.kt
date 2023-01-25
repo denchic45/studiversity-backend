@@ -1,6 +1,7 @@
 package com.studiversity.util
 
-import com.studiversity.feature.course.element.usecase.SortOrder
+import com.stuiversity.api.util.SortOrder
+
 
 fun SortOrder.toSqlSortOrder() = when (this) {
     SortOrder.ASC -> org.jetbrains.exposed.sql.SortOrder.ASC

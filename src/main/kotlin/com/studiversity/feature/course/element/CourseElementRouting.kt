@@ -7,6 +7,7 @@ import com.studiversity.ktor.claimId
 import com.studiversity.ktor.currentUserId
 import com.studiversity.ktor.getUuid
 import com.studiversity.ktor.jwtPrincipal
+import com.stuiversity.api.course.element.model.SortingCourseElements
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*

@@ -1,9 +1,9 @@
 package com.studiversity.feature.attachment
 
-import com.studiversity.feature.course.element.model.AttachmentRequest
-import com.studiversity.feature.course.element.model.CreateFileRequest
-import com.studiversity.feature.course.element.model.CreateLinkRequest
-import com.studiversity.feature.course.work.submission.model.SubmissionErrors
+import com.stuiversity.api.course.element.model.AttachmentRequest
+import com.stuiversity.api.course.element.model.CreateFileRequest
+import com.stuiversity.api.course.element.model.CreateLinkRequest
+import com.stuiversity.api.course.work.submission.model.SubmissionErrors
 import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*

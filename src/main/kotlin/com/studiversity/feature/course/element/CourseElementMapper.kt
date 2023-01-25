@@ -4,9 +4,9 @@ import com.studiversity.database.table.CourseElementDao
 import com.studiversity.database.table.CourseElementDetailsDao
 import com.studiversity.database.table.CourseElements
 import com.studiversity.database.table.CourseWorkDao
-import com.studiversity.feature.course.element.model.CourseElementDetails
-import com.studiversity.feature.course.element.model.CourseElementResponse
-import com.studiversity.feature.course.element.model.CourseWork
+import com.stuiversity.api.course.element.model.CourseElementDetails
+import com.stuiversity.api.course.element.model.CourseElementResponse
+import com.stuiversity.api.course.element.model.CourseWork
 import org.jetbrains.exposed.sql.ResultRow
 
 fun CourseElementDao.toResponse(detailsDao: CourseElementDetailsDao): CourseElementResponse = toResponse(

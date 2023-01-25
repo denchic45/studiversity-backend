@@ -2,8 +2,6 @@ package com.studiversity.feature.course
 
 import com.studiversity.Constants
 import com.studiversity.feature.course.element.courseElementRoutes
-import com.studiversity.feature.course.model.CreateCourseRequest
-import com.studiversity.feature.course.model.UpdateCourseRequest
 import com.studiversity.feature.course.topic.courseTopicsRoutes
 import com.studiversity.feature.course.usecase.*
 import com.studiversity.feature.course.work.courseWorksRoutes
@@ -14,6 +12,8 @@ import com.studiversity.ktor.jwtPrincipal
 import com.studiversity.util.onlyDigits
 import com.studiversity.util.toUUID
 import com.studiversity.validation.buildValidationResult
+import com.stuiversity.api.course.model.CreateCourseRequest
+import com.stuiversity.api.course.model.UpdateCourseRequest
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*

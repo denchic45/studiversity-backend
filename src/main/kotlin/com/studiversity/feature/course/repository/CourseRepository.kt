@@ -2,11 +2,11 @@ package com.studiversity.feature.course.repository
 
 import com.studiversity.database.exists
 import com.studiversity.database.table.*
-import com.studiversity.feature.course.model.CourseResponse
-import com.studiversity.feature.course.model.CreateCourseRequest
-import com.studiversity.feature.course.model.UpdateCourseRequest
 import com.studiversity.feature.course.toResponse
 import com.studiversity.supabase.deleteRecursive
+import com.stuiversity.api.course.model.CourseResponse
+import com.stuiversity.api.course.model.CreateCourseRequest
+import com.stuiversity.api.course.model.UpdateCourseRequest
 import io.github.jan.supabase.storage.BucketApi
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq

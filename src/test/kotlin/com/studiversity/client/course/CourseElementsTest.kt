@@ -2,21 +2,20 @@ package com.studiversity.client.course
 
 import com.github.michaelbull.result.*
 import com.studiversity.KtorClientTest
-import com.studiversity.api.course.CoursesApi
-import com.studiversity.api.course.element.CourseElementApi
-import com.studiversity.api.course.topic.CourseTopicApi
-import com.studiversity.api.course.work.CourseWorkApi
-import com.studiversity.api.membership.MembershipsApi
-import com.studiversity.feature.course.element.CourseWorkType
-import com.studiversity.feature.course.element.model.*
-import com.studiversity.feature.course.element.usecase.SortOrder
-import com.studiversity.feature.course.element.usecase.SortingCourseElements
-import com.studiversity.feature.course.model.CourseResponse
-import com.studiversity.feature.course.model.CreateCourseRequest
-import com.studiversity.feature.course.work.model.CreateCourseWorkRequest
-import com.studiversity.feature.role.Role
 import com.studiversity.util.assertResultSuccess
 import com.studiversity.util.toUUID
+import com.stuiversity.api.course.CoursesApi
+import com.stuiversity.api.course.element.CourseElementApi
+import com.stuiversity.api.course.element.model.*
+import com.stuiversity.api.course.model.CourseResponse
+import com.stuiversity.api.course.model.CreateCourseRequest
+import com.stuiversity.api.course.topic.CourseTopicApi
+import com.stuiversity.api.course.work.CourseWorkApi
+import com.stuiversity.api.course.work.model.CourseWorkType
+import com.stuiversity.api.course.work.model.CreateCourseWorkRequest
+import com.stuiversity.api.membership.MembershipsApi
+import com.stuiversity.api.role.Role
+import com.stuiversity.api.util.SortOrder
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -81,20 +80,16 @@ class CourseElementsTest : KtorClientTest() {
                 workType = CourseWorkType.ASSIGNMENT,
                 maxGrade = 5
             )
-        ).apply {
-            assertNotNull(get()) { "Message is here: " + unwrapError().error.toString() }
-        }.unwrap()
+        ).also(::assertResultSuccess).unwrap()
     }
 
     @AfterEach
     fun tearDown(): Unit = runBlocking {
         // delete course element
-        courseElementApi.delete(course.id, courseWork.id)
-            .apply { assertNotNull(get()) { unwrapError().toString() } }
+        courseElementApi.delete(course.id, courseWork.id).also(::assertResultSuccess)
         // unroll users
         unrollUser(student1Id)
         unrollUser(student2Id)
-        unrollUser(teacher1Id)
     }
 
     private suspend fun enrolStudent(userId: UUID) {

@@ -1,6 +1,6 @@
 package com.studiversity.feature.course.element.model2
 
-import com.studiversity.ktor.UUIDSerializer
+import com.stuiversity.util.UUIDSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
 

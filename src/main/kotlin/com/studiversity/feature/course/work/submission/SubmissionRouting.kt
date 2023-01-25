@@ -2,17 +2,17 @@ package com.studiversity.feature.course.work.submission
 
 import com.studiversity.feature.attachment.receiveAttachment
 import com.studiversity.feature.attachment.respondAttachment
-import com.studiversity.feature.course.element.model.AttachmentHeader
-import com.studiversity.feature.course.element.model.CreateFileRequest
-import com.studiversity.feature.course.element.model.CreateLinkRequest
-import com.studiversity.feature.course.work.submission.model.GradeRequest
-import com.studiversity.feature.course.work.submission.model.SubmissionGrade
+import com.stuiversity.api.course.element.model.AttachmentHeader
+import com.stuiversity.api.course.work.submission.model.GradeRequest
+import com.stuiversity.api.course.work.submission.model.SubmissionGrade
 import com.studiversity.feature.course.work.submission.usecase.*
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.ktor.claimId
 import com.studiversity.ktor.getUuid
 import com.studiversity.ktor.jwtPrincipal
+import com.stuiversity.api.course.element.model.CreateFileRequest
+import com.stuiversity.api.course.element.model.CreateLinkRequest
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*

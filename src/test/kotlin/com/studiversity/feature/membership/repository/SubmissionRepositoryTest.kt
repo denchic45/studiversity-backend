@@ -5,7 +5,7 @@ import com.studiversity.di.coroutineModule
 import com.studiversity.di.supabaseClientModule
 import com.studiversity.feature.course.work.submission.SubmissionRepository
 import com.studiversity.feature.course.work.submission.courseSubmissionModule
-import com.studiversity.feature.role.Role
+import com.stuiversity.api.role.Role
 import com.studiversity.util.toUUID
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.BeforeAll

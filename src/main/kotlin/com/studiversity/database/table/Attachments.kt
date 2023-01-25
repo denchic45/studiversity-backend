@@ -1,8 +1,9 @@
 package com.studiversity.database.table
 
-import com.studiversity.feature.course.element.model.AttachmentOwner
-import com.studiversity.feature.course.element.model.AttachmentType
+
 import com.studiversity.util.varcharMax
+import com.stuiversity.api.course.element.model.AttachmentOwner
+import com.stuiversity.api.course.element.model.AttachmentType
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

@@ -2,10 +2,6 @@ package com.studiversity.feature.course.work
 
 import com.studiversity.feature.attachment.receiveAttachment
 import com.studiversity.feature.attachment.respondAttachment
-import com.studiversity.feature.course.element.model.AttachmentHeader
-import com.studiversity.feature.course.work.model.CreateCourseWorkRequest
-import com.studiversity.feature.course.element.model.CreateFileRequest
-import com.studiversity.feature.course.element.model.CreateLinkRequest
 import com.studiversity.feature.course.element.usecase.*
 import com.studiversity.feature.course.work.submission.workSubmissionRoutes
 import com.studiversity.feature.course.work.usecase.AddCourseWorkUseCase
@@ -15,6 +11,10 @@ import com.studiversity.ktor.claimId
 import com.studiversity.ktor.getUuid
 import com.studiversity.ktor.jwtPrincipal
 import com.studiversity.util.toUUID
+import com.stuiversity.api.course.element.model.AttachmentHeader
+import com.stuiversity.api.course.element.model.CreateFileRequest
+import com.stuiversity.api.course.element.model.CreateLinkRequest
+import com.stuiversity.api.course.work.model.CreateCourseWorkRequest
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*

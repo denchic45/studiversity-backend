@@ -2,10 +2,10 @@ package com.studiversity.plugin
 
 import com.studiversity.ktor.ConflictException
 import com.studiversity.ktor.ForbiddenException
-import com.studiversity.model.ErrorInfo
-import com.studiversity.model.respondWithError
-import com.studiversity.model.respondWithErrors
-import com.studiversity.model.toErrors
+import com.studiversity.util.respondWithError
+import com.studiversity.util.respondWithErrors
+import com.stuiversity.util.ErrorInfo
+import com.stuiversity.util.toErrors
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*

@@ -1,11 +1,11 @@
 package com.studiversity.feature.course.topic
 
-import com.studiversity.api.course.topic.RelatedTopicElements
 import com.studiversity.feature.course.topic.usecase.*
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.ktor.currentUserId
 import com.studiversity.ktor.getUuid
+import com.stuiversity.api.course.topic.RelatedTopicElements
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*

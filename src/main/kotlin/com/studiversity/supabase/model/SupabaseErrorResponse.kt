@@ -1,10 +1,10 @@
 package com.studiversity.supabase.model
 
 import com.studiversity.feature.auth.AuthErrors
-import com.studiversity.model.ErrorInfo
-import com.studiversity.model.ErrorResponse
-import com.studiversity.model.respondWithError
 import com.studiversity.util.bodyOrNull
+import com.studiversity.util.respondWithError
+import com.stuiversity.util.ErrorInfo
+import com.stuiversity.util.ErrorResponse
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*

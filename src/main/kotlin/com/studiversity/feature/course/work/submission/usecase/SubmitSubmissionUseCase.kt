@@ -1,7 +1,7 @@
 package com.studiversity.feature.course.work.submission.usecase
 
 import com.studiversity.feature.course.work.submission.SubmissionRepository
-import com.studiversity.feature.course.work.submission.model.SubmissionState
+import com.stuiversity.api.course.work.submission.model.SubmissionState
 import com.studiversity.transaction.TransactionWorker
 import io.ktor.server.plugins.*
 import java.util.*
