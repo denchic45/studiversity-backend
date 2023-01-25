@@ -84,7 +84,7 @@ class CourseTopicsTest : KtorClientTest() {
 
     @Test
     fun testAddUpdateRemoveTopic(): Unit = runBlocking {
-        val topic = createTopic()
+        val topic = courseTopicApi.createTopic(course.id)
 
         assertEquals("My Topic", topic.name)
 
@@ -107,7 +107,7 @@ class CourseTopicsTest : KtorClientTest() {
 
     @Test
     fun testClearRemovedTopicOfCourseElements(): Unit = runBlocking {
-        val topic = createTopic()
+        val topic = courseTopicApi.createTopic(course.id)
 
         val courseWork = courseWorkApi.create(
             course.id, CreateCourseWorkRequest(
@@ -151,7 +151,7 @@ class CourseTopicsTest : KtorClientTest() {
             )
         ).apply { assertEquals(2, get()?.order) { unwrapError().error.toString() } }.unwrap()
 
-        val topic = createTopic()
+        val topic = courseTopicApi.createTopic(course.id)
 
         // creating element immediately with a topic
         val elemWithTopic1 = courseWorkApi.create(
@@ -209,7 +209,7 @@ class CourseTopicsTest : KtorClientTest() {
                 maxGrade = 5
             )
         ).unwrap()
-        val topic = createTopic()
+        val topic = courseTopicApi.createTopic(course.id)
         courseElementApi.update(
             course.id, element.id,
             UpdateCourseElementRequest(OptionalProperty.Present(topic.id))
@@ -227,43 +227,50 @@ class CourseTopicsTest : KtorClientTest() {
     }
 
     //TODO finish the test
-//    @Test
-//    fun testUpdateOrderOnMoveBetweenTopics(): Unit = runBlocking {
-//        val topic1 = createTopic("Topic 1")
-//        val topic2 = createTopic("Topic 2")
-//
-//        val firstElements = List(5) {
-//            courseWorkApi.create(
-//                course.id, CreateCourseWorkRequest(
-//                    name = "Assignment $it in topic 1",
-//                    description = null,
-//                    topicId = topic1.id,
-//                    workType = CourseWorkType.ASSIGNMENT,
-//                    maxGrade = 5
-//                )
-//            )
-//        }
-//        val secondElements = List(5) {
-//            courseWorkApi.create(
-//                course.id, CreateCourseWorkRequest(
-//                    name = "Assignment $it in topic 2",
-//                    description = null,
-//                    topicId = topic2.id,
-//                    workType = CourseWorkType.ASSIGNMENT,
-//                    maxGrade = 5
-//                )
-//            )
-//        }
-//    }
+    @Test
+    fun testUpdateOrderOnMoveBetweenTopics(): Unit = runBlocking {
+        val topic1 = courseTopicApi.createTopic(course.id,"Topic 1")
+        val topic2 = courseTopicApi.createTopic(course.id,"Topic 2")
+
+        val firstElements = List(5) {
+            courseWorkApi.create(
+                course.id, CreateCourseWorkRequest(
+                    name = "Assignment $it in topic 1",
+                    description = null,
+                    topicId = topic1.id,
+                    workType = CourseWorkType.ASSIGNMENT,
+                    maxGrade = 5
+                )
+            ).unwrap()
+        }
+        val secondElements = List(5) {
+            courseWorkApi.create(
+                course.id, CreateCourseWorkRequest(
+                    name = "Assignment $it in topic 2",
+                    description = null,
+                    topicId = topic2.id,
+                    workType = CourseWorkType.ASSIGNMENT,
+                    maxGrade = 5
+                )
+            ).unwrap()
+        }
+
+        val updatedElement = courseElementApi.update(
+            course.id, firstElements[2].id, UpdateCourseElementRequest(OptionalProperty.Present(topic2.id))
+        ).unwrap().apply {
+            assertEquals(topic2.id, this.topicId)
+            assertEquals(6, this.order)
+        }
+    }
 
     private suspend fun removeTopic(topicId: UUID, relatedTopicElements: RelatedTopicElements) {
         courseTopicApi.delete(course.id, topicId, relatedTopicElements).apply {
             assertNotNull(get()) { unwrapError().error.toString() }
         }
     }
-
-    private suspend fun createTopic(name: String = "My Topic") =
-        courseTopicApi.create(course.id, CreateTopicRequest(name)).apply {
-            assertNotNull(get()) { unwrapError().error.toString() }
-        }.unwrap()
 }
+
+suspend fun CourseTopicApi.createTopic(courseId: UUID, name: String = "My Topic") =
+    create(courseId, CreateTopicRequest(name)).apply {
+        assertNotNull(get()) { unwrapError().error.toString() }
+    }.unwrap()

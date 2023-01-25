@@ -4,14 +4,18 @@ import com.github.michaelbull.result.*
 import com.studiversity.KtorClientTest
 import com.studiversity.api.course.CoursesApi
 import com.studiversity.api.course.element.CourseElementApi
+import com.studiversity.api.course.topic.CourseTopicApi
 import com.studiversity.api.course.work.CourseWorkApi
 import com.studiversity.api.membership.MembershipsApi
 import com.studiversity.feature.course.element.CourseWorkType
 import com.studiversity.feature.course.element.model.*
+import com.studiversity.feature.course.element.usecase.SortOrder
+import com.studiversity.feature.course.element.usecase.SortingCourseElements
 import com.studiversity.feature.course.model.CourseResponse
 import com.studiversity.feature.course.model.CreateCourseRequest
 import com.studiversity.feature.course.work.model.CreateCourseWorkRequest
 import com.studiversity.feature.role.Role
+import com.studiversity.util.assertResultSuccess
 import com.studiversity.util.toUUID
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
@@ -44,6 +48,8 @@ class CourseElementsTest : KtorClientTest() {
 
     private val coursesApi: CoursesApi by inject { parametersOf(client) }
     private val courseElementApi: CourseElementApi by inject { parametersOf(client) }
+    private val courseTopicApi: CourseTopicApi by inject { parametersOf(teacherClient) }
+    private val courseWorkApi: CourseWorkApi by inject { parametersOf(teacherClient) }
     private val courseWorkApiOfTeacher: CourseWorkApi by inject { parametersOf(teacherClient) }
     private val courseWorkApiOfStudent: CourseWorkApi by inject { parametersOf(studentClient) }
     private val membershipsApi: MembershipsApi by inject { parametersOf(client) }
@@ -52,9 +58,8 @@ class CourseElementsTest : KtorClientTest() {
     private lateinit var courseWork: CourseElementResponse
 
     override fun setup(): Unit = runBlocking {
-        course = coursesApi.create(CreateCourseRequest("Test course for submissions")).apply {
-            assertNotNull(get()) { unwrapError().error.toString() }
-        }.unwrap()
+        course = coursesApi.create(CreateCourseRequest("Test course for submissions"))
+            .apply { assertResultSuccess(this) }.unwrap()
         enrolTeacher(teacher1Id)
     }
 
@@ -102,7 +107,7 @@ class CourseElementsTest : KtorClientTest() {
 
     private suspend fun enrolUser(userId: UUID, roleId: Long) {
         membershipsApi.joinToScopeManually(userId, course.id, listOf(roleId)).apply {
-            assertNotNull(get()) { unwrapError().error.toString() }
+            assertResultSuccess(this)
         }
     }
 
@@ -112,6 +117,72 @@ class CourseElementsTest : KtorClientTest() {
             .onFailure { println("Failed unroll user: $userId. Status: ${it.code}. Body: ${it.error}") }
     }
 
+    @Test
+    fun testGetElementsByCourse(): Unit = runBlocking {
+        repeat(3) {
+            courseWorkApi.create(
+                course.id, CreateCourseWorkRequest(
+                    name = "Assignment №$it",
+                    description = null,
+                    topicId = null,
+                    workType = CourseWorkType.ASSIGNMENT,
+                    maxGrade = 5
+                )
+            ).unwrap()
+        }
+        courseElementApi.getByCourseId(course.id)
+            .apply { assertResultSuccess(this) }
+            .unwrap()
+            .apply {
+                forEachIndexed { index, response ->
+                    assertEquals(index, response.order - 1)
+                }
+            }
+    }
+
+    @Test
+    fun testGetElementsByCourseAndSortingByTopic(): Unit = runBlocking {
+        val topic1 = courseTopicApi.createTopic(course.id)
+        repeat(3) {
+            courseWorkApi.create(
+                course.id, CreateCourseWorkRequest(
+                    name = "Assignment №$it",
+                    description = null,
+                    topicId = topic1.id,
+                    workType = CourseWorkType.ASSIGNMENT,
+                    maxGrade = 5
+                )
+            ).unwrap()
+        }
+        val topic2 = courseTopicApi.createTopic(course.id)
+        repeat(3) {
+            courseWorkApi.create(
+                course.id, CreateCourseWorkRequest(
+                    name = "Assignment №$it",
+                    description = null,
+                    topicId = topic2.id,
+                    workType = CourseWorkType.ASSIGNMENT,
+                    maxGrade = 5
+                )
+            ).unwrap()
+        }
+
+        // sort by topic asc
+        courseElementApi.getByCourseId(course.id, SortingCourseElements.TopicId())
+            .apply { assertResultSuccess(this) }
+            .unwrap()
+            .map { it.topicId }
+            .distinctBy { it }
+            .apply { assertEquals(listOf(topic1.id, topic2.id), this) }
+
+        // sort by topic desc
+        courseElementApi.getByCourseId(course.id, SortingCourseElements.TopicId(SortOrder.DESC))
+            .apply { assertResultSuccess(this) }
+            .unwrap()
+            .map { it.topicId }
+            .distinctBy { it }
+            .apply { assertEquals(listOf(topic2.id, topic1.id), this) }
+    }
 
     @Test
     fun testAddRemoveAttachment(): Unit = runBlocking {
