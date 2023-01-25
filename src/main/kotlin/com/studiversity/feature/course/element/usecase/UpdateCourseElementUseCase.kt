@@ -1,5 +1,6 @@
 package com.studiversity.feature.course.element.usecase
 
+import com.studiversity.feature.course.element.model.CourseElementResponse
 import com.studiversity.feature.course.element.model.UpdateCourseElementRequest
 import com.studiversity.feature.course.element.repository.CourseElementRepository
 import com.studiversity.transaction.TransactionWorker
@@ -10,9 +11,14 @@ class UpdateCourseElementUseCase(
     private val transactionWorker: TransactionWorker,
     private val courseElementRepository: CourseElementRepository
 ) {
-    operator fun invoke(courseId: UUID, elementId: UUID, updateCourseElementRequest: UpdateCourseElementRequest) =
-        transactionWorker {
+    operator fun invoke(
+        courseId: UUID,
+        elementId: UUID,
+        updateCourseElementRequest: UpdateCourseElementRequest
+    ): CourseElementResponse {
+        return transactionWorker {
             if (!courseElementRepository.exist(courseId, elementId)) throw NotFoundException()
             courseElementRepository.update(courseId, elementId, updateCourseElementRequest)
         }
+    }
 }
