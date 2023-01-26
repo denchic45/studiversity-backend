@@ -6,12 +6,12 @@ import kotlinx.serialization.Serializable
 import java.util.*
 
 @Serializable
-data class SignupResponse(
+data class SignupGoTrueResponse(
     @SerialName("access_token") val accessToken: String,
     @SerialName("token_type") val tokenType: String,
     @SerialName("expires_in") val expiresIn: Int,
     @SerialName("refresh_token") val refreshToken: String,
-    val user: User
+    val userGoTrue: UserGoTrue
 )
 
 @Serializable
@@ -42,7 +42,7 @@ data class Identities(
 
 
 @Serializable
-data class User(
+data class UserGoTrue(
     @SerialName("id") @Serializable(with = UUIDSerializer::class) val id: UUID,
     @SerialName("aud") val aud: String,
     @SerialName("role") val role: String,

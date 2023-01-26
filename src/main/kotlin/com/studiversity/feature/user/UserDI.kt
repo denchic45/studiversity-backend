@@ -7,7 +7,7 @@ private val useCaseModule = module {
 }
 
 private val repositoryModule = module {
-    single { UserRepository() }
+    single { UserRepository(get()) }
 }
 
 val userModule = module {

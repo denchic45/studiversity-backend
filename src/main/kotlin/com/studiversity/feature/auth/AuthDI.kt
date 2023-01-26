@@ -11,6 +11,7 @@ import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
 val authModule = module {
+
     single {
         HttpClient(CIO) {
             defaultRequest {

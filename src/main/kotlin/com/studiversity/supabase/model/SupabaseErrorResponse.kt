@@ -24,13 +24,17 @@ data class SupabaseError2Response(
 private const val SUPABASE_ERROR = "SUPABASE_ERROR"
 
 suspend fun ApplicationCall.respondWithSupabaseError(response: HttpResponse) = response.apply {
-    val error = bodyOrNull<SupabaseErrorResponse>()?.mapResponse()
+    val error = asSupabaseErrorResponse()
+    respondWithError(error)
+}
+
+ suspend fun HttpResponse.asSupabaseErrorResponse(): ErrorResponse {
+    return bodyOrNull<SupabaseErrorResponse>()?.mapResponse()
         ?: bodyOrNull<SupabaseError2Response>()?.mapResponse()
         ?: ErrorResponse(
             HttpStatusCode.InternalServerError.value,
             ErrorInfo(SUPABASE_ERROR)
         )
-    respondWithError(error)
 }
 
 fun SupabaseErrorResponse.mapResponse(): ErrorResponse = ErrorResponse(

@@ -2,7 +2,7 @@ package com.studiversity
 
 import com.studiversity.client.di.apiModule
 import com.studiversity.feature.auth.model.LoginRequest
-import com.studiversity.supabase.model.SignupResponse
+import com.studiversity.supabase.model.SignupGoTrueResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -59,7 +59,7 @@ abstract class KtorClientTest : KoinTest {
                     BearerTokens(accessToken = client.post("/auth/token?grant_type=password") {
                         contentType(ContentType.Application.Json)
                         setBody(LoginRequest(email, password))
-                    }.body<SignupResponse>().accessToken, "")
+                    }.body<SignupGoTrueResponse>().accessToken, "")
                 }
             }
         }
