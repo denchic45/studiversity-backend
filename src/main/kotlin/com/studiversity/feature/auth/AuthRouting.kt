@@ -3,7 +3,7 @@ package com.studiversity.feature.auth
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.onSuccess
 import com.studiversity.feature.auth.model.SignupRequest
-import com.studiversity.feature.auth.usecase.SignupUseCase
+import com.studiversity.feature.auth.usecase.SignUpUseCase
 import com.studiversity.supabase.model.SignupGoTrueResponse
 import com.studiversity.supabase.model.respondWithSupabaseError
 import io.ktor.client.*
@@ -19,7 +19,7 @@ import org.koin.ktor.ext.inject
 fun Route.signupRoute() {
 //    val userRepository: UserRepository by inject()
 //    val supabaseClient by inject<HttpClient>()
-    val signupUseCase: SignupUseCase by inject()
+    val signupUseCase: SignUpUseCase by inject()
 
     post("/signup") {
         val signupRequest = call.receive<SignupRequest>()

@@ -7,7 +7,7 @@ import com.studiversity.database.table.UserDao
 import com.studiversity.database.table.toDomain
 import com.studiversity.feature.auth.PasswordGenerator
 import com.studiversity.feature.auth.model.CreateUserRequest
-import com.studiversity.feature.auth.model.SignupGoTrueRequest
+import com.studiversity.feature.auth.model.SignUpGoTrueRequest
 import com.studiversity.feature.auth.model.SignupRequest
 import com.studiversity.feature.auth.model.TokenResponse
 import com.studiversity.feature.role.ScopeType
@@ -40,7 +40,7 @@ class UserRepository(
 
     suspend fun add(signupRequest: SignupRequest): ResponseResult<TokenResponse> {
         val response = supabaseClient.post("/auth/v1/signup") {
-            setBody(SignupGoTrueRequest(signupRequest.email, signupRequest.password))
+            setBody(SignUpGoTrueRequest(signupRequest.email, signupRequest.password))
             contentType(ContentType.Application.Json)
         }
 
@@ -63,7 +63,7 @@ class UserRepository(
 
     suspend fun add(createUserRequest: CreateUserRequest) {
         val response = supabaseClient.post("/auth/v1/signup") {
-            setBody(SignupGoTrueRequest(createUserRequest.email, PasswordGenerator().generate()))
+            setBody(SignUpGoTrueRequest(createUserRequest.email, PasswordGenerator().generate()))
             contentType(ContentType.Application.Json)
         }
     }
