@@ -2,7 +2,7 @@ package com.studiversity.feature.auth
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.studiversity.feature.auth.model.LoginRequest
+import com.stuiversity.api.auth.model.SignInByEmailPasswordRequest
 import com.studiversity.util.isEmail
 import com.studiversity.util.respondWithError
 import com.stuiversity.util.ErrorInfo
@@ -40,7 +40,7 @@ fun Application.configureAuth() {
     routing {
         route("/auth") {
             install(RequestValidation) {
-                validate<LoginRequest> { login ->
+                validate<SignInByEmailPasswordRequest> { login ->
                     val password = login.password
 
                     buildList {
@@ -63,7 +63,7 @@ fun Application.configureAuth() {
                     }
                 }
             }
-            signupRoute()
+            signUpRoute()
             tokenRoute()
         }
     }

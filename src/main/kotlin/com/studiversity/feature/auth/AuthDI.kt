@@ -1,6 +1,8 @@
 package com.studiversity.feature.auth
 
 import com.studiversity.SupabaseConstants
+import com.studiversity.feature.auth.usecase.SignUpUseCase
+import com.studiversity.feature.auth.usecase.SignUpUserManuallyUseCase
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
@@ -10,8 +12,13 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
-val authModule = module {
+private val useCaseModule = module {
+    single { SignUpUseCase(get(), get()) }
+    single { SignUpUserManuallyUseCase(get(), get()) }
+}
 
+val authModule = module {
+    includes(useCaseModule)
     single {
         HttpClient(CIO) {
             defaultRequest {

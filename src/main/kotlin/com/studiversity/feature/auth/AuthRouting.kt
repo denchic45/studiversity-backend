@@ -2,9 +2,9 @@ package com.studiversity.feature.auth
 
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.onSuccess
-import com.studiversity.feature.auth.model.SignupRequest
+import com.stuiversity.api.auth.model.SignupRequest
 import com.studiversity.feature.auth.usecase.SignUpUseCase
-import com.studiversity.supabase.model.SignupGoTrueResponse
+import com.studiversity.supabase.model.SignUpGoTrueResponse
 import com.studiversity.supabase.model.respondWithSupabaseError
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -16,15 +16,15 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
-fun Route.signupRoute() {
+fun Route.signUpRoute() {
 //    val userRepository: UserRepository by inject()
 //    val supabaseClient by inject<HttpClient>()
-    val signupUseCase: SignUpUseCase by inject()
+    val signup: SignUpUseCase by inject()
 
-    post("/signup") {
+    post("/signUp") {
         val signupRequest = call.receive<SignupRequest>()
 
-        signupUseCase(signupRequest)
+        signup(signupRequest)
             .onFailure { call.respond(HttpStatusCode.fromValue(it.code), it) }
             .onSuccess { call.respond(HttpStatusCode.OK, it) }
 
@@ -62,7 +62,7 @@ fun Route.tokenRoute() {
             parameter("grant_type", call.request.queryParameters["grant_type"])
         }.apply {
             if (status.isSuccess()) {
-                val message = body<SignupGoTrueResponse>()
+                val message = body<SignUpGoTrueResponse>()
                 this@post.call.respond(message)
             } else {
                 this@post.call.respondWithSupabaseError(this)

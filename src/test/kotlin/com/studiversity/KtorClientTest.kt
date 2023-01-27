@@ -1,8 +1,8 @@
 package com.studiversity
 
 import com.studiversity.client.di.apiModule
-import com.studiversity.feature.auth.model.LoginRequest
-import com.studiversity.supabase.model.SignupGoTrueResponse
+import com.stuiversity.api.auth.model.SignInByEmailPasswordRequest
+import com.studiversity.supabase.model.SignUpGoTrueResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -51,6 +51,10 @@ abstract class KtorClientTest : KoinTest {
 
     open fun cleanup() {}
 
+    fun createGuestClient() = testApp.createClient {
+        installContentNegotiation()
+    }
+
     fun createAuthenticatedClient(email: String, password: String) = testApp.createClient {
         installContentNegotiation()
         install(Auth) {
@@ -58,8 +62,8 @@ abstract class KtorClientTest : KoinTest {
                 refreshTokens {
                     BearerTokens(accessToken = client.post("/auth/token?grant_type=password") {
                         contentType(ContentType.Application.Json)
-                        setBody(LoginRequest(email, password))
-                    }.body<SignupGoTrueResponse>().accessToken, "")
+                        setBody(SignInByEmailPasswordRequest(email, password))
+                    }.body<SignUpGoTrueResponse>().accessToken, "")
                 }
             }
         }

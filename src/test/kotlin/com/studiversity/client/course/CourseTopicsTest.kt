@@ -2,7 +2,7 @@ package com.studiversity.client.course
 
 import com.github.michaelbull.result.*
 import com.studiversity.KtorClientTest
-import com.studiversity.util.assertResultSuccess
+import com.studiversity.util.assertResultOk
 import com.studiversity.util.toUUID
 import com.stuiversity.api.course.CoursesApi
 import com.stuiversity.api.course.element.CourseElementApi
@@ -56,7 +56,7 @@ class CourseTopicsTest : KtorClientTest() {
     @BeforeEach
     fun init(): Unit = runBlocking {
         course = coursesApi.create(CreateCourseRequest("Test course for submissions"))
-            .also(::assertResultSuccess).unwrap()
+            .also(::assertResultOk).unwrap()
         enrolTeacher(teacher1Id)
     }
 
@@ -71,7 +71,7 @@ class CourseTopicsTest : KtorClientTest() {
     }
 
     private suspend fun enrolUser(userId: UUID, roleId: Long) {
-        membershipsApi.joinToScopeManually(userId, course.id, listOf(roleId)).also(::assertResultSuccess)
+        membershipsApi.joinToScopeManually(userId, course.id, listOf(roleId)).also(::assertResultOk)
     }
 
     private suspend fun unrollUser(userId: UUID) {
@@ -86,7 +86,7 @@ class CourseTopicsTest : KtorClientTest() {
 
         assertEquals("My Topic", topic.name)
 
-        courseTopicApi.getByCourseId(course.id).also(::assertResultSuccess).apply {
+        courseTopicApi.getByCourseId(course.id).also(::assertResultOk).apply {
             assertEquals(1, unwrap().size)
             assertEquals(topic, unwrap()[0])
         }
@@ -95,7 +95,7 @@ class CourseTopicsTest : KtorClientTest() {
             courseId = course.id,
             topicId = topic.id,
             updateTopicRequest = UpdateTopicRequest(OptionalProperty.Present("Updated Topic"))
-        ).also(::assertResultSuccess).unwrap()
+        ).also(::assertResultOk).unwrap()
 
         assertEquals("Updated Topic", updatedTopic.name)
 
@@ -114,11 +114,11 @@ class CourseTopicsTest : KtorClientTest() {
                 workType = CourseWorkType.ASSIGNMENT,
                 maxGrade = 5
             )
-        ).also(::assertResultSuccess).unwrap().apply { assertEquals(topic.id, topicId) }
+        ).also(::assertResultOk).unwrap().apply { assertEquals(topic.id, topicId) }
 
         removeTopic(topic.id, RelatedTopicElements.CLEAR_TOPIC)
 
-        courseWorkApi.getById(course.id, courseWork.id).also(::assertResultSuccess).unwrap().apply {
+        courseWorkApi.getById(course.id, courseWork.id).also(::assertResultOk).unwrap().apply {
             assertNull(topicId, ::toString)
         }
     }
@@ -256,12 +256,12 @@ class CourseTopicsTest : KtorClientTest() {
 
         courseElementApi.update(
             course.id, secondElements[4].id, UpdateCourseElementRequest(OptionalProperty.Present(topic1.id))
-        ).also(::assertResultSuccess)
+        ).also(::assertResultOk)
 
-        courseElementApi.delete(course.id, secondElements[0].id).also(::assertResultSuccess)
+        courseElementApi.delete(course.id, secondElements[0].id).also(::assertResultOk)
 
         courseElementApi.getByCourseId(course.id, SortingCourseElements.TopicId())
-            .also(::assertResultSuccess).unwrap().apply {
+            .also(::assertResultOk).unwrap().apply {
                 assertTrue(this.all { it.id != secondElements[0].id })
                 groupBy { it.topicId }.forEach { (key, value) ->
                     value.forEachIndexed { index, response ->
@@ -273,9 +273,9 @@ class CourseTopicsTest : KtorClientTest() {
     }
 
     private suspend fun removeTopic(topicId: UUID, relatedTopicElements: RelatedTopicElements) {
-        courseTopicApi.delete(course.id, topicId, relatedTopicElements).also(::assertResultSuccess)
+        courseTopicApi.delete(course.id, topicId, relatedTopicElements).also(::assertResultOk)
     }
 }
 
 suspend fun CourseTopicApi.createTopic(courseId: UUID, name: String = "My Topic") =
-    create(courseId, CreateTopicRequest(name)).also(::assertResultSuccess).unwrap()
+    create(courseId, CreateTopicRequest(name)).also(::assertResultOk).unwrap()

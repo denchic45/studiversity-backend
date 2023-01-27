@@ -2,7 +2,7 @@ package com.studiversity.client.course
 
 import com.github.michaelbull.result.*
 import com.studiversity.KtorClientTest
-import com.studiversity.util.assertResultSuccess
+import com.studiversity.util.assertResultOk
 import com.studiversity.util.toUUID
 import com.stuiversity.api.course.CoursesApi
 import com.stuiversity.api.course.element.CourseElementApi
@@ -107,7 +107,7 @@ class SubmissionsTest : KtorClientTest() {
     }
 
     private suspend fun enrolUser(userId: UUID, roleId: Long) {
-        membershipsApi.joinToScopeManually(userId, course.id, listOf(roleId)).also(::assertResultSuccess)
+        membershipsApi.joinToScopeManually(userId, course.id, listOf(roleId)).also(::assertResultOk)
     }
 
     private suspend fun unrollUser(userId: UUID) {
@@ -129,7 +129,7 @@ class SubmissionsTest : KtorClientTest() {
     fun testUpdateStatusToCreatedAfterGettingSubmissionByStudent(): Unit = runBlocking {
         enrolStudentsToCourse()
         val submissions = submissionsApiOfTeacher.getAllByCourseWorkId(course.id, courseWork.id)
-            .also(::assertResultSuccess)
+            .also(::assertResultOk)
             .unwrap()
             .also { response ->
                 assertEquals(2, response.size)
@@ -165,7 +165,7 @@ class SubmissionsTest : KtorClientTest() {
     fun testGetSubmissionsAfterAddNewStudentToCourse(): Unit = runBlocking {
         enrolStudent(student2Id)
         submissionsApiOfTeacher.getAllByCourseWorkId(course.id, courseWork.id)
-            .also(::assertResultSuccess)
+            .also(::assertResultOk)
             .unwrap().also { response ->
                 assertEquals(1, response.size)
             }
@@ -198,7 +198,7 @@ class SubmissionsTest : KtorClientTest() {
         enrolStudent(student1Id)
         // get submission by another user (maybe teacher)
         val submission = submissionsApiOfTeacher.getByStudent(course.id, courseWork.id, student1Id)
-            .also(::assertResultSuccess)
+            .also(::assertResultOk)
             .unwrap().also { response ->
                 assertEquals(SubmissionState.NEW, response.state)
             }

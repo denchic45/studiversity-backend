@@ -2,7 +2,7 @@ package com.studiversity.client.course
 
 import com.github.michaelbull.result.*
 import com.studiversity.KtorClientTest
-import com.studiversity.util.assertResultSuccess
+import com.studiversity.util.assertResultOk
 import com.studiversity.util.toUUID
 import com.stuiversity.api.course.CoursesApi
 import com.stuiversity.api.course.element.CourseElementApi
@@ -58,7 +58,7 @@ class CourseElementsTest : KtorClientTest() {
 
     override fun setup(): Unit = runBlocking {
         course = coursesApi.create(CreateCourseRequest("Test course for submissions"))
-            .apply { assertResultSuccess(this) }.unwrap()
+            .apply { assertResultOk(this) }.unwrap()
         enrolTeacher(teacher1Id)
     }
 
@@ -80,13 +80,13 @@ class CourseElementsTest : KtorClientTest() {
                 workType = CourseWorkType.ASSIGNMENT,
                 maxGrade = 5
             )
-        ).also(::assertResultSuccess).unwrap()
+        ).also(::assertResultOk).unwrap()
     }
 
     @AfterEach
     fun tearDown(): Unit = runBlocking {
         // delete course element
-        courseElementApi.delete(course.id, courseWork.id).also(::assertResultSuccess)
+        courseElementApi.delete(course.id, courseWork.id).also(::assertResultOk)
         // unroll users
         unrollUser(student1Id)
         unrollUser(student2Id)
@@ -102,7 +102,7 @@ class CourseElementsTest : KtorClientTest() {
 
     private suspend fun enrolUser(userId: UUID, roleId: Long) {
         membershipsApi.joinToScopeManually(userId, course.id, listOf(roleId)).apply {
-            assertResultSuccess(this)
+            assertResultOk(this)
         }
     }
 
@@ -126,7 +126,7 @@ class CourseElementsTest : KtorClientTest() {
             ).unwrap()
         }
         courseElementApi.getByCourseId(course.id)
-            .apply { assertResultSuccess(this) }
+            .apply { assertResultOk(this) }
             .unwrap()
             .apply {
                 forEachIndexed { index, response ->
@@ -164,7 +164,7 @@ class CourseElementsTest : KtorClientTest() {
 
         // sort by topic asc
         courseElementApi.getByCourseId(course.id, SortingCourseElements.TopicId())
-            .apply { assertResultSuccess(this) }
+            .apply { assertResultOk(this) }
             .unwrap()
             .map { it.topicId }
             .distinctBy { it }
@@ -172,7 +172,7 @@ class CourseElementsTest : KtorClientTest() {
 
         // sort by topic desc
         courseElementApi.getByCourseId(course.id, SortingCourseElements.TopicId(SortOrder.DESC))
-            .apply { assertResultSuccess(this) }
+            .apply { assertResultOk(this) }
             .unwrap()
             .map { it.topicId }
             .distinctBy { it }
