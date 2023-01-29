@@ -1,6 +1,6 @@
 package com.studiversity.feature.auth
 
-import com.studiversity.SupabaseConstants
+import com.studiversity.di.SupabaseEnv
 import com.studiversity.feature.auth.usecase.SignUpUseCase
 import com.studiversity.feature.auth.usecase.SignUpUserManuallyUseCase
 import io.ktor.client.*
@@ -10,6 +10,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 private val useCaseModule = module {
@@ -22,8 +23,8 @@ val authModule = module {
     single {
         HttpClient(CIO) {
             defaultRequest {
-                url(SupabaseConstants.url)
-                header("apikey", SupabaseConstants.key)
+                url(get<String>(named(SupabaseEnv.SUPABASE_URL)))
+                header("apikey", get<String>(named(SupabaseEnv.SUPABASE_KEY)))
             }
             install(ContentNegotiation) {
                 json(Json {

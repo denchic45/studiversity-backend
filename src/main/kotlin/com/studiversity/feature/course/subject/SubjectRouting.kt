@@ -1,8 +1,6 @@
 package com.studiversity.feature.course.subject
 
-import com.studiversity.Constants
-import com.stuiversity.api.course.subject.model.CreateSubjectRequest
-import com.stuiversity.api.course.subject.model.UpdateSubjectRequest
+import com.studiversity.di.OrganizationEnv
 import com.studiversity.feature.course.subject.usecase.*
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
@@ -11,6 +9,8 @@ import com.studiversity.ktor.jwtPrincipal
 import com.studiversity.util.onlyDigits
 import com.studiversity.util.toUUID
 import com.studiversity.validation.buildValidationResult
+import com.stuiversity.api.course.subject.model.CreateSubjectRequest
+import com.stuiversity.api.course.subject.model.UpdateSubjectRequest
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -18,7 +18,9 @@ import io.ktor.server.plugins.requestvalidation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.core.qualifier.named
 import org.koin.ktor.ext.inject
+import java.util.*
 
 fun Application.subjectRoutes() {
     routing {
@@ -38,7 +40,7 @@ fun Application.subjectRoutes() {
                         }
                     }
                 }
-
+                val organizationId: String by inject(named(OrganizationEnv.ORG_ID))
                 val requireCapability: RequireCapabilityUseCase by inject()
                 val addSubject: AddSubjectUseCase by inject()
                 val findAllSubjects: FindAllSubjectsUseCase by inject()
@@ -47,7 +49,7 @@ fun Application.subjectRoutes() {
                     requireCapability(
                         call.jwtPrincipal().payload.claimId,
                         Capability.WriteSubject,
-                        Constants.organizationId
+                        organizationId.toUUID()
                     )
                     val body = call.receive<CreateSubjectRequest>()
                     val subjectId = addSubject(body).toString()
@@ -57,7 +59,7 @@ fun Application.subjectRoutes() {
                     requireCapability(
                         call.jwtPrincipal().payload.claimId,
                         Capability.ReadSubject,
-                        Constants.organizationId
+                        organizationId.toUUID()
                     )
 
                     findAllSubjects().apply {
@@ -90,7 +92,7 @@ fun Route.subjectByIdRoute() {
                 }
             }
         }
-
+        val organizationId: UUID by inject(named(OrganizationEnv.ORG_ID))
         val requireCapability: RequireCapabilityUseCase by inject()
         val findSubjectById: FindSubjectByIdUseCase by inject()
         val updateSubject: UpdateSubjectUseCase by inject()
@@ -102,7 +104,7 @@ fun Route.subjectByIdRoute() {
             requireCapability(
                 call.jwtPrincipal().payload.claimId,
                 Capability.ReadSubject,
-                Constants.organizationId
+                organizationId
             )
 
             findSubjectById(id).let { subject ->
@@ -115,7 +117,7 @@ fun Route.subjectByIdRoute() {
             requireCapability(
                 call.jwtPrincipal().payload.claimId,
                 Capability.WriteSubject,
-                Constants.organizationId
+                organizationId
             )
 
             val body = call.receive<UpdateSubjectRequest>()
@@ -129,7 +131,7 @@ fun Route.subjectByIdRoute() {
             requireCapability(
                 call.jwtPrincipal().payload.claimId,
                 Capability.DeleteSubject,
-                Constants.organizationId
+                organizationId
             )
 
             removeSubject(id)

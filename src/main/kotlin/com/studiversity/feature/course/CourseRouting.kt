@@ -1,6 +1,6 @@
 package com.studiversity.feature.course
 
-import com.studiversity.Constants
+import com.studiversity.di.OrganizationEnv
 import com.studiversity.feature.course.element.courseElementRoutes
 import com.studiversity.feature.course.topic.courseTopicsRoutes
 import com.studiversity.feature.course.usecase.*
@@ -22,6 +22,7 @@ import io.ktor.server.plugins.requestvalidation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.core.qualifier.named
 import org.koin.ktor.ext.inject
 import java.util.*
 
@@ -39,13 +40,14 @@ fun Application.courseRoutes() {
                         }
                     }
                 }
+                val organizationId: UUID by inject(named(OrganizationEnv.ORG_ID))
                 val requireCapability: RequireCapabilityUseCase by inject()
                 val addCourse: AddCourseUseCase by inject()
 
                 post {
                     val currentUserId = call.principal<JWTPrincipal>()!!.payload.getClaim("sub").asString().toUUID()
 
-                    requireCapability(currentUserId, Capability.WriteCourse, Constants.organizationId)
+                    requireCapability(currentUserId, Capability.WriteCourse, organizationId)
 
                     val body = call.receive<CreateCourseRequest>()
 

@@ -1,7 +1,6 @@
 package com.studiversity.feature.membership
 
-import com.studiversity.Constants
-import com.stuiversity.api.membership.model.ManualJoinMemberRequest
+import com.studiversity.di.OrganizationEnv
 import com.studiversity.feature.membership.usecase.FindMembershipByScopeUseCase
 import com.studiversity.feature.membership.usecase.RemoveMemberFromScopeUseCase
 import com.studiversity.feature.membership.usecase.RemoveSelfMemberFromScopeUseCase
@@ -18,6 +17,7 @@ import com.studiversity.ktor.jwtPrincipal
 import com.studiversity.util.hasNotDuplicates
 import com.studiversity.util.toUUID
 import com.studiversity.validation.buildValidationResult
+import com.stuiversity.api.membership.model.ManualJoinMemberRequest
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -28,6 +28,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.util.*
+import org.koin.core.qualifier.named
 import org.koin.ktor.ext.inject
 import java.util.*
 
@@ -35,6 +36,7 @@ fun Application.membershipRoutes(memberships: Map<UUID, ExternalMembership>) {
     routing {
         authenticate("auth-jwt") {
             route("/scopes/{scopeId}") {
+                val organizationId: UUID by inject(named(OrganizationEnv.ORG_ID))
                 membersRoute()
                 route("/memberships") {
                     val findMembershipByScope: FindMembershipByScopeUseCase by inject()
@@ -51,7 +53,7 @@ fun Application.membershipRoutes(memberships: Map<UUID, ExternalMembership>) {
                             requireCapability(
                                 call.jwtPrincipal().payload.claimId,
                                 Capability.WriteMembership,
-                                Constants.organizationId
+                                organizationId
                             )
                             memberships[call.parameters.getOrFail("membershipId").toUUID()]
                                 ?.forceSync()
@@ -100,6 +102,7 @@ fun Route.membersRoute() {
                     membershipService.getMembershipByTypeAndScopeId<ManualMembership>("manual", scopeId)
                         .joinMember(body)
                 }
+
                 else -> throw BadRequestException("UNKNOWN_MEMBERSHIP_ACTION")
             }
             call.respond(HttpStatusCode.Created, result)

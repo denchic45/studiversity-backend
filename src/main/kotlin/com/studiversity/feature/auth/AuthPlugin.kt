@@ -2,9 +2,10 @@ package com.studiversity.feature.auth
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.stuiversity.api.auth.model.SignInByEmailPasswordRequest
+import com.studiversity.di.JwtEnv
 import com.studiversity.util.isEmail
 import com.studiversity.util.respondWithError
+import com.stuiversity.api.auth.model.SignupRequest
 import com.stuiversity.util.ErrorInfo
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -17,19 +18,19 @@ import org.koin.ktor.ext.inject
 
 fun Application.configureAuth() {
 
-    val jwtSecret by inject<String>(named("jwtSecret"))
-    val jwtAudience by inject<String>(named("jwtAudience"))
+    val jwtJWTSecret by inject<String>(named(JwtEnv.JWT_SECRET))
+    val jwtJWTAudience by inject<String>(named(JwtEnv.JWT_AUDIENCE))
 
     authentication {
         jwt("auth-jwt") {
             verifier(
                 JWT
-                    .require(Algorithm.HMAC256(jwtSecret))
-                    .withAudience(jwtAudience)
+                    .require(Algorithm.HMAC256(jwtJWTSecret))
+                    .withAudience(jwtJWTAudience)
                     .build()
             )
             validate { credential ->
-                if (credential.payload.audience.contains(jwtAudience)) JWTPrincipal(credential.payload) else null
+                if (credential.payload.audience.contains(jwtJWTAudience)) JWTPrincipal(credential.payload) else null
             }
             challenge { defaultScheme, realm ->
                 call.respondWithError(HttpStatusCode.Unauthorized, ErrorInfo("Token is not valid or has expired"))
@@ -40,7 +41,7 @@ fun Application.configureAuth() {
     routing {
         route("/auth") {
             install(RequestValidation) {
-                validate<SignInByEmailPasswordRequest> { login ->
+                validate<SignupRequest> { login ->
                     val password = login.password
 
                     buildList {
