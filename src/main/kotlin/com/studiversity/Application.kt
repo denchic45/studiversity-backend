@@ -13,19 +13,25 @@ import io.ktor.server.application.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import kotlinx.coroutines.runBlocking
+import org.koin.ktor.ext.inject
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
 @Suppress("unused")
 fun Application.module() = runBlocking {
-    DatabaseFactory.database
     configureDI()
     configureSerialization()
     configureStatusPages()
+    configureDatabase()
     configureSupabase()
     configureAuth()
     configureUser()
     configureRoles()
     configureMembership()
     configureRouting()
+}
+
+private fun Application.configureDatabase() {
+    val databaseFactory: DatabaseFactory by inject()
+    databaseFactory.database
 }
