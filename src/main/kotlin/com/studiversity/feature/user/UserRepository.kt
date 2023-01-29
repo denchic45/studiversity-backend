@@ -2,7 +2,6 @@ package com.studiversity.feature.user
 
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
-import com.studiversity.Constants
 import com.studiversity.database.table.AuthUsers
 import com.studiversity.database.table.UserDao
 import com.studiversity.database.table.Users
@@ -12,12 +11,12 @@ import com.studiversity.feature.role.ScopeType
 import com.studiversity.feature.role.repository.AddScopeRepoExt
 import com.studiversity.supabase.model.SignUpGoTrueResponse
 import com.studiversity.supabase.model.asSupabaseErrorResponse
+import com.studiversity.util.EmailSender
 import com.stuiversity.api.auth.model.CreateUserRequest
 import com.stuiversity.api.auth.model.SignUpGoTrueRequest
 import com.stuiversity.api.auth.model.SignupRequest
 import com.stuiversity.api.auth.model.TokenResponse
 import com.stuiversity.api.user.model.User
-import com.stuiversity.api.util.EmptyResponseResult
 import com.stuiversity.api.util.ResponseResult
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -28,7 +27,9 @@ import org.jetbrains.exposed.sql.deleteWhere
 import java.util.*
 
 class UserRepository(
-    private val supabaseClient: HttpClient
+    private val organizationId: UUID,
+    private val supabaseClient: HttpClient,
+    private val emailSender: EmailSender
 ) : AddScopeRepoExt {
 
     fun add(user: User) {
@@ -38,7 +39,7 @@ class UserRepository(
             patronymic = user.patronymic
             email = user.account.email
         }
-        addScope(user.id, ScopeType.User, Constants.organizationId)
+        addScope(user.id, ScopeType.User, organizationId)
     }
 
     suspend fun add(signupRequest: SignupRequest): ResponseResult<TokenResponse> {
@@ -58,14 +59,30 @@ class UserRepository(
         contentType(ContentType.Application.Json)
     }
 
-    suspend fun add(createUserRequest: CreateUserRequest): EmptyResponseResult {
-        val response = signUpUser(createUserRequest.email, PasswordGenerator().generate())
+    suspend fun add(createUserRequest: CreateUserRequest): ResponseResult<User> {
+        val password = PasswordGenerator().generate()
+        val response = signUpUser(createUserRequest.email, password)
         if (!response.status.isSuccess())
             return Err(response.asSupabaseErrorResponse())
 
         add(createUserRequest.toUser(response.body<SignUpGoTrueResponse>().user.id))
 
-        return Ok(Unit)
+        emailSender.sendSimpleEmail(
+            createUserRequest.email,
+            "Регистрация — Studiversity",
+            generateEmailMessage(createUserRequest.firstName, createUserRequest.email, password)
+        )
+        return Ok(findById(response.body<SignUpGoTrueResponse>().user.id)!!)
+    }
+
+    private fun generateEmailMessage(firstName: String, email: String, password: String): String {
+        return """
+            Здравствуйте, $firstName
+            
+            Вы были успешно зарегистрированы! Ваши данные для авторизации:
+            email: $email
+            пароль: $password
+        """.trimIndent()
     }
 
     fun findById(id: UUID): User? {

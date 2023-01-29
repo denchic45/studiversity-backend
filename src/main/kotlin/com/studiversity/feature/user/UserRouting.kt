@@ -1,6 +1,8 @@
 package com.studiversity.feature.user
 
-import com.studiversity.Constants
+import com.github.michaelbull.result.onFailure
+import com.github.michaelbull.result.onSuccess
+import com.studiversity.di.OrganizationEnv
 import com.studiversity.feature.auth.usecase.SignUpUserManuallyUseCase
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
@@ -8,6 +10,7 @@ import com.studiversity.feature.user.usecase.FindUserByIdUseCase
 import com.studiversity.feature.user.usecase.RemoveUserUseCase
 import com.studiversity.ktor.currentUserId
 import com.studiversity.ktor.getUuid
+import com.studiversity.util.respondWithError
 import com.studiversity.util.tryToUUID
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -16,12 +19,15 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.util.*
+import org.koin.core.qualifier.named
 import org.koin.ktor.ext.inject
+import java.util.*
 
 fun Application.userRoutes() {
     routing {
         authenticate("auth-jwt") {
             route("/users") {
+                val organizationId: UUID by inject(named(OrganizationEnv.ORG_ID))
                 val requireCapability: RequireCapabilityUseCase by inject()
                 val signUpUserManually: SignUpUserManuallyUseCase by inject()
 
@@ -29,10 +35,11 @@ fun Application.userRoutes() {
                     requireCapability(
                         userId = call.currentUserId(),
                         capability = Capability.WriteUser,
-                        scopeId = Constants.organizationId
+                        scopeId = organizationId
                     )
                     signUpUserManually(call.receive())
-                    call.respond(HttpStatusCode.Created)
+                        .onFailure { call.respondWithError(it) }
+                        .onSuccess { call.respond(HttpStatusCode.Created, it) }
                 }
                 userByIdRoute()
             }
@@ -42,6 +49,7 @@ fun Application.userRoutes() {
 
 private fun Route.userByIdRoute() {
     route("/{userId}") {
+        val organizationId: UUID by inject(named(OrganizationEnv.ORG_ID))
         val requireCapability: RequireCapabilityUseCase by inject()
         val findUserById: FindUserByIdUseCase by inject()
         val removeUser: RemoveUserUseCase by inject()
@@ -60,7 +68,7 @@ private fun Route.userByIdRoute() {
             requireCapability(
                 userId = call.currentUserId(),
                 capability = Capability.DeleteUser,
-                scopeId = Constants.organizationId
+                scopeId = organizationId
             )
 
             removeUser(call.parameters.getUuid("userId"))

@@ -15,8 +15,7 @@ import kotlin.test.assertEquals
 
 class SignUpTest : KtorClientTest() {
 
-
-    private val email = "yar256@mail.ru"
+    private val email = "denchic150@gmail.com"
     private val password = "KLNf94fghn4gg"
     private val expectedFirstName = "Yaroslav"
     private val expectedSurname = "Sokolov"
@@ -31,8 +30,7 @@ class SignUpTest : KtorClientTest() {
     @Test
     fun testSignUp(): Unit = runBlocking {
         val signupRequest = SignupRequest(expectedFirstName, expectedSurname, null, email, password)
-        val token = authApiOfGuest.signUp(signupRequest)
-            .also(::assertResultOk).unwrap()
+        authApiOfGuest.signUp(signupRequest).also(::assertResultOk).unwrap()
 
         authApiOfGuest.signUp(signupRequest).also(::assertResultErr)
 
