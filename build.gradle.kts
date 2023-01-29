@@ -85,6 +85,8 @@ dependencies {
     implementation("io.ktor:ktor-server-request-validation:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
+    implementation("org.apache.commons:commons-email:1.5")
+
     // Ktor client
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-core:$ktorVersion")
@@ -128,6 +130,5 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
-//    testImplementation(project(mapOf("path" to ":api")))
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
 }
