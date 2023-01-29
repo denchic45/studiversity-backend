@@ -14,13 +14,3 @@ fun List<String>.toErrors(): List<ErrorInfo> {
 
 @Serializable
 data class ErrorInfo(val reason: String)
-
-//@Serializable
-//sealed class ErrorWrapper {
-//    @Serializable
-//    data class SingleError(val reason: String) : ErrorWrapper()
-//
-//    @Serializable
-//    data class Errors(val errors: List<SingleError>) : ErrorWrapper()
-//}
-
