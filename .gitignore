@@ -32,4 +32,4 @@ out/
 /nbdist/
 /.nb-gradle/
 
-src/main/kotlin/com/studiversity/Constants.kt
+src/main/resources/application.conf
