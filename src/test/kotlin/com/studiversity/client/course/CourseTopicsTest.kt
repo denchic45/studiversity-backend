@@ -1,6 +1,8 @@
 package com.studiversity.client.course
 
-import com.github.michaelbull.result.*
+import com.github.michaelbull.result.get
+import com.github.michaelbull.result.unwrap
+import com.github.michaelbull.result.unwrapError
 import com.studiversity.KtorClientTest
 import com.studiversity.util.assertResultOk
 import com.studiversity.util.toUUID
@@ -31,12 +33,10 @@ import java.util.*
 
 class CourseTopicsTest : KtorClientTest() {
 
-    private val student1Id = "7a98cdcf-d404-4556-96bd-4ce9137c8cbe".toUUID()
     private val teacher1Id = "02f00b3e-3a78-4431-87d4-34128ebbb04c".toUUID()
 
     private lateinit var course: CourseResponse
 
-    private val studentClient by lazy { createAuthenticatedClient("slavik@gmail.com", "GHBO043g54gh") }
     private val teacherClient by lazy { createAuthenticatedClient("stefan@gmail.com", "FSg54g45dg") }
 
     private val coursesApi: CoursesApi by inject { parametersOf(client) }
@@ -44,14 +44,6 @@ class CourseTopicsTest : KtorClientTest() {
     private val courseWorkApi: CourseWorkApi by inject { parametersOf(teacherClient) }
     private val courseElementApi: CourseElementApi by inject { parametersOf(teacherClient) }
     private val membershipsApi: MembershipsApi by inject { parametersOf(client) }
-
-    override fun setup(): Unit = runBlocking {
-
-    }
-
-    override fun cleanup(): Unit = runBlocking {
-
-    }
 
     @BeforeEach
     fun init(): Unit = runBlocking {
@@ -72,12 +64,6 @@ class CourseTopicsTest : KtorClientTest() {
 
     private suspend fun enrolUser(userId: UUID, roleId: Long) {
         membershipsApi.joinToScopeManually(userId, course.id, listOf(roleId)).also(::assertResultOk)
-    }
-
-    private suspend fun unrollUser(userId: UUID) {
-        membershipsApi.leaveFromScope(userId, course.id, "manual")
-            .onSuccess { println("Success unroll user: $userId") }
-            .onFailure { println("Failed unroll user: $userId. Status: ${it.code}. Body: ${it.error}") }
     }
 
     @Test
@@ -125,7 +111,8 @@ class CourseTopicsTest : KtorClientTest() {
 
     @Test
     fun updatedElementOrdersAfterClearRemovedTopic(): Unit = runBlocking {
-        val elemWithoutTopic1 = courseWorkApi.create(
+        // Create first element without topic
+        courseWorkApi.create(
             course.id, CreateCourseWorkRequest(
                 name = "Some Assignment 1",
                 description = null,
@@ -134,7 +121,9 @@ class CourseTopicsTest : KtorClientTest() {
                 maxGrade = 5
             )
         ).apply { assertEquals(1, get()?.order) }.unwrap()
-        val elemWithoutTopic2 = courseWorkApi.create(
+
+        // Create second element without topic
+        courseWorkApi.create(
             course.id, CreateCourseWorkRequest(
                 name = "Some Assignment 2",
                 description = null,
@@ -263,7 +252,7 @@ class CourseTopicsTest : KtorClientTest() {
         courseElementApi.getByCourseId(course.id, SortingCourseElements.TopicId())
             .also(::assertResultOk).unwrap().apply {
                 assertTrue(this.all { it.id != secondElements[0].id })
-                groupBy { it.topicId }.forEach { (key, value) ->
+                groupBy { it.topicId }.values.forEach { value ->
                     value.forEachIndexed { index, response ->
                         println("Element ${response.name} with topic: ${response.topicId} with order: ${response.order}")
                         assertEquals(index, response.order - 1)
