@@ -5,6 +5,7 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.time
 import java.util.*
@@ -14,6 +15,16 @@ object CourseWorks : UUIDTable("course_work", "course_element_id") {
     val dueTime = time("due_time").nullable()
     val type = enumerationByName("work_type", 10, CourseWorkType::class)
     val maxGrade = short("max_grade")
+
+    init {
+        foreignKey(
+            from = arrayOf(id),
+            target = CourseElements.primaryKey,
+            onUpdate = ReferenceOption.CASCADE,
+            onDelete = ReferenceOption.CASCADE,
+            name = "course_work_course_element_id_fk"
+        )
+    }
 }
 
 class CourseWorkDao(id: EntityID<UUID>) : UUIDEntity(id), CourseElementDetailsDao {

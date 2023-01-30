@@ -1,18 +1,23 @@
 package com.studiversity.database.table
 
-import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.javatime.date
 
-object Periods : UUIDTable("period_id") {
+object Periods : LongIdTable("period", "period_id") {
     val date = date("date")
-    val order = short("order")
-    val roomId = uuid("room_id")
-    val studyGroupId = uuid("study_group_id")
-    val periodType = enumeration<PeriodType>("period_type")
+    val order = short("period_order")
+    val roomId = uuid("room_id").references(
+        Rooms.id,
+        onDelete = ReferenceOption.SET_NULL,
+        onUpdate = ReferenceOption.SET_NULL
+    ).nullable()
+    val studyGroupId = uuid("study_group_id").references(
+        StudyGroups.id,
+        onDelete = ReferenceOption.CASCADE,
+        onUpdate = ReferenceOption.CASCADE
+    )
+    val type = enumeration<PeriodType>("period_type")
 }
 
-enum class PeriodType { Lesson, Event }
-
-fun main() {
-    PeriodType.Lesson
-}
+enum class PeriodType { LESSON, EVENT }

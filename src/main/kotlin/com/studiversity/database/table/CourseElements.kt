@@ -8,6 +8,7 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.javatime.CurrentTimestamp
@@ -16,8 +17,8 @@ import org.jetbrains.exposed.sql.select
 import java.util.*
 
 object CourseElements : UUIDTable("course_element", "course_element_id") {
-    val courseId = uuid("course_id").references(Courses.id)
-    val topicId = uuid("topic_id").references(CourseTopics.id).nullable()
+    val courseId = uuid("course_id").references(Courses.id, onDelete = ReferenceOption.CASCADE,onUpdate = ReferenceOption.CASCADE)
+    val topicId = uuid("topic_id").references(CourseTopics.id,onDelete = ReferenceOption.CASCADE,onUpdate = ReferenceOption.CASCADE).nullable()
     val name = varcharMax("element_name")
     val description = text("description").nullable()
     val order = integer("element_order")
