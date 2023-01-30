@@ -69,7 +69,7 @@ class UserRepository(
 
         emailSender.sendSimpleEmail(
             createUserRequest.email,
-            "Регистрация — Studiversity",
+            "Регистрация",
             generateEmailMessage(createUserRequest.firstName, createUserRequest.email, password)
         )
         return Ok(findById(response.body<SignUpGoTrueResponse>().user.id)!!)
