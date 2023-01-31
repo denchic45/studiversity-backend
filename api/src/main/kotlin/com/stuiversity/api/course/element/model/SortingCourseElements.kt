@@ -1,6 +1,6 @@
 package com.stuiversity.api.course.element.model
 
-import com.stuiversity.api.util.SortOrder
+import com.stuiversity.api.common.SortOrder
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

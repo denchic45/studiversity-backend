@@ -2,10 +2,10 @@ package com.stuiversity.api.course.work
 
 import com.stuiversity.api.course.element.model.*
 import com.stuiversity.api.course.work.model.CreateCourseWorkRequest
-import com.stuiversity.api.util.EmptyResponseResult
-import com.stuiversity.api.util.ResponseResult
-import com.stuiversity.api.util.toAttachmentResult
-import com.stuiversity.api.util.toResult
+import com.stuiversity.api.common.EmptyResponseResult
+import com.stuiversity.api.common.ResponseResult
+import com.stuiversity.api.common.toAttachmentResult
+import com.stuiversity.api.common.toResult
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*

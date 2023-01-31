@@ -2,9 +2,9 @@ package com.stuiversity.api.user
 
 import com.stuiversity.api.auth.model.CreateUserRequest
 import com.stuiversity.api.user.model.User
-import com.stuiversity.api.util.EmptyResponseResult
-import com.stuiversity.api.util.ResponseResult
-import com.stuiversity.api.util.toResult
+import com.stuiversity.api.common.EmptyResponseResult
+import com.stuiversity.api.common.ResponseResult
+import com.stuiversity.api.common.toResult
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.http.*

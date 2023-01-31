@@ -3,10 +3,10 @@ package com.stuiversity.api.submission
 import com.stuiversity.api.course.element.model.*
 import com.stuiversity.api.course.work.submission.model.GradeRequest
 import com.stuiversity.api.course.work.submission.model.SubmissionResponse
-import com.stuiversity.api.util.EmptyResponseResult
-import com.stuiversity.api.util.ResponseResult
-import com.stuiversity.api.util.toAttachmentResult
-import com.stuiversity.api.util.toResult
+import com.stuiversity.api.common.EmptyResponseResult
+import com.stuiversity.api.common.ResponseResult
+import com.stuiversity.api.common.toAttachmentResult
+import com.stuiversity.api.common.toResult
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*

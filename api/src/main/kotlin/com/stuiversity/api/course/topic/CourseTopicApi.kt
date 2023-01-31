@@ -3,9 +3,9 @@ package com.stuiversity.api.course.topic
 import com.stuiversity.api.course.topic.model.CreateTopicRequest
 import com.stuiversity.api.course.topic.model.TopicResponse
 import com.stuiversity.api.course.topic.model.UpdateTopicRequest
-import com.stuiversity.api.util.EmptyResponseResult
-import com.stuiversity.api.util.ResponseResult
-import com.stuiversity.api.util.toResult
+import com.stuiversity.api.common.EmptyResponseResult
+import com.stuiversity.api.common.ResponseResult
+import com.stuiversity.api.common.toResult
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.http.*

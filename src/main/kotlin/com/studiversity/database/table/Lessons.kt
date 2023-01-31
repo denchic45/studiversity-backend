@@ -16,7 +16,7 @@ object Lessons : LongIdTable("lesson", "period_id") {
             target = Periods.primaryKey,
             onUpdate = ReferenceOption.CASCADE,
             onDelete = ReferenceOption.CASCADE,
-            ""
+            "lesson_course_id_fkey"
         )
     }
 }

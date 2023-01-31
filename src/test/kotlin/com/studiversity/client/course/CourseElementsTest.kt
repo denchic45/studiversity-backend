@@ -15,7 +15,7 @@ import com.stuiversity.api.course.work.model.CourseWorkType
 import com.stuiversity.api.course.work.model.CreateCourseWorkRequest
 import com.stuiversity.api.membership.MembershipsApi
 import com.stuiversity.api.role.Role
-import com.stuiversity.api.util.SortOrder
+import com.stuiversity.api.common.SortOrder
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach

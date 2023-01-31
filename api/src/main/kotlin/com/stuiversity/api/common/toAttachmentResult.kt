@@ -1,4 +1,4 @@
-package com.stuiversity.api.util
+package com.stuiversity.api.common
 
 import com.stuiversity.api.course.element.model.Attachment
 import com.stuiversity.api.course.element.model.FileAttachment

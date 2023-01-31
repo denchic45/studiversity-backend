@@ -3,9 +3,9 @@ package com.stuiversity.api.course.element
 import com.stuiversity.api.course.element.model.CourseElementResponse
 import com.stuiversity.api.course.element.model.SortingCourseElements
 import com.stuiversity.api.course.element.model.UpdateCourseElementRequest
-import com.stuiversity.api.util.EmptyResponseResult
-import com.stuiversity.api.util.ResponseResult
-import com.stuiversity.api.util.toResult
+import com.stuiversity.api.common.EmptyResponseResult
+import com.stuiversity.api.common.ResponseResult
+import com.stuiversity.api.common.toResult
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.http.*

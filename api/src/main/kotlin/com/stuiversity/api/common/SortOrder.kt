@@ -1,3 +1,3 @@
-package com.stuiversity.api.util
+package com.stuiversity.api.common
 
 enum class SortOrder { ASC, DESC }

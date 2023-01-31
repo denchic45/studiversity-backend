@@ -1,4 +1,4 @@
-package com.stuiversity.api.util
+package com.stuiversity.api.common
 
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok

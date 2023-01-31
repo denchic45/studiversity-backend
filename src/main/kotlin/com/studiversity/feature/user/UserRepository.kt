@@ -17,7 +17,7 @@ import com.stuiversity.api.auth.model.SignUpGoTrueRequest
 import com.stuiversity.api.auth.model.SignupRequest
 import com.stuiversity.api.auth.model.TokenResponse
 import com.stuiversity.api.user.model.User
-import com.stuiversity.api.util.ResponseResult
+import com.stuiversity.api.common.ResponseResult
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*

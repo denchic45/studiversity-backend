@@ -1,6 +1,6 @@
 package com.studiversity.util
 
-import com.stuiversity.api.util.SortOrder
+import com.stuiversity.api.common.SortOrder
 
 
 fun SortOrder.toSqlSortOrder() = when (this) {
