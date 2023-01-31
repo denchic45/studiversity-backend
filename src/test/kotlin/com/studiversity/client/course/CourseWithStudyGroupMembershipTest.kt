@@ -1,9 +1,9 @@
 package com.studiversity.client.course
 
 import com.studiversity.KtorClientTest
-import com.studiversity.feature.studygroup.model.AcademicYear
-import com.studiversity.feature.studygroup.model.CreateStudyGroupRequest
-import com.studiversity.feature.studygroup.model.StudyGroupResponse
+import com.stuiversity.api.studygroup.model.AcademicYear
+import com.stuiversity.api.studygroup.model.CreateStudyGroupRequest
+import com.stuiversity.api.studygroup.model.StudyGroupResponse
 import com.studiversity.util.toUUID
 import com.stuiversity.api.course.model.CourseResponse
 import com.stuiversity.api.course.model.CreateCourseRequest

@@ -1,7 +1,7 @@
 package com.studiversity.database.table
 
-import com.stuiversity.api.course.work.submission.model.SubmissionState
 import com.studiversity.util.varcharMax
+import com.stuiversity.api.course.work.submission.model.SubmissionState
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -13,8 +13,6 @@ object Submissions : UUIDTable("submission", "submission_id") {
     val authorId = uuid("author_id").references(Users.id)
     val content = varcharMax("content").nullable()
     val state = enumerationByName<SubmissionState>("state", 20)
-//    val grade = short("grade").nullable()
-//    val gradedBy = uuid("graded_by").references(Users.id).nullable()
 }
 
 class SubmissionDao(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -24,8 +22,6 @@ class SubmissionDao(id: EntityID<UUID>) : UUIDEntity(id) {
     var authorId by Submissions.authorId
     var content by Submissions.content
     var state by Submissions.state
-//    var grade by Submissions.grade
-//    var gradedBy by Submissions.gradedBy
 
     var courseWork by CourseWorkDao referencedOn Submissions.courseWorkId
     val grade by GradeDao optionalBackReferencedOn Grades.submissionId

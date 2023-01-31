@@ -1,8 +1,8 @@
 package com.studiversity.feature.studygroup.mapper
 
 import com.studiversity.database.table.StudyGroupDao
-import com.studiversity.feature.studygroup.model.AcademicYear
-import com.studiversity.feature.studygroup.model.StudyGroupResponse
+import com.stuiversity.api.studygroup.model.AcademicYear
+import com.stuiversity.api.studygroup.model.StudyGroupResponse
 
 //fun StudyGroupDao.toStudyGroup() = StudyGroup(
 //    id = id.value,

@@ -1,4 +1,4 @@
-package com.studiversity.feature.studygroup.model
+package com.stuiversity.api.studygroup.model
 
 import com.stuiversity.util.OptionalProperty
 import com.stuiversity.util.OptionalPropertySerializer

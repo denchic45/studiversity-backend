@@ -27,11 +27,3 @@ suspend inline fun <reified T> HttpResponse.toResult(result: (HttpResponse) -> T
 }
 
 typealias EmptyResponseResult = Result<Unit, ErrorResponse>
-
-//suspend inline fun HttpResponse.toEmptyResult(): EmptyResponseResult {
-//    return if (status.isSuccess()) {
-//        Ok(Unit)
-//    } else {
-//        Err(ErrorResponse(status.value, body()))
-//    }
-//}

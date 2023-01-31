@@ -8,6 +8,7 @@ import com.studiversity.feature.course.courseModule
 import com.studiversity.feature.membership.membershipModule
 import com.studiversity.feature.role.roleModule
 import com.studiversity.feature.studygroup.studyGroupModule
+import com.studiversity.feature.timetable.timetableModule
 import com.studiversity.feature.user.userModule
 import com.studiversity.transaction.DatabaseTransactionWorker
 import com.studiversity.transaction.SuspendTransactionWorker
@@ -58,6 +59,7 @@ fun Application.configureDI() {
             studyGroupModule,
             attachmentModule,
             courseModule,
+            timetableModule
         )
     }
 }

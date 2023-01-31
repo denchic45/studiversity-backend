@@ -1,6 +1,6 @@
 package com.studiversity.feature.studygroup.usecase
 
-import com.studiversity.feature.studygroup.model.StudyGroupResponse
+import com.stuiversity.api.studygroup.model.StudyGroupResponse
 import com.studiversity.feature.studygroup.repository.StudyGroupRepository
 import com.studiversity.transaction.TransactionWorker
 import io.ktor.server.plugins.*

@@ -1,4 +1,4 @@
-package com.studiversity.feature.studygroup.model
+package com.stuiversity.api.studygroup.model
 
 import com.stuiversity.util.UUIDSerializer
 import kotlinx.serialization.Serializable

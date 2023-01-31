@@ -5,9 +5,9 @@ import com.studiversity.database.table.SpecialtyDao
 import com.studiversity.database.table.StudyGroupDao
 import com.studiversity.database.table.StudyGroups
 import com.studiversity.feature.studygroup.mapper.toResponse
-import com.studiversity.feature.studygroup.model.CreateStudyGroupRequest
-import com.studiversity.feature.studygroup.model.StudyGroupResponse
-import com.studiversity.feature.studygroup.model.UpdateStudyGroupRequest
+import com.stuiversity.api.studygroup.model.CreateStudyGroupRequest
+import com.stuiversity.api.studygroup.model.StudyGroupResponse
+import com.stuiversity.api.studygroup.model.UpdateStudyGroupRequest
 import com.studiversity.util.toUUID
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere

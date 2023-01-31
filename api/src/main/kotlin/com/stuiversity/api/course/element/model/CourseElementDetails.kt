@@ -20,7 +20,7 @@ data class CourseWork @OptIn(ExperimentalSerializationApi::class) constructor(
     val dueTime: LocalTime?,
     val workType: CourseWorkType,
     val maxGrade: Short,
-    @EncodeDefault(EncodeDefault.Mode.ALWAYS)
+    @EncodeDefault
     val workDetails: CourseWorkDetails? = null
 ) : CourseElementDetails()
 

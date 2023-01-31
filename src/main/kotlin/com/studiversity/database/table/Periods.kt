@@ -1,6 +1,9 @@
 package com.studiversity.database.table
 
 import com.stuiversity.api.timetable.model.PeriodType
+import org.jetbrains.exposed.dao.LongEntity
+import org.jetbrains.exposed.dao.LongEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.javatime.date
@@ -18,5 +21,18 @@ object Periods : LongIdTable("period", "period_id") {
         onDelete = ReferenceOption.CASCADE,
         onUpdate = ReferenceOption.CASCADE
     )
-    val type = enumeration<PeriodType>("period_type")
+    val type = enumerationByName<PeriodType>("period_type",10)
+}
+
+class PeriodDao(id: EntityID<Long>) : LongEntity(id) {
+    companion object : LongEntityClass<PeriodDao>(Periods)
+
+    var date by Periods.date
+    var order by Periods.order
+    var roomId by Periods.roomId
+    var studyGroupId by Periods.studyGroupId
+    var type by Periods.type
+
+    val lesson by LessonDao backReferencedOn Lessons.id
+    val event by EventDao backReferencedOn Events.id
 }

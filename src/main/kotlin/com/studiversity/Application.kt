@@ -5,6 +5,7 @@ import com.studiversity.di.configureDI
 import com.studiversity.feature.auth.configureAuth
 import com.studiversity.feature.membership.configureMembership
 import com.studiversity.feature.role.configureRoles
+import com.studiversity.feature.timetable.configureTimetable
 import com.studiversity.feature.user.configureUser
 import com.studiversity.plugin.*
 import com.studiversity.supabase.configureSupabase
@@ -28,6 +29,7 @@ fun Application.module() = runBlocking {
     configureUser()
     configureRoles()
     configureMembership()
+    configureTimetable()
     configureRouting()
 }
 

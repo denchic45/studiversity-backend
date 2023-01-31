@@ -1,7 +1,7 @@
 package com.studiversity.feature.studygroup
 
-import com.studiversity.feature.studygroup.model.CreateStudyGroupRequest
-import com.studiversity.feature.studygroup.model.UpdateStudyGroupRequest
+import com.stuiversity.api.studygroup.model.CreateStudyGroupRequest
+import com.stuiversity.api.studygroup.model.UpdateStudyGroupRequest
 import com.studiversity.feature.studygroup.usecase.AddStudyGroupUseCase
 import com.studiversity.feature.studygroup.usecase.FindStudyGroupByIdUseCase
 import com.studiversity.feature.studygroup.usecase.RemoveStudyGroupUseCase

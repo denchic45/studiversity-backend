@@ -8,13 +8,13 @@ import java.util.*
 sealed interface PeriodDetails
 
 @Serializable
-data class Lesson(
+data class LessonDetails(
     @Serializable(UUIDSerializer::class)
     val courseId: UUID
 ) : PeriodDetails
 
 @Serializable
-data class Event(
+data class EventDetails(
     val name: String,
     val color: String,
     val icon: String

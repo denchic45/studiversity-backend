@@ -1,50 +1,44 @@
 package com.stuiversity.api.timetable.model
 
-import com.stuiversity.util.LocalDateSerializer
 import com.stuiversity.util.UUIDSerializer
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
-import java.time.LocalDate
 import java.util.*
 
-@Serializable(PeriodResponseSerializer::class)
-sealed interface PeriodResponse:PeriodModel {
-    val id: Long
-    val date: LocalDate
-    val studyGroupId: UUID
+sealed interface PeriodModel {
+    val order: Short
+    val roomId: UUID?
+    val type: PeriodType
+    val details: PeriodDetails
 }
 
+
+@Serializable(PeriodRequestSerializer::class)
+sealed interface PeriodRequest:PeriodModel
+
 @Serializable
-data class LessonResponse(
-    override val id:Long,
-    @Serializable(LocalDateSerializer::class)
-    override val date: LocalDate,
+data class LessonRequest(
     override val order: Short,
     @Serializable(UUIDSerializer::class)
     override val roomId: UUID?,
-    @Serializable(UUIDSerializer::class)
-    override val studyGroupId: UUID,
     override val details: LessonDetails
-) : PeriodResponse {
+) : PeriodRequest {
     @OptIn(ExperimentalSerializationApi::class)
     @EncodeDefault
     override val type: PeriodType = PeriodType.LESSON
 }
 
 @Serializable
-data class EventResponse(
-    override val id: Long,
-    @Serializable(LocalDateSerializer::class)
-    override val date: LocalDate,
+data class EventRequest(
     override val order: Short,
     @Serializable(UUIDSerializer::class)
     override val roomId: UUID?,
-    @Serializable(UUIDSerializer::class)
-    override val studyGroupId: UUID,
     override val details: EventDetails
-) : PeriodResponse {
+) : PeriodRequest {
     @OptIn(ExperimentalSerializationApi::class)
     @EncodeDefault
     override val type: PeriodType = PeriodType.EVENT
 }
+
+enum class PeriodType { LESSON, EVENT }

@@ -1,7 +1,7 @@
 package com.studiversity.feature.studygroup.mapper
 
 import com.studiversity.database.table.SpecialtyDao
-import com.studiversity.feature.studygroup.model.SpecialtyResponse
+import com.stuiversity.api.studygroup.model.SpecialtyResponse
 
 //fun SpecialtyDao.toSpecialty() = Specialty(
 //    id = id.value,
