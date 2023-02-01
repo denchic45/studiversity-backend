@@ -10,6 +10,7 @@ fun PeriodDao.toResponse() = when (type) {
         order = order,
         roomId = roomId,
         studyGroupId = studyGroupId,
+        memberIds = members.map { it.member.id.value },
         details = with(lesson) {
             LessonDetails(courseId = courseId)
         }
@@ -21,6 +22,7 @@ fun PeriodDao.toResponse() = when (type) {
         order = order,
         roomId = roomId,
         studyGroupId = studyGroupId,
+        memberIds = members.map { it.member.id.value },
         details = with(event) {
             EventDetails(name = name, icon = icon, color = color)
         }

@@ -11,21 +11,45 @@ import java.util.*
 
 interface TimetableApi {
     suspend fun putTimetable(
-        studyGroupId: UUID,
         weekOfYear: String,
         putTimetableRequest: PutTimetableRequest
     ): ResponseResult<TimetableResponse>
+
+    suspend fun getTimetable(
+        weekOfYear: String,
+        studyGroupIds: List<UUID>? = null,
+        courseIds: List<UUID>? = null,
+        memberIds: List<UUID>? = null,
+        roomIds: List<UUID>? = null
+    ): ResponseResult<TimetableResponse>
+
+    suspend fun getTimetableByStudyGroupId(
+        weekOfYear: String,
+        studyGroupId: UUID
+    ): ResponseResult<TimetableResponse> = getTimetable(weekOfYear, studyGroupIds = listOf(studyGroupId))
 }
 
 class TimetableApiImpl(private val client: HttpClient) : TimetableApi {
     override suspend fun putTimetable(
-        studyGroupId: UUID,
         weekOfYear: String,
         putTimetableRequest: PutTimetableRequest
     ): ResponseResult<TimetableResponse> {
-        return client.put("/studygroups/$studyGroupId/timetables/$weekOfYear") {
+        return client.put("/timetables/$weekOfYear") {
             contentType(ContentType.Application.Json)
             setBody(putTimetableRequest)
         }.toResult()
     }
+
+    override suspend fun getTimetable(
+        weekOfYear: String,
+        studyGroupIds: List<UUID>?,
+        courseIds: List<UUID>?,
+        memberIds: List<UUID>?,
+        roomIds: List<UUID>?
+    ): ResponseResult<TimetableResponse> = client.get("/timetables/$weekOfYear") {
+        studyGroupIds?.forEach { parameter("studyGroupId", it) }
+        courseIds?.forEach { parameter("courseId", it) }
+        memberIds?.forEach { parameter("memberId", it) }
+        roomIds?.forEach { parameter("roomId", it) }
+    }.toResult()
 }

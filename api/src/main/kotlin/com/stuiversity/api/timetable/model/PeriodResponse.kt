@@ -25,6 +25,7 @@ data class LessonResponse(
     override val roomId: UUID?,
     @Serializable(UUIDSerializer::class)
     override val studyGroupId: UUID,
+    override val memberIds: List<@Serializable(UUIDSerializer::class) UUID>,
     override val details: LessonDetails
 ) : PeriodResponse {
     @OptIn(ExperimentalSerializationApi::class)
@@ -42,6 +43,7 @@ data class EventResponse(
     override val roomId: UUID?,
     @Serializable(UUIDSerializer::class)
     override val studyGroupId: UUID,
+    override val memberIds: List<@Serializable(UUIDSerializer::class) UUID>,
     override val details: EventDetails
 ) : PeriodResponse {
     @OptIn(ExperimentalSerializationApi::class)

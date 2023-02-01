@@ -10,6 +10,7 @@ sealed interface PeriodModel {
     val order: Short
     val roomId: UUID?
     val type: PeriodType
+    val memberIds:List<UUID>
     val details: PeriodDetails
 }
 
@@ -22,6 +23,7 @@ data class LessonRequest(
     override val order: Short,
     @Serializable(UUIDSerializer::class)
     override val roomId: UUID?,
+    override val memberIds: List<@Serializable(UUIDSerializer::class)UUID>,
     override val details: LessonDetails
 ) : PeriodRequest {
     @OptIn(ExperimentalSerializationApi::class)
@@ -34,6 +36,7 @@ data class EventRequest(
     override val order: Short,
     @Serializable(UUIDSerializer::class)
     override val roomId: UUID?,
+    override val memberIds: List<@Serializable(UUIDSerializer::class)UUID>,
     override val details: EventDetails
 ) : PeriodRequest {
     @OptIn(ExperimentalSerializationApi::class)
