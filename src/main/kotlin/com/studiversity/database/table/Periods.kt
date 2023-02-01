@@ -33,6 +33,8 @@ class PeriodDao(id: EntityID<Long>) : LongEntity(id) {
     var studyGroupId by Periods.studyGroupId
     var type by Periods.type
 
+    val members by PeriodMemberDao referrersOn PeriodsMembers.periodId
+
     val lesson by LessonDao backReferencedOn Lessons.id
     val event by EventDao backReferencedOn Events.id
 }
