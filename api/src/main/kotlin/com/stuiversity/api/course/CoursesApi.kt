@@ -27,7 +27,7 @@ class CoursesApiImpl(private val client: HttpClient) : CoursesApi {
     override suspend fun create(createCourseRequest: CreateCourseRequest): ResponseResult<CourseResponse> {
         return client.post("/courses") {
             contentType(ContentType.Application.Json)
-            setBody(CreateCourseRequest("Test course for submissions"))
+            setBody(createCourseRequest)
         }.toResult()
     }
 
