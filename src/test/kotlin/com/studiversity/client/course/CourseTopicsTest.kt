@@ -47,7 +47,7 @@ class CourseTopicsTest : KtorClientTest() {
 
     @BeforeEach
     fun init(): Unit = runBlocking {
-        course = coursesApi.create(CreateCourseRequest("Test course for submissions"))
+        course = coursesApi.create(CreateCourseRequest("Test course for topics"))
             .also(::assertResultOk).unwrap()
         enrolTeacher(teacher1Id)
     }

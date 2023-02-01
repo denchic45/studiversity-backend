@@ -57,7 +57,7 @@ class CourseElementsTest : KtorClientTest() {
     private lateinit var courseWork: CourseElementResponse
 
     override fun setup(): Unit = runBlocking {
-        course = coursesApi.create(CreateCourseRequest("Test course for submissions"))
+        course = coursesApi.create(CreateCourseRequest("Test course"))
             .apply { assertResultOk(this) }.unwrap()
         enrolTeacher(teacher1Id)
     }
