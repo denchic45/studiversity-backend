@@ -1,29 +1,12 @@
 package com.stuiversity.api.course.element.model
 
 import com.stuiversity.api.common.SortOrder
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import com.stuiversity.api.common.Sorting
+import com.stuiversity.api.common.SortingClass
 
-@Serializable
-sealed class SortingCourseElements {
+sealed class SortingCourseElements(field: String) : Sorting(field) {
 
-    abstract val field: String
-    abstract val order: SortOrder
+    class TopicId(override val order: SortOrder = SortOrder.ASC) : SortingCourseElements("topic_id")
 
-    override fun toString() = "$field:$order"
-
-    @SerialName("topic_id")
-    class TopicId(override val order: SortOrder = SortOrder.ASC) : SortingCourseElements() {
-        override val field: String = "topic_id"
-    }
-
-    companion object {
-        fun of(content: String): SortingCourseElements? {
-            val (field, sort) = content.split(":")
-            return when (field) {
-                "topic_id" -> TopicId(SortOrder.valueOf(sort))
-                else -> null
-            }
-        }
-    }
+    companion object : SortingClass<SortingCourseElements>("topic_id" to { TopicId(it) })
 }
