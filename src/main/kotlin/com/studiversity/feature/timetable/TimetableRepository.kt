@@ -1,10 +1,8 @@
 package com.studiversity.feature.timetable
 
 import com.studiversity.database.table.*
-import com.stuiversity.api.timetable.model.EventDetails
-import com.stuiversity.api.timetable.model.LessonDetails
-import com.stuiversity.api.timetable.model.PeriodRequest
-import com.stuiversity.api.timetable.model.TimetableResponse
+import com.studiversity.util.toSqlSortOrder
+import com.stuiversity.api.timetable.model.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.between
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -39,12 +37,10 @@ class TimetableRepository {
             }
 
             period.memberIds.forEach {
-                val value = PeriodMemberDao.new {
+                PeriodMemberDao.new {
                     this.period = periodDao
                     this.member = UserDao.findById(it)!!
                 }
-
-                println("PeriodMember: $value")
             }
         }
     }
@@ -55,26 +51,51 @@ class TimetableRepository {
         studyGroupId: List<UUID>? = null,
         memberIds: List<UUID>? = null,
         courseIds: List<UUID>? = null,
-        roomIds: List<UUID>? = null
+        roomIds: List<UUID>? = null,
+        sorting: List<SortingPeriods>? = null
     ): TimetableResponse {
-        val query = Periods.select(Periods.date.between(startDate, endDate))
+        val query = Periods.innerJoin(Lessons, { Periods.id }, { id })
+            .innerJoin(PeriodsMembers, { Periods.id }, { periodId })
+            .select(Periods.date.between(startDate, endDate))
 
         studyGroupId?.let { query.andWhere { Periods.studyGroupId inList it } }
 
-        courseIds?.let {
-            query.adjustColumnSet { innerJoin(Lessons, { Periods.id }, { id }) }
-                .adjustSlice { slice(fields + Lessons.columns) }
-                .andWhere { Lessons.courseId inList courseIds }
-        }
+        courseIds?.let { query.andWhere { Lessons.courseId inList courseIds } }
 
-        memberIds?.let {
-            query.adjustColumnSet { innerJoin(PeriodsMembers, { Periods.id }, { periodId }) }
-                .adjustSlice { slice(fields + PeriodsMembers.columns) }
-                .andWhere { PeriodsMembers.memberId inList memberIds }
-        }
+        memberIds?.let { query.andWhere { PeriodsMembers.memberId inList memberIds } }
 
-        roomIds?.let {
-            query.andWhere { Periods.roomId inList roomIds }
+        roomIds?.let { query.andWhere { Periods.roomId inList roomIds } }
+
+        sorting?.forEach {
+            query.orderBy(
+                column = when (it) {
+                    is SortingPeriods.Course -> {
+                        query.adjustColumnSet { innerJoin(Courses, { Lessons.courseId }, { Courses.id }) }
+                            .adjustSlice { slice(fields + Courses.name) }
+                        Courses.name
+                    }
+
+                    is SortingPeriods.Member -> {
+                        query.adjustColumnSet { innerJoin(Users, { PeriodsMembers.memberId }, { Users.id }) }
+                            .adjustSlice { slice(fields + Users.surname) }
+                        Users.surname
+                    }
+
+                    is SortingPeriods.Order -> Periods.order
+                    is SortingPeriods.Room -> {
+                        query.adjustColumnSet { innerJoin(Rooms, { Periods.roomId }, { Rooms.id }) }
+                            .adjustSlice { slice(fields + Rooms.name) }
+                        Rooms.name
+                    }
+
+                    is SortingPeriods.StudyGroup -> {
+                        query.adjustColumnSet { innerJoin(StudyGroups, { Periods.studyGroupId }, { StudyGroups.id }) }
+                            .adjustSlice { slice(fields + StudyGroups.name) }
+                        StudyGroups.name
+                    }
+                },
+                order = it.order.toSqlSortOrder()
+            )
         }
 
         return PeriodDao.wrapRows(query)
