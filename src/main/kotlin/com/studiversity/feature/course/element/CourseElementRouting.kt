@@ -3,19 +3,14 @@ package com.studiversity.feature.course.element
 import com.studiversity.feature.course.element.usecase.*
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
-import com.studiversity.ktor.claimId
-import com.studiversity.ktor.currentUserId
-import com.studiversity.ktor.getUuid
-import com.studiversity.ktor.jwtPrincipal
+import com.studiversity.ktor.*
 import com.stuiversity.api.course.element.model.SortingCourseElements
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
-import kotlin.reflect.typeOf
 
 
 fun Route.courseElementRoutes() {
@@ -25,10 +20,7 @@ fun Route.courseElementRoutes() {
 
         get {
             val courseId = call.parameters.getUuid("courseId")
-            val sorting = call.parameters.getAll("sort_by")?.map {
-                SortingCourseElements.of(it)
-                    ?: throw ParameterConversionException(it, typeOf<SortingCourseElements>().toString())
-            }
+            val sorting = call.request.queryParameters.getSortingBy(SortingCourseElements)
 
             requireCapability(
                 userId = call.currentUserId(),
