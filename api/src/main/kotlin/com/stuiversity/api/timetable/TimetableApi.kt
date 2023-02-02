@@ -3,7 +3,9 @@ package com.stuiversity.api.timetable
 import com.stuiversity.api.common.ResponseResult
 import com.stuiversity.api.common.toResult
 import com.stuiversity.api.timetable.model.PutTimetableRequest
+import com.stuiversity.api.timetable.model.SortingPeriods
 import com.stuiversity.api.timetable.model.TimetableResponse
+import com.stuiversity.util.parametersOf
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -20,13 +22,19 @@ interface TimetableApi {
         studyGroupIds: List<UUID>? = null,
         courseIds: List<UUID>? = null,
         memberIds: List<UUID>? = null,
-        roomIds: List<UUID>? = null
+        roomIds: List<UUID>? = null,
+        vararg sorting: SortingPeriods
     ): ResponseResult<TimetableResponse>
 
     suspend fun getTimetableByStudyGroupId(
         weekOfYear: String,
-        studyGroupId: UUID
-    ): ResponseResult<TimetableResponse> = getTimetable(weekOfYear, studyGroupIds = listOf(studyGroupId))
+        studyGroupId: UUID,
+        vararg sorting: SortingPeriods
+    ): ResponseResult<TimetableResponse> = getTimetable(
+        weekOfYear = weekOfYear,
+        studyGroupIds = listOf(studyGroupId),
+        sorting = sorting
+    )
 }
 
 class TimetableApiImpl(private val client: HttpClient) : TimetableApi {
@@ -45,11 +53,13 @@ class TimetableApiImpl(private val client: HttpClient) : TimetableApi {
         studyGroupIds: List<UUID>?,
         courseIds: List<UUID>?,
         memberIds: List<UUID>?,
-        roomIds: List<UUID>?
+        roomIds: List<UUID>?,
+        vararg sorting: SortingPeriods
     ): ResponseResult<TimetableResponse> = client.get("/timetables/$weekOfYear") {
         studyGroupIds?.forEach { parameter("studyGroupId", it) }
         courseIds?.forEach { parameter("courseId", it) }
         memberIds?.forEach { parameter("memberId", it) }
         roomIds?.forEach { parameter("roomId", it) }
+        parametersOf(values = sorting)
     }.toResult()
 }

@@ -1,11 +1,12 @@
 package com.stuiversity.api.course.element
 
-import com.stuiversity.api.course.element.model.CourseElementResponse
-import com.stuiversity.api.course.element.model.SortingCourseElements
-import com.stuiversity.api.course.element.model.UpdateCourseElementRequest
 import com.stuiversity.api.common.EmptyResponseResult
 import com.stuiversity.api.common.ResponseResult
 import com.stuiversity.api.common.toResult
+import com.stuiversity.api.course.element.model.CourseElementResponse
+import com.stuiversity.api.course.element.model.SortingCourseElements
+import com.stuiversity.api.course.element.model.UpdateCourseElementRequest
+import com.stuiversity.util.parametersOf
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -44,9 +45,7 @@ class CourseElementApiImpl(private val client: HttpClient) : CourseElementApi {
         vararg sorting: SortingCourseElements
     ): ResponseResult<List<CourseElementResponse>> {
         return client.get("/courses/$courseId/elements") {
-            sorting.forEach {
-                parameter("sort_by", it.toString())
-            }
+            parametersOf(values = sorting)
         }.toResult()
     }
 
