@@ -23,13 +23,13 @@ interface TimetableApi {
         courseIds: List<UUID>? = null,
         memberIds: List<UUID>? = null,
         roomIds: List<UUID>? = null,
-        vararg sorting: SortingPeriods
+        sorting: List<SortingPeriods> = listOf()
     ): ResponseResult<TimetableResponse>
 
     suspend fun getTimetableByStudyGroupId(
         weekOfYear: String,
         studyGroupId: UUID,
-        vararg sorting: SortingPeriods
+        sorting: List<SortingPeriods> = listOf()
     ): ResponseResult<TimetableResponse> = getTimetable(
         weekOfYear = weekOfYear,
         studyGroupIds = listOf(studyGroupId),
@@ -54,7 +54,7 @@ class TimetableApiImpl(private val client: HttpClient) : TimetableApi {
         courseIds: List<UUID>?,
         memberIds: List<UUID>?,
         roomIds: List<UUID>?,
-        vararg sorting: SortingPeriods
+        sorting: List<SortingPeriods>
     ): ResponseResult<TimetableResponse> = client.get("/timetables/$weekOfYear") {
         studyGroupIds?.forEach { parameter("studyGroupId", it) }
         courseIds?.forEach { parameter("courseId", it) }

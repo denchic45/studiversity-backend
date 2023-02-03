@@ -22,7 +22,7 @@ interface CourseElementApi {
 
     suspend fun getByCourseId(
         courseId: UUID,
-        vararg sorting: SortingCourseElements
+        sorting: List<SortingCourseElements> = listOf()
     ): ResponseResult<List<CourseElementResponse>>
 
     suspend fun delete(courseId: UUID, elementId: UUID): EmptyResponseResult
@@ -42,7 +42,7 @@ class CourseElementApiImpl(private val client: HttpClient) : CourseElementApi {
 
     override suspend fun getByCourseId(
         courseId: UUID,
-        vararg sorting: SortingCourseElements
+        sorting: List<SortingCourseElements>
     ): ResponseResult<List<CourseElementResponse>> {
         return client.get("/courses/$courseId/elements") {
             parametersOf(values = sorting)

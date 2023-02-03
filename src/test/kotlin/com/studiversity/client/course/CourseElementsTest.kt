@@ -163,7 +163,7 @@ class CourseElementsTest : KtorClientTest() {
         }
 
         // sort by topic asc
-        courseElementApi.getByCourseId(course.id, SortingCourseElements.TopicId())
+        courseElementApi.getByCourseId(course.id, listOf(SortingCourseElements.TopicId()))
             .apply { assertResultOk(this) }
             .unwrap()
             .map { it.topicId }
@@ -171,7 +171,7 @@ class CourseElementsTest : KtorClientTest() {
             .apply { assertEquals(listOf(topic1.id, topic2.id), this) }
 
         // sort by topic desc
-        courseElementApi.getByCourseId(course.id, SortingCourseElements.TopicId(SortOrder.DESC))
+        courseElementApi.getByCourseId(course.id, listOf(SortingCourseElements.TopicId(SortOrder.DESC)))
             .apply { assertResultOk(this) }
             .unwrap()
             .map { it.topicId }

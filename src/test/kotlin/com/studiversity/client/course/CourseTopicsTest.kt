@@ -249,7 +249,7 @@ class CourseTopicsTest : KtorClientTest() {
 
         courseElementApi.delete(course.id, secondElements[0].id).also(::assertResultOk)
 
-        courseElementApi.getByCourseId(course.id, SortingCourseElements.TopicId())
+        courseElementApi.getByCourseId(course.id, listOf(SortingCourseElements.TopicId()))
             .also(::assertResultOk).unwrap().apply {
                 assertTrue(this.all { it.id != secondElements[0].id })
                 groupBy { it.topicId }.values.forEach { value ->
