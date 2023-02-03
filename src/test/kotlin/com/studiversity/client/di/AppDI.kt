@@ -12,6 +12,8 @@ import com.stuiversity.api.course.work.CourseWorkApi
 import com.stuiversity.api.course.work.CourseWorkApiImpl
 import com.stuiversity.api.membership.MembershipsApi
 import com.stuiversity.api.membership.MembershipsApiImpl
+import com.stuiversity.api.room.RoomApi
+import com.stuiversity.api.room.RoomApiImpl
 import com.stuiversity.api.studygroup.StudyGroupApi
 import com.stuiversity.api.studygroup.StudyGroupApiImpl
 import com.stuiversity.api.submission.SubmissionsApi
@@ -33,4 +35,5 @@ internal val apiModule = module {
     factory<CourseTopicApi> { CourseTopicApiImpl(it.get()) }
     factory<MembershipsApi> { MembershipsApiImpl(it.get()) }
     factory<TimetableApi> { TimetableApiImpl(it.get()) }
+    factory<RoomApi> { RoomApiImpl(it.get()) }
 }

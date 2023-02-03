@@ -7,6 +7,7 @@ import com.studiversity.feature.auth.authModule
 import com.studiversity.feature.course.courseModule
 import com.studiversity.feature.membership.membershipModule
 import com.studiversity.feature.role.roleModule
+import com.studiversity.feature.room.roomModule
 import com.studiversity.feature.studygroup.studyGroupModule
 import com.studiversity.feature.timetable.timetableModule
 import com.studiversity.feature.user.userModule
@@ -59,7 +60,8 @@ fun Application.configureDI() {
             studyGroupModule,
             attachmentModule,
             courseModule,
-            timetableModule
+            timetableModule,
+            roomModule
         )
     }
 }

@@ -1,4 +1,4 @@
-package com.studiversity.feature.room.model
+package com.stuiversity.api.room.model
 
 import kotlinx.serialization.Serializable
 
