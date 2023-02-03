@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
 import java.util.*
 
-class FindTimetableByStudyGroupUseCase(
+class FindTimetableUseCase(
     private val transactionWorker: TransactionWorker,
     private val timetableRepository: TimetableRepository
 ) {
@@ -28,7 +28,7 @@ class FindTimetableByStudyGroupUseCase(
                 .toFormatter()
         )
 
-        timetableRepository.findByRangeDates(
+        timetableRepository.findByDateRange(
             startDate = monday,
             endDate = monday.plusDays(5),
             studyGroupId = studyGroupIds,

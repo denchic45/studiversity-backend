@@ -29,7 +29,7 @@ class PutTimetableUseCase(
             timetableRepository.putPeriodsOfDay(studyGroupId, monday.plusDays(4), putTimetableRequest.friday)
             timetableRepository.putPeriodsOfDay(studyGroupId, monday.plusDays(5), putTimetableRequest.saturday)
 
-            timetableRepository.findByRangeDates(monday, monday.plusDays(5), listOf(studyGroupId))
+            timetableRepository.findByDateRange(monday, monday.plusDays(5), listOf(studyGroupId))
         }
     }
 }
