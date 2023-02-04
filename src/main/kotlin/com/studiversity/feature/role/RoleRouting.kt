@@ -2,14 +2,12 @@ package com.studiversity.feature.role
 
 import com.studiversity.feature.role.model.UpdateUserRolesRequest
 import com.studiversity.feature.role.usecase.*
-import com.studiversity.ktor.claimId
-import com.studiversity.ktor.jwtPrincipal
+import com.studiversity.ktor.currentUserId
+import com.studiversity.ktor.getUuid
 import com.studiversity.util.hasNotDuplicates
-import com.studiversity.util.toUUID
 import com.studiversity.validation.buildValidationResult
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.plugins.*
 import io.ktor.server.plugins.requestvalidation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -17,7 +15,7 @@ import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
 fun Route.userAssignedRolesRoute() {
-    route("users/{id}/roles") {
+    route("users/{id}/scopes{scopeId}/roles") {
         install(RequestValidation) {
             validate<UpdateUserRolesRequest> {
                 buildValidationResult {
@@ -26,7 +24,6 @@ fun Route.userAssignedRolesRoute() {
                 }
             }
         }
-
         val requireCapability: RequireCapabilityUseCase by inject()
         val requireAvailableRolesInScope: RequireAvailableRolesInScopeUseCase by inject()
         val requirePermissionToAssignRoles: RequirePermissionToAssignRolesUseCase by inject()
@@ -34,20 +31,17 @@ fun Route.userAssignedRolesRoute() {
         val updateUserRolesInScope: UpdateUserRolesInScopeUseCase by inject()
 
         get {
-            val userId = call.parameters["id"]!!.toUUID()
-            val scopeId = call.request.queryParameters["scopeId"]?.toUUID()
-                ?: throw BadRequestException("SCOPE_ID_IS_REQUIRED")
-            //TODO add capability to read user roles
+            val userId = call.parameters.getUuid("id")
+            val scopeId = call.parameters.getUuid("scopeId")
             call.respond(HttpStatusCode.OK, findAssignedUserRolesInScope(userId, scopeId))
         }
 
         put {
-            val userId = call.parameters["id"]!!.toUUID()
-            val scopeId = call.request.queryParameters["scopeId"]?.toUUID()
-                ?: throw BadRequestException("SCOPE_ID_IS_REQUIRED")
+            val userId = call.parameters.getUuid("id")
+            val scopeId = call.parameters.getUuid("scopeId")
             val body = call.receive<UpdateUserRolesRequest>()
 
-            val currentUserId = call.jwtPrincipal().payload.claimId
+            val currentUserId = call.currentUserId()
             requireCapability(currentUserId, Capability.WriteAssignRoles, scopeId)
             val assignableRoles = body.roleIds
 
