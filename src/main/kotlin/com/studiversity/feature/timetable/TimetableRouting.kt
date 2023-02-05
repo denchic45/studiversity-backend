@@ -1,7 +1,7 @@
 package com.studiversity.feature.timetable
 
 import com.studiversity.di.OrganizationEnv
-import com.studiversity.feature.role.Capability
+import com.stuiversity.api.role.model.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.feature.timetable.usecase.*
 import com.studiversity.ktor.currentUserId

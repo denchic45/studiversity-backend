@@ -5,7 +5,7 @@ import com.studiversity.feature.attachment.respondAttachment
 import com.studiversity.feature.course.element.usecase.*
 import com.studiversity.feature.course.work.submission.workSubmissionRoutes
 import com.studiversity.feature.course.work.usecase.AddCourseWorkUseCase
-import com.studiversity.feature.role.Capability
+import com.stuiversity.api.role.model.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.ktor.claimId
 import com.studiversity.ktor.getUuid

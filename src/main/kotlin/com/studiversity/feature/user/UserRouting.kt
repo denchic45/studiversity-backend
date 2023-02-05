@@ -4,7 +4,7 @@ import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.onSuccess
 import com.studiversity.di.OrganizationEnv
 import com.studiversity.feature.auth.usecase.SignUpUserManuallyUseCase
-import com.studiversity.feature.role.Capability
+import com.stuiversity.api.role.model.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.feature.user.usecase.FindUserByIdUseCase
 import com.studiversity.feature.user.usecase.RemoveUserUseCase

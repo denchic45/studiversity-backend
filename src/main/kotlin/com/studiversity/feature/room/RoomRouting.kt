@@ -1,7 +1,7 @@
 package com.studiversity.feature.room
 
 import com.studiversity.di.OrganizationEnv
-import com.studiversity.feature.role.Capability
+import com.stuiversity.api.role.model.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.feature.room.usecase.AddRoomUseCase
 import com.studiversity.feature.room.usecase.FindRoomByIdUseCase

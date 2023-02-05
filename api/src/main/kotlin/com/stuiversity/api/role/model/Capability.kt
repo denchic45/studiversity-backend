@@ -1,4 +1,4 @@
-package com.studiversity.feature.role
+package com.stuiversity.api.role.model
 
 data class Capability(val resource: String) {
 
@@ -19,6 +19,8 @@ data class Capability(val resource: String) {
         val ReadStudyGroup: Capability = Capability("study_group:read")
         val WriteStudyGroup: Capability = Capability("study_group:write")
         val DeleteStudyGroup: Capability = Capability("study_group:delete")
+
+        val BeStudent: Capability = Capability("be_student") // TODO: test capability for test
 
         val WriteTimetable: Capability = Capability("timetable:write")
         val WriteRoom: Capability = Capability("room:write")

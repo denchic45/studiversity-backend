@@ -4,7 +4,7 @@ import com.studiversity.di.OrganizationEnv
 import com.studiversity.feature.membership.usecase.FindMembershipByScopeUseCase
 import com.studiversity.feature.membership.usecase.RemoveMemberFromScopeUseCase
 import com.studiversity.feature.membership.usecase.RemoveSelfMemberFromScopeUseCase
-import com.studiversity.feature.role.Capability
+import com.stuiversity.api.role.model.Capability
 import com.studiversity.feature.role.RoleErrors
 import com.stuiversity.api.role.model.UpdateUserRolesRequest
 import com.studiversity.feature.role.usecase.FindMembersInScopeUseCase

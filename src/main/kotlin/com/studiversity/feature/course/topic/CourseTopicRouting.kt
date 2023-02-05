@@ -1,7 +1,7 @@
 package com.studiversity.feature.course.topic
 
 import com.studiversity.feature.course.topic.usecase.*
-import com.studiversity.feature.role.Capability
+import com.stuiversity.api.role.model.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.ktor.currentUserId
 import com.studiversity.ktor.getUuid

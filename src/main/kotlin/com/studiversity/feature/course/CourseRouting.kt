@@ -5,7 +5,7 @@ import com.studiversity.feature.course.element.courseElementRoutes
 import com.studiversity.feature.course.topic.courseTopicsRoutes
 import com.studiversity.feature.course.usecase.*
 import com.studiversity.feature.course.work.courseWorksRoutes
-import com.studiversity.feature.role.Capability
+import com.stuiversity.api.role.model.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.ktor.claimId
 import com.studiversity.ktor.jwtPrincipal
