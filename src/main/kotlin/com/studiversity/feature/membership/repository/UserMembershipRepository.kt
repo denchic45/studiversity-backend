@@ -5,7 +5,7 @@ import com.studiversity.database.table.*
 import com.stuiversity.api.membership.model.Member
 import com.stuiversity.api.membership.model.MembershipResponse
 import com.stuiversity.api.membership.model.ScopeMember
-import com.stuiversity.api.role.Role
+import com.stuiversity.api.role.model.Role
 import com.studiversity.feature.role.mapper.toRole
 import com.studiversity.logger.logger
 import com.studiversity.util.toUUID
@@ -152,7 +152,7 @@ class UserMembershipRepository(
             .select(UsersMemberships.membershipId eq courseMembershipId)
             .map { it[UsersMemberships.memberId] }
 
-        val isAStudentRoles: List<Long> = RoleDao.findChildRoleIdsByRoleId(Role.Student.id) + Role.Student.id
+        val studentWithChildRoles: List<Long> = RoleDao.findChildRoleIdsByRoleId(Role.Student.id) + Role.Student.id
 
         Memberships.innerJoin(UsersMemberships, { Memberships.id }, { membershipId })
             .innerJoin(
@@ -162,7 +162,7 @@ class UserMembershipRepository(
                 { UsersRolesScopes.userId eq UsersMemberships.memberId })
             .slice(UsersMemberships.memberId)
             .select(
-                UsersRolesScopes.roleId inList isAStudentRoles
+                UsersRolesScopes.roleId inList studentWithChildRoles
                         and (Memberships.scopeId inList groupIds)
                         and (UsersMemberships.memberId notInList courseStudentsFromGroups)
             ).distinctBy { it[UsersMemberships.memberId] }
@@ -177,9 +177,7 @@ class UserMembershipRepository(
     }
 
     fun findRemainingStudentsOfCourseFromGroups(groupIds: List<UUID>, courseMembershipId: UUID) = transaction {
-        val isAStudentRoles: List<Long> = RoleDao.findChildRoleIdsByRoleId(Role.Student.id) + Role.Student.id
-
-//        val groupsMembershipIds = findMembershipsByScopeIds(groupIds)
+        val studentWithChildRoles: List<Long> = RoleDao.findChildRoleIdsByRoleId(Role.Student.id) + Role.Student.id
 
         val groupStudentIds = Memberships.innerJoin(UsersMemberships, { Memberships.id }, { membershipId })
             .innerJoin(
@@ -190,7 +188,7 @@ class UserMembershipRepository(
             .slice(UsersMemberships.memberId)
             .select(
                 Memberships.scopeId inList groupIds
-                        and (UsersRolesScopes.roleId inList isAStudentRoles)
+                        and (UsersRolesScopes.roleId inList studentWithChildRoles)
             ).map { it[UsersMemberships.memberId] }
 
         UsersMemberships.slice(UsersMemberships.memberId)

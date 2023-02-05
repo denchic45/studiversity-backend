@@ -4,7 +4,7 @@ import com.studiversity.feature.course.element.repository.CourseElementRepositor
 import com.studiversity.feature.course.work.submission.SubmissionRepository
 import com.stuiversity.api.course.work.submission.model.SubmissionState
 import com.studiversity.feature.membership.repository.UserMembershipRepository
-import com.stuiversity.api.role.Role
+import com.stuiversity.api.role.model.Role
 import com.studiversity.transaction.TransactionWorker
 import io.ktor.server.plugins.*
 import java.util.*

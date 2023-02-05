@@ -5,7 +5,7 @@ import com.studiversity.feature.course.work.submission.SubmissionRepository
 import com.studiversity.feature.membership.repository.UserMembershipRepository
 import com.studiversity.transaction.TransactionWorker
 import com.stuiversity.api.course.work.model.CreateCourseWorkRequest
-import com.stuiversity.api.role.Role
+import com.stuiversity.api.role.model.Role
 import java.util.*
 
 class AddCourseWorkUseCase(

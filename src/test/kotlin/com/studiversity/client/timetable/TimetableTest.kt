@@ -3,7 +3,7 @@ package com.studiversity.client.timetable
 import com.github.michaelbull.result.unwrap
 import com.studiversity.KtorClientTest
 import com.studiversity.util.UNKNOWN_LONG_ID
-import com.studiversity.util.assertResultOk
+import com.studiversity.util.assertResultIsOk
 import com.studiversity.util.toUUID
 import com.stuiversity.api.course.CoursesApi
 import com.stuiversity.api.course.model.CourseResponse
@@ -89,39 +89,39 @@ class TimetableTest : KtorClientTest() {
     fun init(): Unit = runBlocking {
         studyGroup1 = studyGroupApi.create(
             CreateStudyGroupRequest("Test group PKS 4.1", AcademicYear(2019, 2023), null, null)
-        ).also(::assertResultOk).unwrap()
+        ).also(::assertResultIsOk).unwrap()
 
         studyGroup2 = studyGroupApi.create(
             CreateStudyGroupRequest("Test group PKS 4.2", AcademicYear(2023, 2027), null, null)
-        ).also(::assertResultOk).unwrap()
+        ).also(::assertResultIsOk).unwrap()
 
-        mathCourse = courseApi.create(CreateCourseRequest("Math")).also(::assertResultOk).unwrap()
-        engCourse = courseApi.create(CreateCourseRequest("English")).also(::assertResultOk).unwrap()
-        physicsCourse = courseApi.create(CreateCourseRequest("Physics")).also(::assertResultOk).unwrap()
+        mathCourse = courseApi.create(CreateCourseRequest("Math")).also(::assertResultIsOk).unwrap()
+        engCourse = courseApi.create(CreateCourseRequest("English")).also(::assertResultIsOk).unwrap()
+        physicsCourse = courseApi.create(CreateCourseRequest("Physics")).also(::assertResultIsOk).unwrap()
 
-        room5 = roomApi.create(CreateRoomRequest("Room 5")).also(::assertResultOk).unwrap()
-        room10 = roomApi.create(CreateRoomRequest("Room 10")).also(::assertResultOk).unwrap()
-        room15 = roomApi.create(CreateRoomRequest("Room 15")).also(::assertResultOk).unwrap()
-        roomWorkshop = roomApi.create(CreateRoomRequest("Workshop")).also(::assertResultOk).unwrap()
+        room5 = roomApi.create(CreateRoomRequest("Room 5")).also(::assertResultIsOk).unwrap()
+        room10 = roomApi.create(CreateRoomRequest("Room 10")).also(::assertResultIsOk).unwrap()
+        room15 = roomApi.create(CreateRoomRequest("Room 15")).also(::assertResultIsOk).unwrap()
+        roomWorkshop = roomApi.create(CreateRoomRequest("Workshop")).also(::assertResultIsOk).unwrap()
     }
 
     @AfterEach
     fun tearDown(): Unit = runBlocking {
-        studyGroupApi.delete(studyGroup1.id).also(::assertResultOk)
-        studyGroupApi.delete(studyGroup2.id).also(::assertResultOk)
+        studyGroupApi.delete(studyGroup1.id).also(::assertResultIsOk)
+        studyGroupApi.delete(studyGroup2.id).also(::assertResultIsOk)
 
-        courseApi.setArchive(mathCourse.id).also(::assertResultOk)
-        courseApi.setArchive(engCourse.id).also(::assertResultOk)
-        courseApi.setArchive(physicsCourse.id).also(::assertResultOk)
+        courseApi.setArchive(mathCourse.id).also(::assertResultIsOk)
+        courseApi.setArchive(engCourse.id).also(::assertResultIsOk)
+        courseApi.setArchive(physicsCourse.id).also(::assertResultIsOk)
 
-        courseApi.delete(mathCourse.id).also(::assertResultOk)
-        courseApi.delete(engCourse.id).also(::assertResultOk)
-        courseApi.delete(physicsCourse.id).also(::assertResultOk)
+        courseApi.delete(mathCourse.id).also(::assertResultIsOk)
+        courseApi.delete(engCourse.id).also(::assertResultIsOk)
+        courseApi.delete(physicsCourse.id).also(::assertResultIsOk)
 
-        roomApi.delete(room5.id).also(::assertResultOk)
-        roomApi.delete(room10.id).also(::assertResultOk)
-        roomApi.delete(room15.id).also(::assertResultOk)
-        roomApi.delete(roomWorkshop.id).also(::assertResultOk)
+        roomApi.delete(room5.id).also(::assertResultIsOk)
+        roomApi.delete(room10.id).also(::assertResultIsOk)
+        roomApi.delete(room15.id).also(::assertResultIsOk)
+        roomApi.delete(roomWorkshop.id).also(::assertResultIsOk)
     }
 
     @Test
@@ -134,12 +134,12 @@ class TimetableTest : KtorClientTest() {
             response.toFlatPeriods().map(PeriodResponse::details)
         )
 
-        timetableApi.deleteTimetable(weekOfYear, studyGroup1.id).also(::assertResultOk)
+        timetableApi.deleteTimetable(weekOfYear, studyGroup1.id).also(::assertResultIsOk)
         assertTrue(timetableApi.getTimetable(weekOfYear, listOf(studyGroup1.id)).unwrap().toFlatPeriods().isEmpty())
     }
 
     private suspend fun putTimetable(request: PutTimetableRequest): TimetableResponse {
-        return timetableApi.putTimetable(weekOfYear, request).also(::assertResultOk).unwrap()
+        return timetableApi.putTimetable(weekOfYear, request).also(::assertResultIsOk).unwrap()
     }
 
     @Test
@@ -148,7 +148,7 @@ class TimetableTest : KtorClientTest() {
         putTimetable(request)
 
         val response = timetableApi.getTimetableByStudyGroupId(weekOfYear, studyGroup1.id)
-            .also(::assertResultOk).unwrap()
+            .also(::assertResultIsOk).unwrap()
 
         assertIterableEquals(
             request.toFlatPeriods().map(PeriodRequest::details),
@@ -164,7 +164,7 @@ class TimetableTest : KtorClientTest() {
         putTimetable(request2)
 
         val response = timetableApi.getTimetable(weekOfYear, memberIds = listOf(teacher1Id))
-            .also(::assertResultOk).unwrap()
+            .also(::assertResultIsOk).unwrap()
 
         val expectedTimetableResponse = TimetableResponse(
             monday = listOf(
@@ -261,7 +261,7 @@ class TimetableTest : KtorClientTest() {
             weekOfYear = weekOfYear,
             courseIds = listOf(mathCourse.id),
             sorting = listOf(SortingPeriods.StudyGroup())
-        ).also(::assertResultOk).unwrap()
+        ).also(::assertResultIsOk).unwrap()
 
         val expectedTimetableResponse = TimetableResponse(
             monday = listOf(
@@ -424,7 +424,7 @@ class TimetableTest : KtorClientTest() {
             weekOfYear,
             roomIds = listOf(room10.id),
             sorting = listOf(SortingPeriods.Order(), SortingPeriods.StudyGroup())
-        ).also(::assertResultOk).unwrap()
+        ).also(::assertResultIsOk).unwrap()
 
         expectedResponse.toFlatPeriods().zip(response.toFlatPeriods())
             .forEach { (expected, actual) ->
@@ -483,7 +483,7 @@ class TimetableTest : KtorClientTest() {
         )
 
         val response = timetableApi.getTimetableOfDayByStudyGroupId(weekOfYear, 2, studyGroup1.id)
-            .also(::assertResultOk).unwrap()
+            .also(::assertResultIsOk).unwrap()
 
         expectedResponse.periods.zip(response.periods).forEach { (expected, actual) ->
             assertEquals(expected.studyGroupId, actual.studyGroupId)
@@ -547,7 +547,7 @@ class TimetableTest : KtorClientTest() {
                     LessonRequest(4, room5.id, listOf(teacher1Id), LessonDetails(mathCourse.id)),
                 )
             )
-        ).also(::assertResultOk).unwrap()
+        ).also(::assertResultIsOk).unwrap()
         expectedResponse.periods.zip(response.periods).forEach { (expected, actual) ->
             assertEquals(expected.studyGroupId, actual.studyGroupId)
             assertEquals(expected.date, actual.date)
@@ -556,7 +556,7 @@ class TimetableTest : KtorClientTest() {
             assertEquals(expected.roomId, actual.roomId)
         }
 
-        timetableApi.deleteTimetable(weekOfYear, 3, studyGroup1.id).also(::assertResultOk)
+        timetableApi.deleteTimetable(weekOfYear, 3, studyGroup1.id).also(::assertResultIsOk)
         assertTrue(timetableApi.getTimetableOfDay(weekOfYear, 3, listOf(studyGroup1.id)).unwrap().periods.isEmpty())
     }
 

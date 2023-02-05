@@ -1,6 +1,6 @@
 package com.stuiversity.api.membership.model
 
-import com.stuiversity.api.role.Role
+import com.stuiversity.api.role.model.Role
 import com.stuiversity.util.UUIDSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
