@@ -2,9 +2,9 @@ package com.studiversity.feature.role.mapper
 
 import com.studiversity.database.table.RoleDao
 import com.studiversity.database.table.UserRoleScopeDao
-import com.stuiversity.api.role.Role
-import com.studiversity.feature.role.model.UserRolesResponse
-import com.studiversity.feature.role.model.UserWithRolesResponse
+import com.stuiversity.api.role.model.Role
+import com.stuiversity.api.role.model.UserRolesResponse
+import com.stuiversity.api.role.model.UserWithRolesResponse
 import java.util.*
 
 fun RoleDao.toRole(): Role = Role(id = id.value, resource = shortName)

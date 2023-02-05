@@ -4,14 +4,14 @@ import com.studiversity.database.exists
 import com.studiversity.database.table.*
 import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.Permission
-import com.stuiversity.api.role.Role
 import com.studiversity.feature.role.combinedPermission
 import com.studiversity.feature.role.mapper.toUserRolesResponse
 import com.studiversity.feature.role.mapper.toUsersWithRoles
-import com.studiversity.feature.role.model.UpdateUserRolesRequest
-import com.studiversity.feature.role.model.UserRolesResponse
-import com.studiversity.feature.role.model.UserWithRolesResponse
+import com.stuiversity.api.role.model.Role
+import com.stuiversity.api.role.model.UserRolesResponse
+import com.stuiversity.api.role.model.UserWithRolesResponse
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
@@ -56,11 +56,7 @@ class RoleRepository {
         val path = ScopeDao.findById(scopeId)!!.path
         var has = false
         for (nextScopeId in path) {
-            when (findCapabilityPermissionOfUserInScope(
-                userId,
-                nextScopeId,
-                capability.toString()
-            )) {
+            when (findCapabilityPermissionOfUserInScope(userId, nextScopeId, capability.toString())) {
                 Permission.Undefined -> continue
                 Permission.Allow -> has = true
                 Permission.Prohibit -> {
@@ -76,23 +72,23 @@ class RoleRepository {
         userId: UUID,
         scopeId: UUID,
         capabilityResource: String
-    ): Permission = UsersRolesScopes.slice(UsersRolesScopes.roleId)
-        .select(
-            UsersRolesScopes.userId eq userId
-                    and (UsersRolesScopes.scopeId eq scopeId)
-        ).map { usersRolesScopesRow ->
-            findPermissionByRole(
-                roleId = usersRolesScopesRow[UsersRolesScopes.roleId].value,
-                capabilityResource = capabilityResource
-            )
-        }.combinedPermission()
+    ): Permission = UsersRolesScopes.slice(UsersRolesScopes.roleId).select(
+        UsersRolesScopes.userId eq userId
+                and (UsersRolesScopes.scopeId eq scopeId)
+    ).map { usersRolesScopesRow ->
+        val roleId = usersRolesScopesRow[UsersRolesScopes.roleId].value
+        findPermissionByRole(
+            roleIds = RoleDao.findParentRoleIdsByRoleId(roleId) + roleId,
+            capabilityResource = capabilityResource
+        )
+    }.combinedPermission()
 
     private fun findPermissionByRole(
-        roleId: Long,
+        roleIds: List<Long>,
         capabilityResource: String
     ) = RolesCapabilities.slice(RolesCapabilities.permission)
         .select(
-            RolesCapabilities.roleId eq roleId
+            RolesCapabilities.roleId inList roleIds
                     and (RolesCapabilities.capabilityResource eq capabilityResource)
         ).map { rolesCapabilitiesRow -> rolesCapabilitiesRow[RolesCapabilities.permission] }
         .firstOrNull() ?: Permission.Undefined
@@ -105,24 +101,22 @@ class RoleRepository {
         }
     }
 
-    fun existPermissionRolesByUserId(userId: UUID, assignRoles: List<Long>, scopeId: UUID) = transaction {
-        assignRoles.all { assignRole ->
-            existPermissionRoleByUserId(userId, assignRole, scopeId)
-        }
+    fun existPermissionRolesByUserAndScopeId(userId: UUID, assignRoles: List<Long>, scopeId: UUID) = transaction {
+        assignRoles.all { assignRole -> existPermissionRoleByUserAndScopeId(userId, assignRole, scopeId) }
     }
 
-    private fun existPermissionRoleByUserId(userId: UUID, assignRoleId: Long, scopeId: UUID): Boolean {
+    private fun existPermissionRoleByUserAndScopeId(userId: UUID, assignRoleId: Long, scopeId: UUID): Boolean {
         return ScopeDao.findById(scopeId)!!.path.any { segmentScopeId ->
-            getUserRoleIdsByScope(userId, segmentScopeId).any { role ->
-                existRoleAssignment(role, assignRoleId)
+            getUserRoleIdsByScope(userId, segmentScopeId).any { roleId ->
+                existRoleAssignment(RoleDao.findParentRoleIdsByRoleId(roleId) + roleId, assignRoleId)
             }
         }
     }
 
 
-    private fun existRoleAssignment(roleId: Long, assignRoleId: Long): Boolean {
+    private fun existRoleAssignment(roleIds: List<Long>, assignRoleId: Long): Boolean {
         return RolesAssignments.exists {
-            RolesAssignments.roleId eq roleId and (RolesAssignments.assignableRoleId eq assignRoleId)
+            RolesAssignments.roleId inList roleIds and (RolesAssignments.assignableRoleId eq assignRoleId)
         }
     }
 
@@ -169,17 +163,20 @@ class RoleRepository {
             UsersRolesScopes.scopeId eq scopeId and
                     (UsersRolesScopes.userId eq userId)
         }
-    }.let { it > 0 }
+    } > 0
 
-    fun updateByUserAndScope(
-        userId: UUID,
-        scopeId: UUID,
-        updateUserRolesRequest: UpdateUserRolesRequest
-    ): UserRolesResponse {
-        updateUserRolesRequest.roleIds.let { roles ->
-            removeUserRolesFromScope(userId, scopeId)
-            addUserRolesToScope(userId, roles, scopeId)
+    fun setByUserAndScope(userId: UUID, roleId: Long, scopeId: UUID) = UsersRolesScopes.insert {
+        it[UsersRolesScopes.userId] = userId
+        it[UsersRolesScopes.roleId] = roleId
+        it[UsersRolesScopes.scopeId] = scopeId
+    }.insertedCount > 0
+
+
+    fun removeByUserAndScope(userId: UUID, roleId: Long, scopeId: UUID) {
+        UsersRolesScopes.deleteWhere {
+            UsersRolesScopes.userId eq userId and
+                    (UsersRolesScopes.roleId eq roleId) and
+                    (UsersRolesScopes.scopeId eq scopeId)
         }
-        return findUserRolesByScopeId(userId, scopeId)
     }
 }

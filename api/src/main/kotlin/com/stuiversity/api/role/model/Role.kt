@@ -1,4 +1,4 @@
-package com.stuiversity.api.role
+package com.stuiversity.api.role.model
 
 import kotlinx.serialization.Serializable
 

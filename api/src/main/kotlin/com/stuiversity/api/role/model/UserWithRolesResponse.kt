@@ -1,6 +1,5 @@
-package com.studiversity.feature.role.model
+package com.stuiversity.api.role.model
 
-import com.stuiversity.api.role.Role
 import com.stuiversity.util.UUIDSerializer
 import kotlinx.serialization.Serializable
 import java.util.*

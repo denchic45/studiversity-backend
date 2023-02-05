@@ -11,7 +11,8 @@ private val useCaseModule = module {
     single { RequirePermissionToAssignRolesUseCase(get()) }
     single { FindRolesByNamesUseCase(get()) }
     single { FindAssignedUserRolesInScopeUseCase(get(), get()) }
-    single { UpdateUserRolesInScopeUseCase(get(), get()) }
+    single { PutRoleToUserInScopeUseCase(get(), get()) }
+    single { RemoveRoleFromUserInScopeUseCase(get(), get()) }
     single { FindMembersInScopeUseCase(get(), get()) }
 }
 
