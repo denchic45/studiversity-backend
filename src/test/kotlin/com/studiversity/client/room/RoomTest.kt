@@ -2,7 +2,7 @@ package com.studiversity.client.room
 
 import com.github.michaelbull.result.unwrap
 import com.studiversity.KtorClientTest
-import com.studiversity.util.assertResultOk
+import com.studiversity.util.assertResultIsOk
 import com.stuiversity.api.room.RoomApi
 import com.stuiversity.api.room.model.CreateRoomRequest
 import com.stuiversity.api.room.model.UpdateRoomRequest
@@ -19,19 +19,19 @@ class RoomTest : KtorClientTest() {
 
     @Test
     fun test(): Unit = runBlocking {
-        val createdRoom = roomApi.create(CreateRoomRequest("Room №20")).also(::assertResultOk).unwrap().apply {
+        val createdRoom = roomApi.create(CreateRoomRequest("Room №20")).also(::assertResultIsOk).unwrap().apply {
             assertEquals("Room №20", name)
         }
 
-        roomApi.getById(createdRoom.id).also(::assertResultOk).unwrap().apply {
+        roomApi.getById(createdRoom.id).also(::assertResultIsOk).unwrap().apply {
             assertEquals(createdRoom.id, id)
             assertEquals("Room №20", name)
         }
 
-        roomApi.update(createdRoom.id, UpdateRoomRequest(OptionalProperty.Present("Workshop"))).also(::assertResultOk).unwrap().apply {
+        roomApi.update(createdRoom.id, UpdateRoomRequest(OptionalProperty.Present("Workshop"))).also(::assertResultIsOk).unwrap().apply {
             assertEquals("Workshop", name)
         }
 
-        roomApi.delete(createdRoom.id).also(::assertResultOk)
+        roomApi.delete(createdRoom.id).also(::assertResultIsOk)
     }
 }

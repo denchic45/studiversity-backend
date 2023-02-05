@@ -2,7 +2,7 @@ package com.studiversity.client.user
 
 import com.github.michaelbull.result.unwrap
 import com.studiversity.KtorClientTest
-import com.studiversity.util.assertResultOk
+import com.studiversity.util.assertResultIsOk
 import com.stuiversity.api.auth.model.CreateUserRequest
 import com.stuiversity.api.user.UserApi
 import kotlinx.coroutines.runBlocking
@@ -22,13 +22,13 @@ class CreateUserTest : KtorClientTest() {
     @Test
     fun test(): Unit = runBlocking {
         val user = userApi.create(CreateUserRequest(expectedFirstName, expectedSurname, null, email))
-            .also(::assertResultOk).unwrap()
+            .also(::assertResultIsOk).unwrap()
 
-        userApiOfModerator.getById(user.id).also(::assertResultOk).unwrap().apply {
+        userApiOfModerator.getById(user.id).also(::assertResultIsOk).unwrap().apply {
             assertEquals(expectedFirstName, firstName)
             assertEquals(expectedSurname, surname)
         }
 
-        userApiOfModerator.remove(user.id).also(::assertResultOk)
+        userApiOfModerator.delete(user.id).also(::assertResultIsOk)
     }
 }

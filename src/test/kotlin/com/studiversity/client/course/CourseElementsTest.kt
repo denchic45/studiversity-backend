@@ -2,7 +2,7 @@ package com.studiversity.client.course
 
 import com.github.michaelbull.result.*
 import com.studiversity.KtorClientTest
-import com.studiversity.util.assertResultOk
+import com.studiversity.util.assertResultIsOk
 import com.studiversity.util.toUUID
 import com.stuiversity.api.course.CoursesApi
 import com.stuiversity.api.course.element.CourseElementApi
@@ -14,7 +14,7 @@ import com.stuiversity.api.course.work.CourseWorkApi
 import com.stuiversity.api.course.work.model.CourseWorkType
 import com.stuiversity.api.course.work.model.CreateCourseWorkRequest
 import com.stuiversity.api.membership.MembershipsApi
-import com.stuiversity.api.role.Role
+import com.stuiversity.api.role.model.Role
 import com.stuiversity.api.common.SortOrder
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
@@ -58,7 +58,7 @@ class CourseElementsTest : KtorClientTest() {
 
     override fun setup(): Unit = runBlocking {
         course = coursesApi.create(CreateCourseRequest("Test course"))
-            .apply { assertResultOk(this) }.unwrap()
+            .apply { assertResultIsOk(this) }.unwrap()
         enrolTeacher(teacher1Id)
     }
 
@@ -80,13 +80,13 @@ class CourseElementsTest : KtorClientTest() {
                 workType = CourseWorkType.ASSIGNMENT,
                 maxGrade = 5
             )
-        ).also(::assertResultOk).unwrap()
+        ).also(::assertResultIsOk).unwrap()
     }
 
     @AfterEach
     fun tearDown(): Unit = runBlocking {
         // delete course element
-        courseElementApi.delete(course.id, courseWork.id).also(::assertResultOk)
+        courseElementApi.delete(course.id, courseWork.id).also(::assertResultIsOk)
         // unroll users
         unrollUser(student1Id)
         unrollUser(student2Id)
@@ -102,7 +102,7 @@ class CourseElementsTest : KtorClientTest() {
 
     private suspend fun enrolUser(userId: UUID, roleId: Long) {
         membershipsApi.joinToScopeManually(userId, course.id, listOf(roleId)).apply {
-            assertResultOk(this)
+            assertResultIsOk(this)
         }
     }
 
@@ -126,7 +126,7 @@ class CourseElementsTest : KtorClientTest() {
             ).unwrap()
         }
         courseElementApi.getByCourseId(course.id)
-            .apply { assertResultOk(this) }
+            .apply { assertResultIsOk(this) }
             .unwrap()
             .apply {
                 forEachIndexed { index, response ->
@@ -164,7 +164,7 @@ class CourseElementsTest : KtorClientTest() {
 
         // sort by topic asc
         courseElementApi.getByCourseId(course.id, listOf(SortingCourseElements.TopicId()))
-            .apply { assertResultOk(this) }
+            .apply { assertResultIsOk(this) }
             .unwrap()
             .map { it.topicId }
             .distinctBy { it }
@@ -172,7 +172,7 @@ class CourseElementsTest : KtorClientTest() {
 
         // sort by topic desc
         courseElementApi.getByCourseId(course.id, listOf(SortingCourseElements.TopicId(SortOrder.DESC)))
-            .apply { assertResultOk(this) }
+            .apply { assertResultIsOk(this) }
             .unwrap()
             .map { it.topicId }
             .distinctBy { it }

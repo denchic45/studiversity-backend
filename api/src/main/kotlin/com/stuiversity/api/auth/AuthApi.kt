@@ -17,7 +17,7 @@ interface AuthApi {
 
 class AuthApiImpl(private val client: HttpClient) : AuthApi {
     override suspend fun signUp(signupRequest: SignupRequest): ResponseResult<TokenResponse> {
-        return client.post("/auth/signUp") {
+        return client.post("/auth/signup") {
             contentType(ContentType.Application.Json)
             setBody(signupRequest)
         }.toResult()

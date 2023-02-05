@@ -9,7 +9,7 @@ import com.stuiversity.api.course.model.CourseResponse
 import com.stuiversity.api.course.model.CreateCourseRequest
 import com.stuiversity.api.membership.model.ManualJoinMemberRequest
 import com.stuiversity.api.membership.model.ScopeMember
-import com.stuiversity.api.role.Role
+import com.stuiversity.api.role.model.Role
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*

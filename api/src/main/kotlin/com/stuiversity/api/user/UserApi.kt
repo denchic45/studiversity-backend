@@ -17,7 +17,7 @@ interface UserApi {
 
     suspend fun getById(userId: UUID): ResponseResult<User>
 
-    suspend fun remove(userId: UUID): EmptyResponseResult
+    suspend fun delete(userId: UUID): EmptyResponseResult
 }
 
 class UserApiImpl(private val client: HttpClient) : UserApi {
@@ -36,7 +36,7 @@ class UserApiImpl(private val client: HttpClient) : UserApi {
         return client.get("/users/$userId").toResult()
     }
 
-    override suspend fun remove(userId: UUID): EmptyResponseResult {
+    override suspend fun delete(userId: UUID): EmptyResponseResult {
         return client.delete("/users/$userId").toResult()
     }
 }
