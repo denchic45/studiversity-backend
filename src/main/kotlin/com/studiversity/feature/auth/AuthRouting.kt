@@ -2,7 +2,9 @@ package com.studiversity.feature.auth
 
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.onSuccess
+import com.studiversity.di.OrganizationEnv
 import com.studiversity.feature.auth.usecase.SignUpUseCase
+import com.studiversity.ktor.ForbiddenException
 import com.studiversity.supabase.model.SignUpGoTrueResponse
 import com.studiversity.supabase.model.respondWithSupabaseError
 import com.stuiversity.api.auth.model.SignupRequest
@@ -14,11 +16,15 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.core.qualifier.named
 import org.koin.ktor.ext.inject
 
 fun Route.signUpRoute() {
     val signup: SignUpUseCase by inject()
-    post("/signUp") {
+    val selfRegister: Boolean by inject(named(OrganizationEnv.ORG_SELF_REGISTER))
+
+    post("/signup") {
+        if (!selfRegister) throw ForbiddenException()
         val signupRequest = call.receive<SignupRequest>()
 
         signup(signupRequest)

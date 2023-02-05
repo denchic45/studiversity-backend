@@ -11,6 +11,7 @@ val Application.environmentModule: Module
         val config = this@environmentModule.environment.config
 
         single(named(OrganizationEnv.ORG_ID)) { config.property("organization.id").getString().toUUID() }
+        single(named(OrganizationEnv.ORG_SELF_REGISTER)) { config.property("organization.selfRegister").getString().toBoolean() }
 
         single(named(JwtEnv.JWT_AUDIENCE)) { config.property("jwt.audience").getString() }
         single(named(JwtEnv.JWT_DOMAIN)) { config.property("jwt.domain").getString() }
@@ -31,7 +32,7 @@ val Application.environmentModule: Module
         single(named(SupabaseEnv.SUPABASE_KEY)) { config.property("supabase.key").getString() }
     }
 
-enum class OrganizationEnv { ORG_ID }
+enum class OrganizationEnv { ORG_ID, ORG_SELF_REGISTER }
 
 enum class JwtEnv { JWT_AUDIENCE, JWT_DOMAIN, JWT_SECRET }
 
