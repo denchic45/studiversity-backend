@@ -12,6 +12,8 @@ import com.stuiversity.api.course.work.CourseWorkApi
 import com.stuiversity.api.course.work.CourseWorkApiImpl
 import com.stuiversity.api.membership.MembershipsApi
 import com.stuiversity.api.membership.MembershipsApiImpl
+import com.stuiversity.api.role.CapabilityApi
+import com.stuiversity.api.role.CapabilityApiImpl
 import com.stuiversity.api.role.RoleApi
 import com.stuiversity.api.role.RoleApiImpl
 import com.stuiversity.api.room.RoomApi
@@ -30,6 +32,7 @@ internal val apiModule = module {
     factory<AuthApi> { AuthApiImpl(it.get()) }
     factory<UserApi> { UserApiImpl(it.get()) }
     factory<RoleApi> { RoleApiImpl(it.get()) }
+    factory<CapabilityApi> { CapabilityApiImpl(it.get()) }
     factory<StudyGroupApi> { StudyGroupApiImpl(it.get()) }
     factory<CoursesApi> { CoursesApiImpl(it.get()) }
     factory<CourseElementApi> { CourseElementApiImpl(it.get()) }

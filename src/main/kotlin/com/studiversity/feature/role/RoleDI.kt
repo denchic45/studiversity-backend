@@ -6,7 +6,7 @@ import com.studiversity.feature.role.usecase.*
 import org.koin.dsl.module
 
 private val useCaseModule = module {
-    single { RequireCapabilityUseCase(get()) }
+    single { RequireCapabilityUseCase(get(),get()) }
     single { RequireAvailableRolesInScopeUseCase(get()) }
     single { RequirePermissionToAssignRolesUseCase(get()) }
     single { FindRolesByNamesUseCase(get()) }
@@ -14,6 +14,8 @@ private val useCaseModule = module {
     single { PutRoleToUserInScopeUseCase(get(), get()) }
     single { RemoveRoleFromUserInScopeUseCase(get(), get()) }
     single { FindMembersInScopeUseCase(get(), get()) }
+
+    single { CheckCapabilitiesByUserInScopeUseCase(get(), get()) }
 }
 
 private val repositoryModule = module {

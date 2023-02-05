@@ -2,14 +2,11 @@ package com.studiversity.feature.role.repository
 
 import com.studiversity.database.exists
 import com.studiversity.database.table.*
-import com.studiversity.feature.role.Capability
 import com.studiversity.feature.role.Permission
 import com.studiversity.feature.role.combinedPermission
 import com.studiversity.feature.role.mapper.toUserRolesResponse
 import com.studiversity.feature.role.mapper.toUsersWithRoles
-import com.stuiversity.api.role.model.Role
-import com.stuiversity.api.role.model.UserRolesResponse
-import com.stuiversity.api.role.model.UserWithRolesResponse
+import com.stuiversity.api.role.model.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.and
@@ -52,7 +49,19 @@ class RoleRepository {
         ).map { it.roleId.value }
     }
 
-    fun hasCapability(userId: UUID, capability: Capability, scopeId: UUID): Boolean = transaction {
+    fun findCapabilitiesByUserIdAndScopeId(
+        userId: UUID,
+        scopeId: UUID,
+        capabilities: List<String>
+    ): CheckCapabilitiesResponse {
+        return CheckCapabilitiesResponse(buildMap {
+            capabilities.forEach { capability ->
+                put(capability, hasCapability(userId, Capability(capability), scopeId))
+            }
+        })
+    }
+
+    fun hasCapability(userId: UUID, capability: Capability, scopeId: UUID): Boolean {
         val path = ScopeDao.findById(scopeId)!!.path
         var has = false
         for (nextScopeId in path) {
@@ -65,7 +74,8 @@ class RoleRepository {
                 }
             }
         }
-        return@transaction has
+        return has
+
     }
 
     private fun findCapabilityPermissionOfUserInScope(
