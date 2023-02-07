@@ -31,7 +31,7 @@ val authModule = module {
                     prettyPrint = true
                     isLenient = true
                     ignoreUnknownKeys = true
-                    encodeDefaults = true
+                    encodeDefaults = false
                 })
             }
         }
