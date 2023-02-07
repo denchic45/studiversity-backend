@@ -4,7 +4,6 @@ import com.github.michaelbull.result.unwrap
 import com.studiversity.KtorClientTest
 import com.studiversity.util.assertResultIsError
 import com.studiversity.util.assertResultIsOk
-import com.stuiversity.api.auth.AuthApi
 import com.stuiversity.api.auth.model.SignupRequest
 import com.stuiversity.api.user.UserApi
 import kotlinx.coroutines.runBlocking
@@ -21,18 +20,17 @@ class SignUpTest : KtorClientTest() {
     private val expectedSurname = "Sokolov"
 
     private val userClient by lazy { createAuthenticatedClient(email, password) }
-    private val guestClient by lazy { createGuestClient() }
 
-    private val authApiOfGuest: AuthApi by inject { parametersOf(guestClient) }
     private val userApiOfUser: UserApi by inject { parametersOf(userClient) }
     private val userApiOfModerator: UserApi by inject { parametersOf(client) }
 
     @Test
     fun testSignUp(): Unit = runBlocking {
         val signupRequest = SignupRequest(expectedFirstName, expectedSurname, null, email, password)
-        authApiOfGuest.signUp(signupRequest).also(::assertResultIsOk).unwrap()
+        authApiOfGuest.signup(signupRequest).also(::assertResultIsOk).unwrap()
 
-        authApiOfGuest.signUp(signupRequest).also(::assertResultIsError)
+        // User already registered
+        authApiOfGuest.signup(signupRequest).also(::assertResultIsError)
 
         val user = userApiOfUser.getMe().also(::assertResultIsOk).unwrap().apply {
             assertEquals(expectedFirstName, firstName)
@@ -40,5 +38,4 @@ class SignUpTest : KtorClientTest() {
         }
         userApiOfModerator.delete(user.id).also(::assertResultIsOk)
     }
-
 }

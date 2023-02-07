@@ -1,8 +1,9 @@
 package com.studiversity
 
 import com.studiversity.client.di.apiModule
+import com.studiversity.util.unwrapAsserted
+import com.stuiversity.api.auth.AuthApi
 import com.stuiversity.api.auth.model.SignInByEmailPasswordRequest
-import com.studiversity.supabase.model.SignUpGoTrueResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -19,13 +20,16 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.koin.core.context.loadKoinModules
+import org.koin.core.parameter.parametersOf
 import org.koin.test.KoinTest
+import org.koin.test.inject
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class KtorClientTest : KoinTest {
 
     private lateinit var testApp: TestApplication
     lateinit var client: HttpClient
+    val authApiOfGuest: AuthApi by inject { parametersOf(createGuestClient()) }
 
     @BeforeAll
     fun beforeAll(): Unit = runBlocking {
@@ -60,10 +64,9 @@ abstract class KtorClientTest : KoinTest {
         install(Auth) {
             bearer {
                 refreshTokens {
-                    BearerTokens(accessToken = client.post("/auth/token?grant_type=password") {
-                        contentType(ContentType.Application.Json)
-                        setBody(SignInByEmailPasswordRequest(email, password))
-                    }.body<SignUpGoTrueResponse>().accessToken, "")
+                    val response = authApiOfGuest.signInByEmailPassword(SignInByEmailPasswordRequest(email, password))
+                        .unwrapAsserted()
+                    BearerTokens(accessToken = response.token, response.refreshToken)
                 }
             }
         }

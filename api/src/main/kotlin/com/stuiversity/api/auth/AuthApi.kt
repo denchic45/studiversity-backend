@@ -10,13 +10,13 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 
 interface AuthApi {
-    suspend fun signUp(signupRequest: SignupRequest): ResponseResult<TokenResponse>
+    suspend fun signup(signupRequest: SignupRequest): ResponseResult<TokenResponse>
 
     suspend fun signInByEmailPassword(signInByEmailPasswordRequest: SignInByEmailPasswordRequest): ResponseResult<TokenResponse>
 }
 
 class AuthApiImpl(private val client: HttpClient) : AuthApi {
-    override suspend fun signUp(signupRequest: SignupRequest): ResponseResult<TokenResponse> {
+    override suspend fun signup(signupRequest: SignupRequest): ResponseResult<TokenResponse> {
         return client.post("/auth/signup") {
             contentType(ContentType.Application.Json)
             setBody(signupRequest)
