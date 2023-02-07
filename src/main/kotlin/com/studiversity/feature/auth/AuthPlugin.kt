@@ -53,8 +53,9 @@ fun Application.configureAuth() {
                     }
                 }
             }
-            signUpRoute()
+            signupRoute()
             tokenRoute()
+            recoverRoute()
         }
     }
 }
