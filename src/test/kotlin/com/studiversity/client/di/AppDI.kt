@@ -1,5 +1,7 @@
 package com.studiversity.client.di
 
+import com.stuiversity.api.account.AccountApi
+import com.stuiversity.api.account.AccountApiImpl
 import com.stuiversity.api.auth.AuthApi
 import com.stuiversity.api.auth.AuthApiImpl
 import com.stuiversity.api.course.CoursesApi
@@ -31,6 +33,7 @@ import org.koin.dsl.module
 internal val apiModule = module {
     factory<AuthApi> { AuthApiImpl(it.get()) }
     factory<UserApi> { UserApiImpl(it.get()) }
+    factory<AccountApi> { AccountApiImpl(it.get()) }
     factory<RoleApi> { RoleApiImpl(it.get()) }
     factory<CapabilityApi> { CapabilityApiImpl(it.get()) }
     factory<StudyGroupApi> { StudyGroupApiImpl(it.get()) }

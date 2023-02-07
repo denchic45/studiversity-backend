@@ -9,15 +9,18 @@ import com.studiversity.database.table.toDomain
 import com.studiversity.feature.auth.PasswordGenerator
 import com.studiversity.feature.role.ScopeType
 import com.studiversity.feature.role.repository.AddScopeRepoExt
+import com.studiversity.feature.user.account.model.PutUserSupabaseRequest
 import com.studiversity.supabase.model.SignUpGoTrueResponse
 import com.studiversity.supabase.model.asSupabaseErrorResponse
 import com.studiversity.util.EmailSender
-import com.stuiversity.api.auth.model.CreateUserRequest
-import com.stuiversity.api.auth.model.SignUpGoTrueRequest
-import com.stuiversity.api.auth.model.SignupRequest
-import com.stuiversity.api.auth.model.TokenResponse
-import com.stuiversity.api.user.model.User
+import com.stuiversity.api.account.model.UpdateAccountPersonalRequest
+import com.stuiversity.api.account.model.UpdateEmailRequest
+import com.stuiversity.api.account.model.UpdatePasswordRequest
+import com.stuiversity.api.auth.model.*
+import com.stuiversity.api.common.EmptyResponseResult
 import com.stuiversity.api.common.ResponseResult
+import com.stuiversity.api.user.model.User
+import com.stuiversity.util.OptionalProperty
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -92,5 +95,62 @@ class UserRepository(
     fun remove(userId: UUID): Boolean {
         return (AuthUsers.deleteWhere { AuthUsers.id eq userId } == 1
                 && Users.deleteWhere { Users.id eq userId } == 1)
+    }
+
+    fun update(userId: UUID, updateAccountPersonalRequest: UpdateAccountPersonalRequest) {
+        UserDao.findById(userId)!!.apply {
+            updateAccountPersonalRequest.firstName.ifPresent {
+                firstName = it
+            }
+            updateAccountPersonalRequest.surname.ifPresent {
+                surname = it
+            }
+            updateAccountPersonalRequest.patronymic.ifPresent {
+                patronymic = it
+            }
+        }
+    }
+
+    suspend fun update(userId: UUID, updatePasswordRequest: UpdatePasswordRequest): EmptyResponseResult {
+        val tokenResponse = signInByEmailAndPassword(userId, updatePasswordRequest.oldPassword)
+        if (!tokenResponse.status.isSuccess())
+            return Err(tokenResponse.asSupabaseErrorResponse())
+
+        val updatePassword = supabaseClient.put("/auth/v1/user") {
+            contentType(ContentType.Application.Json)
+            header("Authorization", "Bearer ${tokenResponse.body<SignUpGoTrueResponse>().accessToken}")
+            setBody(PutUserSupabaseRequest(password = OptionalProperty.of(updatePasswordRequest.newPassword)))
+        }
+
+        if (!updatePassword.status.isSuccess())
+            return Err(updatePassword.asSupabaseErrorResponse())
+
+        return Ok(Unit)
+    }
+
+    private suspend fun signInByEmailAndPassword(
+        userId: UUID,
+        password: String
+    ) = supabaseClient.post("/auth/v1/token") {
+        setBody(SignInByEmailPasswordRequest(UserDao.findById(userId)!!.email, password))
+        contentType(ContentType.Application.Json)
+        parameter("grant_type", "password")
+    }
+
+    suspend fun update(userId: UUID, updateEmailRequest: UpdateEmailRequest): EmptyResponseResult {
+        val tokenResponse = signInByEmailAndPassword(userId, updateEmailRequest.password)
+        if (!tokenResponse.status.isSuccess())
+            return Err(tokenResponse.asSupabaseErrorResponse())
+
+        val updateEmail = supabaseClient.put("/auth/v1/user") {
+            contentType(ContentType.Application.Json)
+            header("Authorization", "Bearer ${tokenResponse.body<SignUpGoTrueResponse>().accessToken}")
+            setBody(PutUserSupabaseRequest(email = OptionalProperty.of(updateEmailRequest.email)))
+        }
+
+        if (!updateEmail.status.isSuccess())
+            return Err(updateEmail.asSupabaseErrorResponse())
+
+        return Ok(Unit)
     }
 }

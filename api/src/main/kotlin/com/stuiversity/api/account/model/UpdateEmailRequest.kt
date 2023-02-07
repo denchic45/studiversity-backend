@@ -4,5 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UpdateEmailRequest(
-    val email: String
+    val email: String,
+    val password:String
 )
