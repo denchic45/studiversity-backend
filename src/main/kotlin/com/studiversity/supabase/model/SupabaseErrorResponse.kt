@@ -1,8 +1,8 @@
 package com.studiversity.supabase.model
 
-import com.studiversity.feature.auth.AuthErrors
 import com.studiversity.util.bodyOrNull
 import com.studiversity.util.respondWithError
+import com.stuiversity.api.auth.AuthErrors
 import com.stuiversity.util.ErrorInfo
 import com.stuiversity.util.ErrorResponse
 import io.ktor.client.statement.*
@@ -59,5 +59,5 @@ private val msgToErrorInfo = mapOf(
 
 private val errorToErrorInfo = mapOf(
     "invalid_request" to ErrorInfo(AuthErrors.REFRESH_TOKEN_REQUIRED),
-    "invalid_grant" to ErrorInfo(AuthErrors.WRONG_REFRESH_TOKEN)
+    "invalid_grant" to ErrorInfo(AuthErrors.INVALID_GRANT)
 )

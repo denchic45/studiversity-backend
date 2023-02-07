@@ -8,6 +8,7 @@ import com.studiversity.ktor.ForbiddenException
 import com.studiversity.supabase.model.SignUpGoTrueResponse
 import com.studiversity.supabase.model.respondWithSupabaseError
 import com.stuiversity.api.auth.model.SignupRequest
+import com.stuiversity.api.auth.model.TokenResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -44,7 +45,7 @@ fun Route.tokenRoute() {
         }.apply {
             if (status.isSuccess()) {
                 val message = body<SignUpGoTrueResponse>()
-                this@post.call.respond(message)
+                this@post.call.respond(TokenResponse(message.accessToken,message.refreshToken))
             } else {
                 this@post.call.respondWithSupabaseError(this)
             }

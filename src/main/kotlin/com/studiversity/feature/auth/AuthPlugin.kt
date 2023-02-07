@@ -5,6 +5,9 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.studiversity.di.JwtEnv
 import com.studiversity.util.isEmail
 import com.studiversity.util.respondWithError
+import com.studiversity.validation.ValidationResultBuilder
+import com.studiversity.validation.buildValidationResult
+import com.stuiversity.api.auth.AuthErrors
 import com.stuiversity.api.auth.model.SignupRequest
 import com.stuiversity.util.ErrorInfo
 import io.ktor.http.*
@@ -44,23 +47,9 @@ fun Application.configureAuth() {
                 validate<SignupRequest> { login ->
                     val password = login.password
 
-                    buildList {
-                        if (password.length < 6)
-                            add(AuthErrors.PASSWORD_MUST_CONTAIN_AT_LEAST_6_CHARACTERS)
-
-                        if (!password.contains("(?=.*[a-z])(?=.*[A-Z])".toRegex()))
-                            add(AuthErrors.PASSWORD_MUST_CONTAIN_UPPER_AND_LOWER_CASE_CHARACTERS)
-
-                        if (!password.contains("[0-9]".toRegex()))
-                            add(AuthErrors.PASSWORD_MUST_CONTAIN_DIGITS)
-
-                        if (!login.email.isEmail())
-                            add(AuthErrors.WRONG_EMAIL)
-
-                    }.let { errors ->
-                        if (errors.isEmpty())
-                            ValidationResult.Valid
-                        else ValidationResult.Invalid(errors)
+                    buildValidationResult {
+                        addPasswordConditions(password)
+                        condition(login.email.isEmail(), AuthErrors.WRONG_EMAIL)
                     }
                 }
             }
@@ -70,13 +59,11 @@ fun Application.configureAuth() {
     }
 }
 
-object AuthErrors {
-    const val REFRESH_TOKEN_REQUIRED = "REFRESH_TOKEN_REQUIRED"
-    const val WRONG_REFRESH_TOKEN = "WRONG_REFRESH_TOKEN"
-    const val WRONG_EMAIL = "WRONG_EMAIL"
-    const val USER_ALREADY_REGISTERED = "USER_ALREADY_REGISTERED"
-    const val PASSWORD_MUST_CONTAIN_AT_LEAST_6_CHARACTERS = "PASSWORD_MUST_CONTAIN_AT_LEAST_6_CHARACTERS"
-    const val PASSWORD_MUST_CONTAIN_UPPER_AND_LOWER_CASE_CHARACTERS =
-        "PASSWORD_MUST_CONTAIN_UPPER_AND_LOWER_CASE_CHARACTERS"
-    const val PASSWORD_MUST_CONTAIN_DIGITS = "PASSWORD_MUST_CONTAIN_DIGITS"
+fun ValidationResultBuilder.addPasswordConditions(password: String) {
+    condition(password.length >= 6, AuthErrors.PASSWORD_MUST_CONTAIN_AT_LEAST_6_CHARACTERS)
+    condition(
+        password.contains("(?=.*[a-z])(?=.*[A-Z])".toRegex()),
+        AuthErrors.PASSWORD_MUST_CONTAIN_UPPER_AND_LOWER_CASE_CHARACTERS
+    )
+    condition(password.contains("[0-9]".toRegex()), AuthErrors.PASSWORD_MUST_CONTAIN_DIGITS)
 }
