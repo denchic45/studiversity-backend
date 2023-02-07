@@ -16,6 +16,10 @@ sealed class OptionalProperty<out T> {
 
     val isPresent: Boolean
         get() = this is Present
+
+    companion object {
+        fun <T> of(value: T) = Present(value)
+    }
 }
 
 fun <T> OptionalProperty<T>.requirePresent(): T {
