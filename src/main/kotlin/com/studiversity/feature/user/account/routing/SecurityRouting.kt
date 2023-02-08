@@ -1,13 +1,10 @@
 package com.studiversity.feature.user.account.routing
 
-import com.github.michaelbull.result.Err
-import com.github.michaelbull.result.Ok
 import com.studiversity.feature.auth.addPasswordConditions
 import com.studiversity.feature.user.account.usecase.UpdateEmailUseCase
 import com.studiversity.feature.user.account.usecase.UpdatePasswordUseCase
 import com.studiversity.ktor.currentUserId
 import com.studiversity.util.isEmail
-import com.studiversity.util.respondWithError
 import com.studiversity.validation.buildValidationResult
 import com.stuiversity.api.account.model.UpdateEmailRequest
 import com.stuiversity.api.account.model.UpdatePasswordRequest
@@ -31,20 +28,16 @@ fun Route.securityRoute() {
         }
         validate<UpdateEmailRequest> { request ->
             buildValidationResult {
-                condition(request.email.isEmail(), AuthErrors.WRONG_EMAIL)
+                condition(request.email.isEmail(), AuthErrors.INVALID_EMAIL)
             }
         }
     }
     post("/password") {
-        when (val response = updatePassword(call.currentUserId(), call.receive())) {
-            is Ok -> call.respond(HttpStatusCode.OK)
-            is Err -> call.respondWithError(response.error)
-        }
+        updatePassword(call.currentUserId(), call.receive())
+        call.respond(HttpStatusCode.OK)
     }
     post("/email") {
-        when (val response = updateEmail(call.currentUserId(), call.receive())) {
-            is Ok -> call.respond(HttpStatusCode.OK)
-            is Err -> call.respondWithError(response.error)
-        }
+        updateEmail(call.currentUserId(), call.receive())
+        call.respond(HttpStatusCode.OK)
     }
 }

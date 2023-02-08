@@ -1,17 +1,14 @@
 package com.studiversity.feature.user
 
-import com.github.michaelbull.result.onFailure
-import com.github.michaelbull.result.onSuccess
 import com.studiversity.di.OrganizationEnv
 import com.studiversity.feature.auth.usecase.SignUpUserManuallyUseCase
-import com.stuiversity.api.role.model.Capability
 import com.studiversity.feature.role.usecase.RequireCapabilityUseCase
 import com.studiversity.feature.user.usecase.FindUserByIdUseCase
 import com.studiversity.feature.user.usecase.RemoveUserUseCase
 import com.studiversity.ktor.currentUserId
 import com.studiversity.ktor.getUuid
-import com.studiversity.util.respondWithError
 import com.studiversity.util.tryToUUID
+import com.stuiversity.api.role.model.Capability
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -37,9 +34,7 @@ fun Application.userRoutes() {
                         capability = Capability.WriteUser,
                         scopeId = organizationId
                     )
-                    signUpUserManually(call.receive())
-                        .onFailure { call.respondWithError(it) }
-                        .onSuccess { call.respond(HttpStatusCode.Created, it) }
+                    call.respond(HttpStatusCode.Created, signUpUserManually(call.receive()))
                 }
                 userByIdRoute()
             }

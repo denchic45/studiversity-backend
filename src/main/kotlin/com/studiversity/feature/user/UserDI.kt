@@ -19,7 +19,7 @@ private val useCaseModule = module {
 }
 
 private val repositoryModule = module {
-    single { UserRepository(get(named(OrganizationEnv.ORG_ID)), get(), get()) }
+    single { UserRepository(get(named(OrganizationEnv.ORG_ID))) }
 }
 
 val userModule = module {

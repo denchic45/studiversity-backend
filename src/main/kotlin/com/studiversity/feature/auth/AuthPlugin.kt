@@ -49,7 +49,7 @@ fun Application.configureAuth() {
 
                     buildValidationResult {
                         addPasswordConditions(password)
-                        condition(login.email.isEmail(), AuthErrors.WRONG_EMAIL)
+                        condition(login.email.isEmail(), AuthErrors.INVALID_EMAIL)
                     }
                 }
             }

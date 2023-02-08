@@ -1,6 +1,8 @@
 package com.studiversity.feature.auth
 
 import com.studiversity.di.SupabaseEnv
+import com.studiversity.feature.auth.usecase.RefreshTokenUseCase
+import com.studiversity.feature.auth.usecase.SignInByEmailAndPasswordUseCase
 import com.studiversity.feature.auth.usecase.SignUpUseCase
 import com.studiversity.feature.auth.usecase.SignUpUserManuallyUseCase
 import io.ktor.client.*
@@ -15,7 +17,9 @@ import org.koin.dsl.module
 
 private val useCaseModule = module {
     single { SignUpUseCase(get(), get()) }
-    single { SignUpUserManuallyUseCase(get(), get()) }
+    single { SignUpUserManuallyUseCase(get(), get(), get()) }
+    single { SignInByEmailAndPasswordUseCase(get(), get()) }
+    single { RefreshTokenUseCase(get(), get()) }
 }
 
 val authModule = module {

@@ -16,6 +16,7 @@ object Users : UUIDTable("user", "user_id") {
     val surname = varcharMax("surname")
     val patronymic = varcharMax("patronymic").nullable()
     val email = varcharMax("email")
+    val password = varcharMax("password")
 }
 
 class UserDao(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -29,6 +30,7 @@ class UserDao(id: EntityID<UUID>) : UUIDEntity(id) {
     var surname by Users.surname
     var patronymic by Users.patronymic
     var email by Users.email
+    var password by Users.password
 }
 
 fun UserDao.toDomain(): User = User(

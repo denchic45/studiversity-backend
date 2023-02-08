@@ -20,14 +20,18 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.core.parameter.parametersOf
+import org.koin.test.get
 import org.koin.test.inject
 import kotlin.test.assertEquals
+
 
 class AccountSecurityTest : KtorClientTest() {
 
     private val userApi: UserApi by inject { parametersOf(client) }
-    private val accountApi: AccountApi by inject { parametersOf(userClient) }
-    private val userApiOfUser: UserApi by inject { parametersOf(userClient) }
+    private val accountApi: AccountApi
+        get() = get { parametersOf(userClient) }
+    private val userApiOfUser: UserApi
+        get() = get { parametersOf(userClient) }
 
     private val email = "petya@gmail.com"
     private val password = "h9gf90G90v854"
@@ -51,11 +55,11 @@ class AccountSecurityTest : KtorClientTest() {
     @Test
     fun testUpdateEmail(): Unit = runBlocking {
         // Wrong email
-        accountApi.updateEmail(UpdateEmailRequest("another.mail.ru", password)).unwrapAssertedError().apply {
-            assertEquals(listOf(AuthErrors.WRONG_EMAIL), (error as? ErrorValidation)?.reasons)
+        accountApi.updateEmail(UpdateEmailRequest("another.mail.ru")).unwrapAssertedError().apply {
+            assertEquals(listOf(AuthErrors.INVALID_EMAIL), (error as? ErrorValidation)?.reasons)
         }
 
-        accountApi.updateEmail(UpdateEmailRequest("another@mail.ru", password)).assertedResultIsOk()
+        accountApi.updateEmail(UpdateEmailRequest("another@mail.ru")).assertedResultIsOk()
     }
 
     @Test

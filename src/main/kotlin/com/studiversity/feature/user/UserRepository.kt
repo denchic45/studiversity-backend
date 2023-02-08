@@ -1,91 +1,51 @@
 package com.studiversity.feature.user
 
-import com.github.michaelbull.result.Err
-import com.github.michaelbull.result.Ok
-import com.studiversity.database.table.AuthUsers
+import com.studiversity.database.exists
+import com.studiversity.database.table.RefreshTokens
 import com.studiversity.database.table.UserDao
 import com.studiversity.database.table.Users
 import com.studiversity.database.table.toDomain
-import com.studiversity.feature.auth.PasswordGenerator
+import com.studiversity.feature.auth.model.CreateRefreshToken
+import com.studiversity.feature.auth.model.RefreshToken
+import com.studiversity.feature.auth.model.UserByEmail
 import com.studiversity.feature.role.ScopeType
 import com.studiversity.feature.role.repository.AddScopeRepoExt
-import com.studiversity.feature.user.account.model.PutUserSupabaseRequest
-import com.studiversity.supabase.model.SignUpGoTrueResponse
-import com.studiversity.supabase.model.asSupabaseErrorResponse
-import com.studiversity.util.EmailSender
 import com.stuiversity.api.account.model.UpdateAccountPersonalRequest
 import com.stuiversity.api.account.model.UpdateEmailRequest
 import com.stuiversity.api.account.model.UpdatePasswordRequest
-import com.stuiversity.api.auth.model.*
-import com.stuiversity.api.common.EmptyResponseResult
-import com.stuiversity.api.common.ResponseResult
+import com.stuiversity.api.auth.AuthErrors
+import com.stuiversity.api.auth.model.CreateUserRequest
+import com.stuiversity.api.auth.model.SignupRequest
 import com.stuiversity.api.user.model.User
-import com.stuiversity.util.OptionalProperty
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.http.*
+import io.ktor.server.plugins.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
+import org.mindrot.jbcrypt.BCrypt
+import java.time.Instant
 import java.util.*
 
 class UserRepository(
-    private val organizationId: UUID,
-    private val supabaseClient: HttpClient,
-    private val emailSender: EmailSender
+    private val organizationId: UUID
 ) : AddScopeRepoExt {
 
-    fun add(user: User) {
-        UserDao.new(user.id) {
-            firstName = user.firstName
-            surname = user.surname
-            patronymic = user.patronymic
-            email = user.account.email
-        }
-        addScope(user.id, ScopeType.User, organizationId)
+
+    fun add(signupRequest: SignupRequest) {
+        val hashed: String = BCrypt.hashpw(signupRequest.password, BCrypt.gensalt())
+        add(signupRequest.toCreateUser(), hashed)
     }
 
-    suspend fun add(signupRequest: SignupRequest): ResponseResult<TokenResponse> {
-        val response = signUpUser(signupRequest.email, signupRequest.password)
-
-        if (!response.status.isSuccess())
-            return Err(response.asSupabaseErrorResponse())
-
-        val signupResponse = response.body<SignUpGoTrueResponse>()
-        add(signupRequest.toUser(signupResponse.user.id))
-
-        return Ok(TokenResponse(signupResponse.accessToken, signupResponse.refreshToken))
-    }
-
-    private suspend fun signUpUser(email: String, password: String) = supabaseClient.post("/auth/v1/signup") {
-        setBody(SignUpGoTrueRequest(email, password))
-        contentType(ContentType.Application.Json)
-    }
-
-    suspend fun add(createUserRequest: CreateUserRequest): ResponseResult<User> {
-        val password = PasswordGenerator().generate()
-        val response = signUpUser(createUserRequest.email, password)
-        if (!response.status.isSuccess())
-            return Err(response.asSupabaseErrorResponse())
-
-        add(createUserRequest.toUser(response.body<SignUpGoTrueResponse>().user.id))
-
-        emailSender.sendSimpleEmail(
-            createUserRequest.email,
-            "Регистрация",
-            generateEmailMessage(createUserRequest.firstName, createUserRequest.email, password)
-        )
-        return Ok(findById(response.body<SignUpGoTrueResponse>().user.id)!!)
-    }
-
-    private fun generateEmailMessage(firstName: String, email: String, password: String): String {
-        return """
-            Здравствуйте, $firstName
-            
-            Вы были успешно зарегистрированы! Ваши данные для авторизации:
-            email: $email
-            пароль: $password
-        """.trimIndent()
+    fun add(user: CreateUserRequest, password: String): User = UserDao.new {
+        firstName = user.firstName
+        surname = user.surname
+        patronymic = user.patronymic
+        email = user.email
+        this.password = password
+    }.toDomain().apply {
+        addScope(id, ScopeType.User, organizationId)
     }
 
     fun findById(id: UUID): User? {
@@ -93,8 +53,7 @@ class UserRepository(
     }
 
     fun remove(userId: UUID): Boolean {
-        return (AuthUsers.deleteWhere { AuthUsers.id eq userId } == 1
-                && Users.deleteWhere { Users.id eq userId } == 1)
+        return Users.deleteWhere { Users.id eq userId } == 1
     }
 
     fun update(userId: UUID, updateAccountPersonalRequest: UpdateAccountPersonalRequest) {
@@ -111,46 +70,51 @@ class UserRepository(
         }
     }
 
-    suspend fun update(userId: UUID, updatePasswordRequest: UpdatePasswordRequest): EmptyResponseResult {
-        val tokenResponse = signInByEmailAndPassword(userId, updatePasswordRequest.oldPassword)
-        if (!tokenResponse.status.isSuccess())
-            return Err(tokenResponse.asSupabaseErrorResponse())
-
-        val updatePassword = supabaseClient.put("/auth/v1/user") {
-            contentType(ContentType.Application.Json)
-            header("Authorization", "Bearer ${tokenResponse.body<SignUpGoTrueResponse>().accessToken}")
-            setBody(PutUserSupabaseRequest(password = OptionalProperty.of(updatePasswordRequest.newPassword)))
+    fun update(userId: UUID, updatePasswordRequest: UpdatePasswordRequest) {
+        UserDao.findById(userId)!!.apply {
+            if (!BCrypt.checkpw(updatePasswordRequest.oldPassword, password))
+                throw BadRequestException(AuthErrors.INVALID_PASSWORD)
+            password = BCrypt.hashpw(updatePasswordRequest.newPassword, BCrypt.gensalt())
         }
-
-        if (!updatePassword.status.isSuccess())
-            return Err(updatePassword.asSupabaseErrorResponse())
-
-        return Ok(Unit)
     }
 
-    private suspend fun signInByEmailAndPassword(
-        userId: UUID,
-        password: String
-    ) = supabaseClient.post("/auth/v1/token") {
-        setBody(SignInByEmailPasswordRequest(UserDao.findById(userId)!!.email, password))
-        contentType(ContentType.Application.Json)
-        parameter("grant_type", "password")
+    fun update(userId: UUID, updateEmailRequest: UpdateEmailRequest) {
+        UserDao.findById(userId)!!.email = updateEmailRequest.email
     }
 
-    suspend fun update(userId: UUID, updateEmailRequest: UpdateEmailRequest): EmptyResponseResult {
-        val tokenResponse = signInByEmailAndPassword(userId, updateEmailRequest.password)
-        if (!tokenResponse.status.isSuccess())
-            return Err(tokenResponse.asSupabaseErrorResponse())
-
-        val updateEmail = supabaseClient.put("/auth/v1/user") {
-            contentType(ContentType.Application.Json)
-            header("Authorization", "Bearer ${tokenResponse.body<SignUpGoTrueResponse>().accessToken}")
-            setBody(PutUserSupabaseRequest(email = OptionalProperty.of(updateEmailRequest.email)))
-        }
-
-        if (!updateEmail.status.isSuccess())
-            return Err(updateEmail.asSupabaseErrorResponse())
-
-        return Ok(Unit)
+    fun findByEmail(email: String): UserByEmail? {
+        return UserDao.find(Users.email eq email).singleOrNull()
+            ?.let { UserByEmail(it.id.value, it.email, it.password) }
     }
+
+    fun addToken(createRefreshToken: CreateRefreshToken): String {
+        return RefreshTokens.insert {
+            it[userId] = createRefreshToken.userId
+            it[token] = createRefreshToken.token
+            it[expireAt] = createRefreshToken.expireAt
+        }[RefreshTokens.token]
+    }
+
+    fun existByEmail(email: String): Boolean {
+        return Users.exists { Users.email eq email }
+    }
+
+    fun findRefreshToken(refreshToken: String): RefreshToken? {
+        val expiredTokens = RefreshTokens.select(RefreshTokens.expireAt less Instant.now()).limit(10)
+            .map { it[RefreshTokens.id] }
+        RefreshTokens.deleteWhere { RefreshTokens.id inList expiredTokens }
+        return RefreshTokens.select(RefreshTokens.token eq refreshToken)
+            .singleOrNull()?.let {
+                RefreshToken(
+                    it[RefreshTokens.userId].value,
+                    it[RefreshTokens.token],
+                    it[RefreshTokens.expireAt]
+                )
+            }
+    }
+
+    fun removeRefreshToken(refreshToken: String) {
+        RefreshTokens.deleteWhere { token eq refreshToken }
+    }
+
 }

@@ -12,9 +12,9 @@ import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
 import kotlin.test.assertEquals
 
-class SignUpTest : KtorClientTest() {
+class SignupTest : KtorClientTest() {
 
-    private val email = "yaroslav@gmail.com"
+    private val email = "denchic150@gmail.com"
     private val password = "KLNf94fghn4gg"
     private val expectedFirstName = "Yaroslav"
     private val expectedSurname = "Sokolov"
@@ -25,7 +25,7 @@ class SignUpTest : KtorClientTest() {
     private val userApiOfModerator: UserApi by inject { parametersOf(client) }
 
     @Test
-    fun testSignUp(): Unit = runBlocking {
+    fun testSignup(): Unit = runBlocking {
         val signupRequest = SignupRequest(expectedFirstName, expectedSurname, null, email, password)
         authApiOfGuest.signup(signupRequest).also(::assertResultIsOk).unwrap()
 

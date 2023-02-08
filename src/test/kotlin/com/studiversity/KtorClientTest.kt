@@ -1,8 +1,10 @@
 package com.studiversity
 
+import com.github.michaelbull.result.onSuccess
 import com.studiversity.client.di.apiModule
 import com.studiversity.util.unwrapAsserted
 import com.stuiversity.api.auth.AuthApi
+import com.stuiversity.api.auth.model.RefreshTokenRequest
 import com.stuiversity.api.auth.model.SignInByEmailPasswordRequest
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -37,7 +39,7 @@ abstract class KtorClientTest : KoinTest {
             buildApp()
         }
         testApp.start()
-        client = createAuthenticatedClient("denchic150@gmail.com", "OBDIhi76534g33")
+        client = createAuthenticatedClient("denchic860@gmail.com", "JFonij5430")
         setup()
     }
 
@@ -62,11 +64,22 @@ abstract class KtorClientTest : KoinTest {
     fun createAuthenticatedClient(email: String, password: String) = testApp.createClient {
         installContentNegotiation()
         install(Auth) {
+            var bearerTokens = runBlocking {
+                authApiOfGuest.signInByEmailPassword(SignInByEmailPasswordRequest(email, password)).unwrapAsserted()
+                    .run {
+                        BearerTokens(this.token, this.refreshToken)
+                    }
+            }
             bearer {
+                loadTokens {
+                    bearerTokens
+                }
                 refreshTokens {
-                    val response = authApiOfGuest.signInByEmailPassword(SignInByEmailPasswordRequest(email, password))
-                        .unwrapAsserted()
-                    BearerTokens(accessToken = response.token, response.refreshToken)
+                    val result = authApiOfGuest.refreshToken(RefreshTokenRequest(oldTokens!!.refreshToken))
+                    result.onSuccess {
+                        bearerTokens = BearerTokens(it.token, it.refreshToken)
+                    }
+                    bearerTokens
                 }
             }
         }
