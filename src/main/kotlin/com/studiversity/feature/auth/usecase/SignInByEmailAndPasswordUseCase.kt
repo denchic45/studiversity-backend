@@ -1,6 +1,6 @@
 package com.studiversity.feature.auth.usecase
 
-import com.studiversity.feature.auth.model.CreateRefreshToken
+import com.studiversity.feature.auth.model.RefreshToken
 import com.studiversity.feature.user.UserRepository
 import com.studiversity.transaction.TransactionWorker
 import com.stuiversity.api.auth.AuthErrors
@@ -16,13 +16,13 @@ class SignInByEmailAndPasswordUseCase(
     private val userRepository: UserRepository
 ) {
     operator fun invoke(signInByEmailPasswordRequest: SignInByEmailPasswordRequest) = transactionWorker {
-        val userByEmail = userRepository.findByEmail(signInByEmailPasswordRequest.email)
+        val userByEmail = userRepository.findEmailPasswordByEmail(signInByEmailPasswordRequest.email)
             ?: throw BadRequestException(AuthErrors.INVALID_EMAIL)
         if (!BCrypt.checkpw(signInByEmailPasswordRequest.password, userByEmail.password))
             throw BadRequestException(AuthErrors.INVALID_PASSWORD)
 
         userByEmail.id to userRepository.addToken(
-            CreateRefreshToken(
+            RefreshToken(
                 userByEmail.id,
                 UUID.randomUUID().toString(),
                 LocalDateTime.now().plusWeeks(1).toInstant(ZoneOffset.UTC)

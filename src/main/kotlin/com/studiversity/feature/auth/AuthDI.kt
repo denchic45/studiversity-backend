@@ -1,10 +1,7 @@
 package com.studiversity.feature.auth
 
 import com.studiversity.di.SupabaseEnv
-import com.studiversity.feature.auth.usecase.RefreshTokenUseCase
-import com.studiversity.feature.auth.usecase.SignInByEmailAndPasswordUseCase
-import com.studiversity.feature.auth.usecase.SignUpUseCase
-import com.studiversity.feature.auth.usecase.SignUpUserManuallyUseCase
+import com.studiversity.feature.auth.usecase.*
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
@@ -20,6 +17,8 @@ private val useCaseModule = module {
     single { SignUpUserManuallyUseCase(get(), get(), get()) }
     single { SignInByEmailAndPasswordUseCase(get(), get()) }
     single { RefreshTokenUseCase(get(), get()) }
+    single { RecoverPasswordUseCase(get(), get(), get()) }
+    single { CheckMagicLinkTokenUseCase(get(), get()) }
 }
 
 val authModule = module {

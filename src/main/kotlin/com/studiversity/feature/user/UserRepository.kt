@@ -1,11 +1,8 @@
 package com.studiversity.feature.user
 
 import com.studiversity.database.exists
-import com.studiversity.database.table.RefreshTokens
-import com.studiversity.database.table.UserDao
-import com.studiversity.database.table.Users
-import com.studiversity.database.table.toDomain
-import com.studiversity.feature.auth.model.CreateRefreshToken
+import com.studiversity.database.table.*
+import com.studiversity.feature.auth.model.MagicLinkToken
 import com.studiversity.feature.auth.model.RefreshToken
 import com.studiversity.feature.auth.model.UserByEmail
 import com.studiversity.feature.role.ScopeType
@@ -82,12 +79,16 @@ class UserRepository(
         UserDao.findById(userId)!!.email = updateEmailRequest.email
     }
 
-    fun findByEmail(email: String): UserByEmail? {
+    fun findUserByEmail(email: String): User? {
+        return UserDao.find(Users.email eq email).singleOrNull()?.toDomain()
+    }
+
+    fun findEmailPasswordByEmail(email: String): UserByEmail? {
         return UserDao.find(Users.email eq email).singleOrNull()
             ?.let { UserByEmail(it.id.value, it.email, it.password) }
     }
 
-    fun addToken(createRefreshToken: CreateRefreshToken): String {
+    fun addToken(createRefreshToken: RefreshToken): String {
         return RefreshTokens.insert {
             it[userId] = createRefreshToken.userId
             it[token] = createRefreshToken.token
@@ -100,7 +101,7 @@ class UserRepository(
     }
 
     fun findRefreshToken(refreshToken: String): RefreshToken? {
-        val expiredTokens = RefreshTokens.select(RefreshTokens.expireAt less Instant.now()).limit(10)
+        val expiredTokens = RefreshTokens.select(RefreshTokens.expireAt less Instant.now()).limit(100)
             .map { it[RefreshTokens.id] }
         RefreshTokens.deleteWhere { RefreshTokens.id inList expiredTokens }
         return RefreshTokens.select(RefreshTokens.token eq refreshToken)
@@ -115,6 +116,32 @@ class UserRepository(
 
     fun removeRefreshToken(refreshToken: String) {
         RefreshTokens.deleteWhere { token eq refreshToken }
+    }
+
+    fun addMagicLink(magicLinkToken: MagicLinkToken): String {
+        return MagicLinks.insert {
+            it[token] = magicLinkToken.token
+            it[userId] = magicLinkToken.userId
+            it[expireAt] = magicLinkToken.expireAt
+        }[MagicLinks.token]
+    }
+
+    fun removeMagicLink(token: String) {
+        MagicLinks.deleteWhere { this.token eq token }
+    }
+
+    fun findMagicLinkByToken(token: String): MagicLinkToken? {
+        val expiredTokens = MagicLinks.select(MagicLinks.expireAt less Instant.now()).limit(100)
+            .map { it[MagicLinks.id] }
+        MagicLinks.deleteWhere { MagicLinks.id inList expiredTokens }
+
+        return MagicLinks.select(MagicLinks.token eq token).singleOrNull()?.let {
+            MagicLinkToken(
+                userId = it[MagicLinks.userId].value,
+                token = it[MagicLinks.token],
+                expireAt = it[MagicLinks.expireAt]
+            )
+        }
     }
 
 }

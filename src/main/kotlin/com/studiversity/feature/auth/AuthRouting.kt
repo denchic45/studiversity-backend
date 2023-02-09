@@ -4,9 +4,7 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.studiversity.di.JwtEnv
 import com.studiversity.di.OrganizationEnv
-import com.studiversity.feature.auth.usecase.RefreshTokenUseCase
-import com.studiversity.feature.auth.usecase.SignInByEmailAndPasswordUseCase
-import com.studiversity.feature.auth.usecase.SignUpUseCase
+import com.studiversity.feature.auth.usecase.*
 import com.studiversity.ktor.ForbiddenException
 import com.stuiversity.api.auth.AuthErrors
 import com.stuiversity.api.auth.model.SignupRequest
@@ -17,6 +15,7 @@ import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.util.*
 import org.koin.core.qualifier.named
 import org.koin.ktor.ext.inject
 import java.util.*
@@ -57,7 +56,27 @@ fun Route.tokenRoute() {
 }
 
 fun Route.recoverRoute() {
+    val recoverPassword: RecoverPasswordUseCase by inject()
     post("/recover") {
+        recoverPassword(call.receive(), url {
+            host = call.request.host()
+            port = call.request.port()
+            path("auth", "reset")
+        }
+        )
+        call.respond(HttpStatusCode.Accepted)
+    }
+}
 
+fun Route.resetRoute() {
+    val checkMagicLinkToken: CheckMagicLinkTokenUseCase by inject()
+    post("/recover") {
+        checkMagicLinkToken(call.request.queryParameters.getOrFail("token"))
+        call.respondText(
+            """
+                
+        """.trimIndent(),
+            ContentType.Text.Html
+        )
     }
 }

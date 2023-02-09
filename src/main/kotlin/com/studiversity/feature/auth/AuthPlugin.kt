@@ -56,6 +56,7 @@ fun Application.configureAuth() {
             signupRoute()
             tokenRoute()
             recoverRoute()
+            resetRoute()
         }
     }
 }

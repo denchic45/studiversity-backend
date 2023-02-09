@@ -1,6 +1,6 @@
 package com.studiversity.feature.auth.usecase
 
-import com.studiversity.feature.auth.model.CreateRefreshToken
+import com.studiversity.feature.auth.model.RefreshToken
 import com.studiversity.feature.user.UserRepository
 import com.studiversity.transaction.TransactionWorker
 import com.stuiversity.api.auth.AuthErrors
@@ -24,7 +24,7 @@ class RefreshTokenUseCase(
             throw BadRequestException(AuthErrors.INVALID_REFRESH_TOKEN)
 
         val userId = foundRefreshToken.userId
-        val generatedRefreshToken = CreateRefreshToken(
+        val generatedRefreshToken = RefreshToken(
             userId,
             UUID.randomUUID().toString(),
             LocalDateTime.now().plusWeeks(1).toInstant(ZoneOffset.UTC)
